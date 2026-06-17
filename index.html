@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="pl" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +7,9 @@
 <title>Emocje i Motywacje</title>
 <!-- KONFIG: FAVICON — ikona na zakładce przeglądarki (tu: emoji 🐱 zakodowane jako SVG; wystarczy podmienić emoji albo wstawić link do pliku .ico/.png) -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎭%3C/text%3E%3C/svg%3E">
+<!-- KONFIG: MOTYW — ustaw motyw zanim przeglądarka pomaluje stronę (brak „mignięcia" ciemnego motywu).
+     Domyślnie jasny; zapamiętany wybór z localStorage ma pierwszeństwo. -->
+<script>(function(){try{var t=localStorage.getItem('emocjeMotywacje_v1_theme');document.documentElement.dataset.theme=(t==='dark'||t==='light')?t:'light';}catch(e){document.documentElement.dataset.theme='light';}})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,8 +17,10 @@
 /* ============================================================
    KONFIG: KOLORY — motywy i paleta strony
    ------------------------------------------------------------
-   Motyw CIEMNY jest domyślny (:root). Motyw JASNY nadpisuje
-   zmienne w bloku html[data-theme="light"] poniżej.
+   Domyślny motyw to JASNY (paleta jak w kursach) — ustawiany przez
+   atrybut data-theme="light" na <html>. Blok :root definiuje motyw
+   CIEMNY (data-theme="dark"); motyw JASNY nadpisuje zmienne w bloku
+   html[data-theme="light"] poniżej.
    UWAGA: zmienne w sekcji „JS: system nagrody" są nadpisywane
    przez funkcję applyBloom() — możesz zmienić wartości startowe,
    ale NIE zmieniaj ich nazw.
@@ -71,37 +76,40 @@
   --aurora-base:.14;
 }
 
-/* — Motyw JASNY (przełącznik w menu ⚙) — */
+/* — Motyw JASNY (DOMYŚLNY) — paleta „papier + morska zieleń", spójna
+   kolorystycznie z kursami emocje.html / motywacje.html. Odcienie poświaty
+   (aurora, blask) ustala applyBloom(), w trybie jasnym na bazę morską. — */
 html[data-theme="light"]{
   color-scheme:light;
-  --bg:hsl(var(--bg-h) 36% calc(103% - var(--bg-l)));
-  --ink:hsl(228 32% 15%);
-  --ink-soft:hsl(228 13% 42%);
-  --accent:hsl(var(--accent-h) calc(var(--accent-s) + 30%) calc(var(--accent-l) * .82));
-  --accent2:hsl(var(--accent2-h) calc(var(--accent-s) + 34%) calc(var(--accent-l) * .94));
-  --on-accent:hsl(0 0% 100%);
-  --gold:hsl(33 72% 40%);
-  --gold-bg:hsl(36 85% 52% / .13);
-  --gold-bd:hsl(36 70% 45% / .4);
-  --ok:hsl(156 62% 33%);
-  --ok-ink:hsl(158 65% 21%);
-  --ok-bg:hsl(156 55% 42% / .13);
-  --ok-bd:hsl(156 45% 38% / .35);
-  --no:hsl(353 62% 46%);
-  --no-ink:hsl(353 62% 31%);
-  --no-bg:hsl(353 75% 52% / .1);
-  --no-bd:hsl(353 55% 50% / .32);
-  --glass:hsl(var(--surface-h) 55% calc(108% - var(--surface-l)) / .55);
-  --glass-strong:hsl(var(--surface-h) 60% calc(108% - var(--surface-l)) / .85);
-  --field:hsl(228 45% 24% / .05);
-  --field-hover:hsl(228 50% 26% / .09);
-  --chip:hsl(228 42% 24% / .08);
-  --line:hsl(228 28% 32% / .15);
-  --line-strong:hsl(228 32% 28% / .3);
-  --edge:inset 0 1px 0 hsl(0 0% 100% / .6);
-  --shadow-soft:0 18px 44px -26px hsl(228 55% 30% / .45);
-  --shadow-pop:0 30px 70px -28px hsl(228 55% 25% / .5);
-  --aurora-base:.1;
+  --accent-h:172; --accent2-h:150;          /* baza odcieni do efektów hsl(var(--accent-h)…) */
+  --bg:#F4F2EC;
+  --ink:#20262E;
+  --ink-soft:#586068;
+  --accent:#16776A;
+  --accent2:#2F8E8F;
+  --on-accent:#FFFFFF;
+  --gold:#B0742B;
+  --gold-bg:hsl(33 78% 50% / .13);
+  --gold-bd:hsl(33 64% 45% / .4);
+  --ok:hsl(154 52% 32%);
+  --ok-ink:hsl(156 58% 22%);
+  --ok-bg:hsl(154 50% 42% / .13);
+  --ok-bd:hsl(154 42% 38% / .35);
+  --no:hsl(7 64% 47%);
+  --no-ink:hsl(7 62% 34%);
+  --no-bg:hsl(7 72% 52% / .1);
+  --no-bd:hsl(7 55% 50% / .32);
+  --glass:hsl(44 38% 99% / .72);
+  --glass-strong:hsl(44 42% 99% / .9);
+  --field:hsl(36 18% 38% / .06);
+  --field-hover:hsl(36 22% 38% / .1);
+  --chip:hsl(36 16% 40% / .09);
+  --line:hsl(43 18% 83%);
+  --line-strong:hsl(40 14% 72%);
+  --edge:inset 0 1px 0 hsl(0 0% 100% / .7);
+  --shadow-soft:0 18px 44px -26px hsl(38 22% 26% / .3);
+  --shadow-pop:0 30px 70px -28px hsl(38 22% 22% / .34);
+  --aurora-base:.08;
 }
 
 *{box-sizing:border-box}
@@ -134,7 +142,7 @@ body::after{
   transition:background .9s ease;
 }
 html[data-theme="light"] body::after{
-  background:radial-gradient(120% 90% at 50% 0%, transparent 60%, hsl(228 40% 88% / .5) 100%);
+  background:radial-gradient(120% 90% at 50% 0%, transparent 60%, hsl(40 28% 84% / .5) 100%);
 }
 ::selection{background:hsl(var(--accent-h) 70% 50% / .35)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -201,6 +209,40 @@ header.top{
 }
 .btn-mode:hover{background:var(--accent);color:var(--on-accent);transform:translateY(-1px);
   box-shadow:0 8px 20px -8px hsl(var(--accent-h) 70% 45% / .5)}
+
+/* ====== Przyciski „Kurs" — wyróżnione kafle prowadzące do materiałów nauki ====== */
+.course-row{display:flex;gap:12px;flex-wrap:wrap;align-items:stretch;width:100%;margin-bottom:18px}
+.btn-course{
+  position:relative;flex:1 1 200px;min-width:190px;
+  display:flex;align-items:center;gap:12px;
+  padding:13px 18px;border-radius:16px;cursor:pointer;text-decoration:none;
+  color:#fff;border:1px solid transparent;overflow:hidden;
+  background:linear-gradient(135deg,var(--c1),var(--c2));
+  box-shadow:0 12px 28px -12px var(--c-shadow),inset 0 1px 0 hsl(0 0% 100% / .28);
+  transition:transform .22s var(--ease),box-shadow .25s var(--ease),filter .2s;
+}
+.btn-course::before{               /* delikatny połysk szkła */
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(125deg,hsl(0 0% 100% / .26),transparent 44%);
+}
+.btn-course::after{                /* strzałka „wejdź" */
+  content:"→";margin-left:auto;font-size:1.15rem;font-weight:700;
+  opacity:.7;transition:transform .25s var(--ease),opacity .2s;
+}
+.btn-course:hover{transform:translateY(-2px);filter:brightness(1.06);
+  box-shadow:0 18px 36px -12px var(--c-shadow),inset 0 1px 0 hsl(0 0% 100% / .34)}
+.btn-course:hover::after{transform:translateX(4px);opacity:1}
+.btn-course:active{transform:translateY(0) scale(.99)}
+.btn-course .bc-ic{
+  flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;
+  font-size:1.3rem;line-height:1;background:hsl(0 0% 100% / .18);
+  box-shadow:inset 0 1px 0 hsl(0 0% 100% / .3);
+}
+.btn-course .bc-tx{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+.btn-course .bc-kick{font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+.btn-course .bc-name{font-family:"Fraunces",serif;font-size:1.12rem;font-weight:600;letter-spacing:-.01em}
+.btn-course.emo{--c1:#1c8a79;--c2:#0f5a50;--c-shadow:hsl(170 60% 22% / .6)}
+.btn-course.mot{--c1:#c47a3a;--c2:#9a481c;--c-shadow:hsl(24 60% 26% / .55)}
 
 /* ====== Pasek postępu ====== */
 #progress{height:6px;border-radius:999px;background:var(--field);border:1px solid var(--line);overflow:hidden;margin-bottom:22px}
@@ -379,7 +421,7 @@ button.ghost:hover{border-color:var(--no-bd);color:var(--no);background:var(--no
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   animation:wnFade .25s ease;
 }
-html[data-theme="light"] .wn-overlay{background:hsl(228 40% 30% / .25)}
+html[data-theme="light"] .wn-overlay{background:hsl(38 25% 25% / .3)}
 .wn-modal{
   position:relative;max-width:430px;width:100%;max-height:82vh;overflow:auto;
   background:var(--glass-strong);
@@ -558,9 +600,19 @@ html[data-theme="light"] .wn-overlay{background:hsl(228 40% 30% / .25)}
     <div class="stat" id="mastery-stat"><div class="label">Opanowane</div><div class="val"><span id="mastered-count">0</span><small> / <span id="bank-size">240</span></small></div></div>
   </div>
 
+  <div class="course-row">
+    <a class="btn-course emo" href="emocje.html" title="Otwórz kurs: Emocje (materiały do nauki)">
+      <span class="bc-ic">📗</span>
+      <span class="bc-tx"><span class="bc-kick">Kurs · Część 1</span><span class="bc-name">Emocje</span></span>
+    </a>
+    <a class="btn-course mot" href="motywacje.html" title="Otwórz kurs: Motywacje (materiały do nauki)">
+      <span class="bc-ic">📙</span>
+      <span class="bc-tx"><span class="bc-kick">Kurs · Część 2</span><span class="bc-name">Motywacje</span></span>
+    </a>
+  </div>
+
   <div class="toolbar">
     <button class="btn-mode" id="btn-mode" onclick="toggleMode()">🎓 Tryb testu</button>
-    <button class="btn-mode" onclick="window.location.href='emocje.html'">Kurs: Emocje</button>
     <div class="tool-cluster">
       <button class="tool-icon" id="browse-open-btn" onclick="openBrowse('all')" title="Przeglądaj wszystkie pytania (bez odpowiadania)" aria-label="Przeglądaj pytania">📖</button>
       <button class="tool-icon" id="fav-open-btn" onclick="openBrowse('fav')" title="Twoje ulubione pytania" aria-label="Ulubione pytania">★<span id="fav-count" class="tool-badge hidden">0</span></button>
@@ -646,12 +698,14 @@ html[data-theme="light"] .wn-overlay{background:hsl(228 40% 30% / .25)}
     <!-- KONFIG: CO-NOWEGO — lista zmian w okienku „Co nowego?" (najnowsze na górze) -->
     <ul class="wn-list">
       <li><b>Specjalne podziękowania dla:</b> Marty Łapki i Zuzi Czajkowskiej!</li>
+      <li><b>Kursy do nauki.</b> Wyróżnione kafle <span class="wn-em">📗 Emocje</span> i <span class="wn-em">📙 Motywacje</span> na górze otwierają pełne materiały do egzaminu — definicje, teorie i przykłady w jednym miejscu.</li>
+      <li><b>Nowy, jaśniejszy wygląd.</b> Strona startuje teraz w trybie jasnym, spójnym kolorystycznie z kursami. Tryb ciemny dalej włączysz przełącznikiem <span class="wn-em">Tryb jasny</span> w menu <span class="wn-em">⚙</span>.</li>
       <li><b>Baza 240 pytań ABCD.</b> Część I — Emocje (wg zagadnień egzaminacyjnych dr P. Basińskiej), Część II — Motywacje (wg materiału dr E. Kasprzak). Każde pytanie ma krótkie wyjaśnienie poprawnej odpowiedzi.</li>
       <li><b>Tryb fiszek.</b> W menu <span class="wn-em">⚙</span> → <span class="wn-em">🔄 Tryb fiszek</span>: najpierw widzisz samo pytanie, przypominasz sobie odpowiedź, a potem odsłaniasz ją razem z wyjaśnieniem i oceniasz, czy wiedziałeś/-aś.</li>
       <li><b>Słabe punkty.</b> W menu <span class="wn-em">⚙</span> → <span class="wn-em">🎯 Słabe punkty</span>: drill złożony tylko z pytań jeszcze nieopanowanych. Licznik pokazuje, ile ich zostało.</li>
       <li><b>Wyjaśnienia odpowiedzi.</b> Po udzieleniu odpowiedzi pod pytaniem pojawia się <span class="wn-em">💡 Wyjaśnienie</span> poprawnej odpowiedzi.</li>
       <li><b>Start od pytania 1.</b> Przy pierwszym uruchomieniu strona startuje od pytania 1 i bez tasowania — tasowanie włączysz w menu <span class="wn-em">⚙</span>.</li>
-      <li><b>Tryb jasny.</b> W menu <span class="wn-em">⚙</span> znajdziesz przełącznik <span class="wn-em">Tryb jasny</span>. Domyślnie strona działa w trybie ciemnym, a wybór zapamiętuje się na Twoim urządzeniu.</li>
+      <li><b>Tryb jasny i ciemny.</b> W menu <span class="wn-em">⚙</span> znajdziesz przełącznik <span class="wn-em">Tryb jasny</span>. Domyślnie strona działa w trybie jasnym, a wybór zapamiętuje się na Twoim urządzeniu.</li>
       <li><b>Cofanie do poprzedniego pytania.</b> Przycisk <span class="wn-em">← Wstecz</span> (lub klawisz <span class="wn-em">←</span>) pokazuje rozwiązane pytanie. Jeśli przez przypadek kliknęłaś/eś złą opcję, możesz zaznaczyć inną — po potwierdzeniu wynik zostanie poprawiony.</li>
       <li><b>Ulubione pytania.</b> Kliknij gwiazdkę <span class="wn-em">☆</span> przy pytaniu, aby dodać je do ulubionych, a przyciskiem <span class="wn-em">★ Ulubione</span> przejrzyj je w dowolnej chwili.</li>
       <li><b>Przeglądanie pytań.</b> Przycisk <span class="wn-em">📖 Przeglądaj</span> pokazuje wszystkie pytania razem z poprawnymi odpowiedziami — bez odpowiadania i bez wpływu na wynik. Jest też wyszukiwarka.</li>
@@ -699,11 +753,12 @@ document.title = PAGE_TITLE;
 document.getElementById('brand-name').textContent = BRAND_NAME;
 
 /* ============================================================
-   KONFIG: MOTYW — domyślny motyw strony ('dark' = ciemny, 'light' = jasny).
-   Użytkownik może go zmienić przełącznikiem „Tryb jasny" w menu ⚙;
-   wybór zapisuje się w localStorage i ma pierwszeństwo przed domyślnym.
+   KONFIG: MOTYW — domyślny motyw strony ('light' = jasny, 'dark' = ciemny).
+   Domyślnie JASNY. Wartość jest też ustawiana wcześnie w <head> (skrypt
+   anty-mignięcie). Użytkownik może ją zmienić przełącznikiem „Tryb jasny"
+   w menu ⚙; wybór zapisuje się w localStorage i ma pierwszeństwo.
    ============================================================ */
-const DEFAULT_THEME = 'dark';
+const DEFAULT_THEME = 'light';
 const THEME_KEY = 'emocjeMotywacje_v1_theme';
 function setTheme(t){
   document.documentElement.dataset.theme = t;
@@ -722,6 +777,8 @@ function setTheme(t){
 })();
 document.getElementById('theme-toggle').addEventListener('change', e=>{
   setTheme(e.target.checked ? 'light' : 'dark');
+  // odśwież odcienie poświaty/blasku zależne od motywu (jasny = morski, ciemny = granat→fiolet)
+  if(typeof applyBloom === 'function') applyBloom();
 });
 
 /* ============================================================
@@ -2425,8 +2482,13 @@ function applyBloom(){
   const e = intensity; 
   
   const colorShiftPoints = Math.max(0, bloom - INTENSITY_TARGET);
-  const accentH = (205 + colorShiftPoints * 15) % 360;
-  const accent2H = (250 + colorShiftPoints * 15) % 360;
+  // Bazowe odcienie zależą od motywu: jasny = morska zieleń (jak kursy),
+  // ciemny = granat → fiolet (bez zmian względem poprzedniej wersji).
+  const light = document.documentElement.dataset.theme === 'light';
+  const baseH  = light ? 172 : 205;
+  const base2H = light ? 150 : 250;
+  const accentH = (baseH + colorShiftPoints * 15) % 360;
+  const accent2H = (base2H + colorShiftPoints * 15) % 360;
 
   const accentS = 22 + e * 52; 
   const accentL = 35 + e * 23; 

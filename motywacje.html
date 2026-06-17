@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motywacja — kurs egzaminacyjny · dr hab. Kasprzak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4F1EA; --paper-2:#EBE7DD; --ink:#221F1A; --ink-soft:#574F45;
+  --ink-faint:#8C8377; --line:#DBD4C7; --line-soft:#E6E0D4; --card:#FFFFFF;
+  --accent:#B5602A; --accent-deep:#8C481D; --warm:#2F8E8F;
+  --b1:#C2722E; --b2:#B0466B; --b3:#4A8A6F; --b4:#4A77B5;
+  --b5:#8A6FB0; --b6:#C0563A; --b7:#2F8E8F;
+  --shadow:0 1px 2px rgba(34,31,26,.04),0 8px 24px rgba(34,31,26,.06);
+  --shadow-lg:0 2px 4px rgba(34,31,26,.05),0 18px 50px rgba(34,31,26,.12);
+  --r:14px; --maxread:50rem;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:1.5rem}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased;font-size:16.5px}
+::selection{background:var(--accent);color:#fff}
+
+/* layout */
+.layout{display:grid;grid-template-columns:clamp(15rem,22vw,17.5rem) 1fr;gap:0;max-width:90rem;margin:0 auto;min-height:100vh}
+.sidebar{position:sticky;top:0;height:100vh;overflow-y:auto;padding:1.6rem 1.1rem 2rem;border-right:1px solid var(--line);background:linear-gradient(180deg,var(--paper) 0%,var(--paper-2) 100%)}
+.main{min-width:0;padding:2.2rem clamp(1.1rem,4vw,3.5rem) 5rem}
+#content{max-width:var(--maxread);margin:0 auto}
+
+/* brand */
+.brand{margin-bottom:1.4rem}
+.brand__kick{font-family:'Space Mono';font-size:.66rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:.4rem}
+.brand__title{font-family:'Space Grotesk';font-weight:700;font-size:1.32rem;line-height:1.05;letter-spacing:-.01em}
+.brand__sub{font-size:.78rem;color:var(--ink-faint);margin-top:.3rem;line-height:1.35}
+
+/* powrót do strony głównej (quiz / index.html) */
+.home-link{display:inline-flex;align-items:center;gap:.45rem;margin-bottom:1.1rem;
+  font-family:'Space Mono';font-size:.68rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink-soft);text-decoration:none;background:var(--card);
+  border:1px solid var(--line);border-radius:10px;padding:.5rem .8rem;box-shadow:var(--shadow);
+  transition:color .15s,border-color .15s,transform .15s,box-shadow .15s}
+.home-link:hover{color:var(--accent);border-color:var(--accent);transform:translateX(-2px);box-shadow:var(--shadow-lg)}
+.home-link .hl-ar{font-size:.95rem;line-height:1}
+
+/* search */
+.search{margin-bottom:1.1rem}
+.search__box{position:relative}
+.search input{width:100%;font-family:inherit;font-size:.86rem;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:.55rem .8rem .55rem 2rem;outline:none;transition:border-color .15s}
+.search input:focus{border-color:var(--accent)}
+.search__icon{position:absolute;left:.65rem;top:50%;transform:translateY(-50%);width:.95rem;height:.95rem;opacity:.45;pointer-events:none}
+.search__hint{font-family:'Space Mono';font-size:.64rem;color:var(--ink-faint);margin-top:.35rem;padding-left:.2rem;min-height:.8rem}
+
+/* nav */
+.nav__group{font-family:'Space Mono';font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin:1rem 0 .5rem .2rem}
+#navList{list-style:none}
+#navList a{display:flex;align-items:center;gap:.6rem;text-decoration:none;color:var(--ink-soft);font-size:.85rem;font-weight:500;padding:.42rem .55rem;border-radius:9px;transition:background .15s,color .15s;line-height:1.2}
+#navList a:hover{background:var(--card);color:var(--ink)}
+#navList a.active{background:var(--card);color:var(--ink);font-weight:600;box-shadow:var(--shadow)}
+.nav__dot{flex:0 0 auto;width:.62rem;height:.62rem;border-radius:3px;background:var(--accent)}
+.nav__n{font-family:'Space Mono';font-size:.68rem;color:var(--ink-faint);flex:0 0 auto;width:1.1rem}
+#navList a.active .nav__n{color:var(--ink-soft)}
+
+/* hero */
+.hero{margin-bottom:2.4rem}
+.hero__kick{font-family:'Space Mono';font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:.7rem}
+.hero h1{font-family:'Space Grotesk';font-weight:700;font-size:clamp(1.9rem,4.5vw,2.9rem);line-height:1.04;letter-spacing:-.02em;margin-bottom:.9rem}
+.hero__lede{font-size:1.06rem;color:var(--ink-soft);max-width:42rem;line-height:1.55}
+.hero__meta{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.3rem}
+.chip{font-family:'Space Mono';font-size:.7rem;font-weight:700;letter-spacing:.03em;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:.32rem .75rem;color:var(--ink-soft)}
+.chip b{color:var(--accent)}
+.hero__note{margin-top:1.5rem;background:linear-gradient(100deg,#2f8e8f12,transparent);border:1px solid var(--line);border-left:3px solid var(--warm);border-radius:11px;padding:.85rem 1.05rem;font-size:.88rem;color:var(--ink-soft);line-height:1.5}
+.hero__note b{color:var(--ink)}
+
+/* compmap (mechanisms) */
+.compmap{margin:1.6rem 0 0;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:1.15rem 1.25rem;box-shadow:var(--shadow)}
+.compmap__t{font-family:'Space Mono';font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:.85rem}
+.compmap__row{display:flex;flex-wrap:wrap;gap:.55rem;align-items:stretch}
+.compcard{flex:1 1 8rem;min-width:8rem;border:1px solid var(--line-soft);border-radius:10px;padding:.6rem .7rem;background:var(--paper)}
+.compcard b{display:block;font-family:'Space Grotesk';font-size:.86rem;color:var(--ink);margin-bottom:.15rem}
+.compcard span{font-size:.74rem;color:var(--ink-faint);line-height:1.35}
+.compcard--aff{border-top:2.5px solid var(--b2)}
+.compcard--cog{border-top:2.5px solid var(--b4)}
+
+/* blocks */
+.block{margin-bottom:3.2rem;scroll-margin-top:1.5rem}
+.block__head{margin-bottom:1.4rem}
+.block__tag{display:inline-flex;align-items:center;gap:.5rem;font-family:'Space Mono';font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:.5rem}
+.block__head h2{font-family:'Space Grotesk';font-weight:700;font-size:clamp(1.5rem,3vw,2rem);line-height:1.1;letter-spacing:-.015em;color:var(--ink)}
+.block__head h2::after{content:"";display:block;width:2.5rem;height:3px;border-radius:2px;background:var(--blockc,var(--accent));margin-top:.6rem}
+.block__intro{font-size:.97rem;color:var(--ink-soft);margin-top:.85rem;line-height:1.55;max-width:42rem}
+.block__intro b{color:var(--ink)}
+
+/* topic cards */
+.topic{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:1.25rem 1.4rem;margin-bottom:1.1rem;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.topic::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--blockc,var(--accent));opacity:.55}
+.topic__head{display:flex;align-items:baseline;gap:.7rem;margin-bottom:.9rem}
+.topic__num{font-family:'Space Mono';font-size:.72rem;font-weight:700;color:var(--blockc,var(--accent));flex:0 0 auto;padding-top:.15rem}
+.topic__term{font-family:'Space Grotesk';font-weight:600;font-size:1.16rem;line-height:1.25;letter-spacing:-.01em;color:var(--ink)}
+.topic__body{display:flex;flex-direction:column;gap:.7rem}
+
+/* slots: definicja / po prostu / przyklad */
+.slot{border-radius:10px;padding:.7rem .85rem .75rem;position:relative}
+.slot__label{display:inline-block;font-family:'Space Mono';font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.3rem}
+.slot p{font-size:.93rem;line-height:1.55}
+.slot p b{font-weight:600}
+.slot--def{background:#b5602a0d;border:1px solid #b5602a26}
+.slot--def .slot__label{color:var(--accent)}
+.slot--plain{background:#2f8e8f0d;border:1px solid #2f8e8f26}
+.slot--plain .slot__label{color:#1f6e64}
+.slot--ex{background:var(--paper-2);border:1px solid var(--line-soft)}
+.slot--ex .slot__label{color:var(--ink-faint)}
+.slot--ex p{color:var(--ink-soft)}
+
+/* notes / callouts */
+.note{display:flex;gap:.6rem;align-items:flex-start;background:var(--paper-2);border-radius:10px;padding:.7rem .85rem;font-size:.86rem;color:var(--ink-soft);line-height:1.5;margin-top:.3rem}
+.note__icon{flex:0 0 auto;font-size:.95rem;line-height:1.4;color:var(--accent)}
+.note b{color:var(--ink)}
+.note--tip{background:#2f8e8f10;border:1px solid #2f8e8f26}
+.note--tip .note__icon{color:#1f6e64}
+
+/* comparison tables */
+.tablewrap{overflow-x:auto;margin-top:.4rem;border-radius:10px;border:1px solid var(--line)}
+table.cmp{width:100%;border-collapse:collapse;font-size:.86rem;min-width:30rem}
+table.cmp th,table.cmp td{text-align:left;padding:.6rem .8rem;border-bottom:1px solid var(--line-soft);vertical-align:top;line-height:1.45}
+table.cmp thead th{background:var(--paper-2);font-family:'Space Grotesk';font-weight:600;color:var(--ink);font-size:.82rem}
+table.cmp tbody tr:last-child td{border-bottom:none}
+table.cmp td:first-child{font-weight:600;color:var(--ink-soft);font-family:'Space Mono';font-size:.78rem}
+.cmp .pos{color:#2f7a4f}
+.cmp .neg{color:#be5039}
+
+/* theory family strips */
+.theories{display:grid;grid-template-columns:repeat(auto-fill,minmax(13rem,1fr));gap:.7rem;margin:.3rem 0 .2rem}
+.tcard{border:1px solid var(--line);border-radius:11px;padding:.8rem .9rem;background:var(--card);box-shadow:var(--shadow)}
+.tcard__who{font-family:'Space Grotesk';font-weight:600;font-size:.92rem;color:var(--ink);margin-bottom:.15rem}
+.tcard__who span{font-family:'Space Mono';font-size:.68rem;font-weight:400;color:var(--ink-faint);display:block;margin-top:.1rem}
+.tcard p{font-size:.82rem;color:var(--ink-soft);line-height:1.45;margin-top:.35rem}
+.formula{font-family:'Space Mono';font-size:.82rem;background:var(--paper-2);border-radius:7px;padding:.5rem .7rem;margin:.5rem 0;color:var(--ink);display:inline-block}
+
+/* widgets */
+.widget{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:1.2rem 1.3rem 1.35rem;margin:1.4rem 0;box-shadow:var(--shadow-lg)}
+.widget__title{font-family:'Space Grotesk';font-weight:600;font-size:1.05rem;color:var(--ink);margin-bottom:.25rem;display:flex;align-items:center;gap:.5rem}
+.widget__title::before{content:"";width:.7rem;height:.7rem;border-radius:50%;background:var(--accent)}
+.widget__desc{font-size:.85rem;color:var(--ink-soft);margin-bottom:1rem;line-height:1.5}
+
+/* deep details */
+details.deep{margin-top:.5rem;border:1px dashed var(--line);border-radius:10px;overflow:hidden}
+details.deep summary{cursor:pointer;font-family:'Space Mono';font-size:.74rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);padding:.6rem .85rem;list-style:none;display:flex;align-items:center;gap:.5rem;user-select:none}
+details.deep summary::-webkit-details-marker{display:none}
+details.deep summary::before{content:"+";font-size:1rem;color:var(--accent)}
+details.deep[open] summary::before{content:"–"}
+details.deep summary:hover{color:var(--ink)}
+details.deep .deep__body{padding:0 .85rem .85rem;font-size:.88rem;color:var(--ink-soft);line-height:1.55}
+details.deep .deep__body p{margin-top:.5rem}
+
+/* footer */
+.footer{border-top:1px solid var(--line);margin-top:3rem;padding-top:1.5rem;font-size:.85rem;color:var(--ink-faint);line-height:1.55}
+.footer b{color:var(--ink-soft)}
+
+/* search no-results */
+.no-results{display:none;text-align:center;padding:3rem 1rem;color:var(--ink-faint);font-size:.95rem}
+.no-results.show{display:block}
+mark{background:#f2c14e66;color:inherit;padding:0 .1em;border-radius:3px}
+
+/* reveal */
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease}
+.reveal.in{opacity:1;transform:none}
+
+/* mobile */
+.topbar{display:none}
+#scrim{display:none}
+@media(max-width:880px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{position:fixed;top:0;left:0;width:min(80vw,20rem);z-index:50;transform:translateX(-100%);transition:transform .25s ease;box-shadow:var(--shadow-lg)}
+  .sidebar.open{transform:none}
+  .topbar{display:flex;align-items:center;gap:.8rem;position:sticky;top:0;z-index:40;background:var(--paper);border-bottom:1px solid var(--line);padding:.7rem 1rem}
+  #menuBtn{background:var(--card);border:1.5px solid var(--line);border-radius:9px;width:2.3rem;height:2.3rem;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto}
+  #menuBtn span,#menuBtn span::before,#menuBtn span::after{content:"";display:block;width:1.1rem;height:2px;background:var(--ink);position:relative;transition:.2s}
+  #menuBtn span::before{position:absolute;top:-.36rem}
+  #menuBtn span::after{position:absolute;top:.36rem}
+  .topbar__t{font-family:'Space Grotesk';font-weight:700;font-size:.98rem}
+  .topbar__t span{color:var(--accent);font-family:'Space Mono';font-size:.66rem;display:block;letter-spacing:.1em;text-transform:uppercase}
+  #scrim.show{display:block;position:fixed;inset:0;background:rgba(34,31,26,.4);z-index:45}
+  .main{padding:1.4rem 1.15rem 4rem}
+}
+@media(max-width:520px){
+  body{font-size:16px}
+  .topic{padding:1.05rem 1.1rem}
+  .hero__lede{font-size:1rem}
+}
+
+/* print */
+@media print{
+  .sidebar,.topbar,.widget,#scrim{display:none!important}
+  .layout{grid-template-columns:1fr}
+  .topic,.tcard{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+  .reveal{opacity:1!important;transform:none!important}
+  body{font-size:11pt}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button id="menuBtn" aria-label="Menu"><span></span></button>
+  <div class="topbar__t"><span>Część 2 · Motywacja</span>Kurs egzaminacyjny</div>
+</div>
+<div id="scrim"></div>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <a class="home-link" href="index.html"><span class="hl-ar">←</span> Strona główna · Quiz</a>
+    <div class="brand">
+      <div class="brand__kick">Emocje i Motywacje · Cz. 2</div>
+      <div class="brand__title">Motywacja</div>
+      <div class="brand__sub">dr hab. E. Kasprzak · UKW<br>kurs egzaminacyjny</div>
+    </div>
+    <div class="search">
+      <div class="search__box">
+        <svg class="search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="20" y2="20"/></svg>
+        <input id="searchInput" type="text" placeholder="Szukaj pojęcia…" autocomplete="off">
+      </div>
+      <div class="search__hint" id="searchHint">100+ zagadnień · 7 bloków</div>
+    </div>
+    <nav>
+      <div class="nav__group">Bloki tematyczne</div>
+      <ul id="navList">
+        <li><a href="#blok1"><span class="nav__n">01</span><span class="nav__dot" style="background:var(--b1)"></span>Czym jest motywacja</a></li>
+        <li><a href="#blok2"><span class="nav__n">02</span><span class="nav__dot" style="background:var(--b2)"></span>Biologia i uczenie się</a></li>
+        <li><a href="#blok3"><span class="nav__n">03</span><span class="nav__dot" style="background:var(--b3)"></span>Potrzeby jako motywy</a></li>
+        <li><a href="#blok4"><span class="nav__n">04</span><span class="nav__dot" style="background:var(--b4)"></span>Cele i oczekiwania</a></li>
+        <li><a href="#blok5"><span class="nav__n">05</span><span class="nav__dot" style="background:var(--b5)"></span>Ja, samoocena, kontrola</a></li>
+        <li><a href="#blok6"><span class="nav__n">06</span><span class="nav__dot" style="background:var(--b6)"></span>Optymizm, nadzieja, depresja</a></li>
+        <li><a href="#blok7"><span class="nav__n">07</span><span class="nav__dot" style="background:var(--b7)"></span>Autodeterminacja i pasja</a></li>
+        <li><a href="#quiz"><span class="nav__n">★</span><span class="nav__dot" style="background:var(--ink)"></span>Quiz powtórkowy</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main">
+  <div id="content">
+
+  <section class="hero reveal">
+    <div class="hero__kick">Emocje i Motywacje · Część 2 z 2</div>
+    <h1>Motywacja — co uruchamia i podtrzymuje nasze działanie</h1>
+    <p class="hero__lede">Pełny kurs do egzaminu z motywacji u dr hab. Elżbiety Kasprzak. Od biologicznych podstaw (popęd, pobudzenie, struktury mózgowe) przez poznawcze motywy (cele, oczekiwania, samoocena, atrybucje) po wielką syntezę — teorię autodeterminacji. Każde zagadnienie w stałym układzie: <b>Definicja → Po prostu → Przykład</b>.</p>
+    <div class="hero__meta">
+      <span class="chip">7 bloków</span>
+      <span class="chip"><b>100+</b> zagadnień</span>
+      <span class="chip">5 modeli interaktywnych</span>
+      <span class="chip">quiz</span>
+    </div>
+
+    <div class="compmap">
+      <div class="compmap__t">Oś całego kursu · dwa mechanizmy motywacyjne</div>
+      <div class="compmap__row">
+        <div class="compcard compcard--aff"><b>Mechanizm afektywny</b><span>biologiczny: popędy, emocje, pobudzenie AUN, instynkty, system gorący</span></div>
+        <div class="compcard compcard--cog"><b>Mechanizm poznawczy</b><span>uczenie się (nawyki) + reprezentacje poznawcze: cele, oczekiwania, przekonania, atrybucje</span></div>
+      </div>
+    </div>
+
+    <div class="hero__note">
+      <b>To osobny moduł niż Emocje.</b> Inny prowadzący (Kasprzak, nie Basińska) i inny zakres. Materiał oparto na dwóch wykładach Kasprzak (2024-25) jako podstawie, uzupełnionych o zagadnienia realnie odpytywane na egzaminie (m.in. kontinuum autodeterminacji z typami regulacji, cele osiągnięć 2×2). <b>Powtórka:</b> kilka pojęć (pasja Valleranda, wyuczona bezradność, Yerkes-Dodson) pojawiło się już w module Emocje — tu ujęte od strony motywacji.
+    </div>
+  </section>
+
+<!-- ===================== BLOK 1 ===================== -->
+<section class="block reveal" id="blok1" style="--blockc:var(--b1);--blockc-soft:#c2722e14">
+  <div class="block__head">
+    <div class="block__tag"><span class="nav__dot" style="background:var(--b1)"></span>Blok 01 · Podstawy</div>
+    <h2>Czym jest motywacja</h2>
+    <p class="block__intro">Fundament całego kursu. Motywacja odpowiada na pytanie <b>„dlaczego ktoś zachowuje się tak, a nie inaczej"</b> — dlaczego jeden działa adaptacyjnie, a inny dezadaptacyjnie. Tu poznasz definicję, trzy aspekty (energia, kierunek, regulacja), dwa wielkie mechanizmy (afektywny i poznawczy) oraz logikę dążenia i unikania.</p>
+  </div>
+
+  <article class="topic" id="t1-1">
+    <div class="topic__head"><span class="topic__num">1.1</span><h3 class="topic__term">Definicja motywacji</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Procesy motywacyjne obejmują <b>mechanizmy uruchamiające oraz podtrzymujące zachowanie</b>. Motywacja to <b>proces wzbudzający działanie, utrzymujący je w toku i regulujący jego przebieg</b> (Murphy, 1947). Dotyczy determinant zachowania ludzi i zwierząt; opisuje, co odpowiada za <b>energię, wytrwałość i ukierunkowanie</b> zachowania.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Motywacja to odpowiedź na pytanie „<b>co sprawia, że w ogóle coś robimy i nie odpuszczamy</b>". Trzy słowa-klucze: <b>energia</b> (siła), <b>wytrwałość</b> (trwanie) i <b>kierunek</b> (na co).</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Student siada do nauki (uruchomienie), uczy się przez trzy godziny mimo zmęczenia (podtrzymanie) i robi to, by zdać egzamin (ukierunkowanie) — wszystkie trzy elementy w jednym zachowaniu.</p></div>
+    </div>
+    <div class="note"><span class="note__icon">◆</span><div>Cytat z wykładu (Rizzolatti): <i>„Niejasność definicyjna usprawiedliwia każdy wniosek"</i> — motywacja jest pojęciem nieostrym; ma <b>względną odrębność</b> wobec innych procesów (np. emocji), a jej granice wyznacza kontekst sytuacyjny.</div></div>
+  </article>
+
+  <article class="topic" id="t1-2">
+    <div class="topic__head"><span class="topic__num">1.2</span><h3 class="topic__term">Trzy aspekty motywacji</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Motywacja obejmuje: <b>aspekt energetyczny</b> (ile siły i pobudzenia wkładamy w działanie), <b>kierunek</b> (na jaki cel/przedmiot jest skierowane) oraz <b>regulację przebiegu</b> (jak działanie jest podtrzymywane i modyfikowane w czasie), a także <b>treść</b> tego działania.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Trzy pytania: <b>ile mocy?</b> (energia), <b>w którą stronę?</b> (kierunek), <b>jak to prowadzić?</b> (regulacja). Sama energia bez kierunku to chaos; sam kierunek bez energii to bezruch.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Bieganie maratonu: energia (mobilizacja organizmu), kierunek (ukończyć bieg), regulacja (rozłożenie sił, zwolnienie na podbiegach, przyspieszenie na finiszu).</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t1-3">
+    <div class="topic__head"><span class="topic__num">1.3</span><h3 class="topic__term">Czynniki wywołujące zachowanie</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Zachowanie wywołują trzy grupy czynników: <b>biologiczne</b> (emocja, popęd, instynkt, potrzeba), <b>psychologiczne</b> (wewnętrzny nacisk, chęć, impuls, pragnienie) oraz <b>przedmiotowe/środowiskowe — zewnętrzne</b> (cel, zainteresowanie, postawy, zamiar, plan, wartość). Można je analizować na wymiarach: <b>biologiczne–społeczne, teraźniejsze–przyszłościowe, przyciąganie–odpychanie, wrodzone–nabyte, cielesne–psychiczne</b>. Wymiary te nie są ani pełne, ani rozłączne.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Do działania popycha nas troje „rodzajów sił": <b>ciało</b> (popędy, potrzeby), <b>psychika</b> (chęci, pragnienia) i <b>świat zewnętrzny</b> (cele, wartości). Zwykle działają razem, a granice między nimi się zacierają.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Sięgasz po jabłko, bo jesteś głodny (biologiczne), bo masz ochotę na coś słodkiego (psychologiczne) i bo leży kuszące w misce na stole (środowiskowe).</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t1-4">
+    <div class="topic__head"><span class="topic__num">1.4</span><h3 class="topic__term">Dwa mechanizmy motywacyjne: afektywny i poznawczy</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Wyróżnia się dwa nadrzędne mechanizmy motywacyjne: <b>afektywny</b> (biologiczny — popędy, emocje, pobudzenie, instynkty) oraz <b>poznawczy</b> (uczenie się oraz schematy/reprezentacje poznawcze: cele, oczekiwania, przekonania). Motywacja do działania (dążenie–unikanie/hamowanie) wynika ze współdziałania obu.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Dwa „silniki" motywacji: <b>gorący/biologiczny</b> (emocje, popędy — działa szybko) i <b>chłodny/poznawczy</b> (myślenie, cele, nauczone wzorce — działa rozważnie). To oś, do której wrócą wszystkie teorie w tym kursie.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Rzucasz palenie: mechanizm afektywny ciągnie po papierosa (popęd, ulga emocjonalna), mechanizm poznawczy trzyma postanowienie (cel zdrowotny, przekonania o sobie).</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t1-5">
+    <div class="topic__head"><span class="topic__num">1.5</span><h3 class="topic__term">Trzy mechanizmy kierunku: potrzeby, nawyki, cele</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Kierunek zachowania wyjaśniają trzy mechanizmy (wszystkie trzeba uwzględnić): <b>(1) potrzeby/popędy</b> — odczuwane jako napięcie, silne podłoże biologiczne; <b>(2) uczenie się (nawyki)</b> — wyznacza cel przez przyzwyczajenie; <b>(3) myślenie (reprezentacja poznawcza)</b> — wyznacza cel przez namysł. Kluczowa teza: <b>to cel wyznacza przedmiot zachowania, a nie popęd ani potrzeba</b>. Popęd może być nawet odroczony lub zaniechany.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Popęd daje <b>energię i napięcie</b>, ale to <b>cel</b> decyduje, co konkretnie zrobimy. Ten sam głód można zaspokoić kanapką (nawyk) albo sałatką (myślenie: „zdrowo się odżywiam") — albo w ogóle odłożyć (post). Popęd „pcha", cel „kieruje".</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Popęd głodu wyzwala dążenie do jedzenia. Czy zjesz kanapkę, sałatkę, czy pościsz, zależy od nawyku albo od myślenia (np. przekonania religijne, solidarność z odchudzającym się partnerem) — nie od samego popędu.</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t1-6">
+    <div class="topic__head"><span class="topic__num">1.6</span><h3 class="topic__term">Dążenie i unikanie</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p><b>Dążenie–unikanie</b> to stała dyspozycja wyznaczająca kierunek działania (przez emocje i cel). Cele i potrzeby bywają konkretne, choć nie zawsze (np. dążenie do niezależności, unikanie wynikające z uogólnionego lęku). Możliwy jest <b>konflikt motywów</b> dążenia i unikania. Pragnienie unikania bywa <b>silniejsze</b> niż dążenia — to ewolucyjnie wykształcona tendencja (<b>loss aversion</b>): błędna ocena zagrożenia i przeżycie są „tańsze" niż błędna ocena bezpieczeństwa i utrata życia.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Dwa bieguny: <b>iść ku czemuś</b> (nagroda) lub <b>uciekać od czegoś</b> (zagrożenie). Ewolucja ustawiła nas tak, że <b>strata boli mocniej niż cieszy zysk</b> — dlatego unikanie często wygrywa. Czasem ten sam cel i przyciąga, i odpycha (konflikt).</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Rozmowa z autorytetem: intryguje (dążenie — „chcę pogadać z kimś mądrym") i jednocześnie przeraża (unikanie — „a jak się ośmieszę?"). To klasyczny konflikt dążenie–unikanie.</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t1-7">
+    <div class="topic__head"><span class="topic__num">1.7</span><h3 class="topic__term">System gorący i zimny (Metcalfe i Mischel)</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Skuteczne dążenie–unikanie zależy od trzech mechanizmów (potrzeby–nawyki–cele) oraz od działania dwóch systemów przetwarzania informacji (Metcalfe, Mischel, 1999). <b>System gorący</b>: szybki, emocjonalny, nastawiony na natychmiastową gratyfikację, prosty, odruchowy, <b>nasila się w stresie</b>, kontrolowany przez bodźce. <b>System zimny</b>: rozwija się później, wolny, trwały, złożony, refleksyjny, <b>słabnie w stresie</b>, kontrolowany przez jednostkę.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>W głowie walczą dwa tryby: <b>gorący</b> („chcę TERAZ", emocje, impuls — pod presją robi się głośniejszy) i <b>zimny</b> („pomyśl, zaplanuj" — pod stresem cichnie). Samokontrola = włączyć zimny, gdy gorący krzyczy.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Uczyć się do sesji czy obejrzeć ulubiony serial? System gorący ciągnie do serialu (natychmiastowa przyjemność), zimny przypomina o egzaminie (cel odroczony).</p></div>
+    </div>
+    <div class="note note--tip"><span class="note__icon">→</span><div>Analogiczne ujęcia tego samego podziału: <b>droga korowa–podkorowa</b> (LeDoux), <b>remembering self / experiencing self</b>, <b>slow/fast thinking</b> oraz metafora <b>słoń i jeździec</b> (zob. D. Kahneman, <i>Pułapki myślenia</i>).</div></div>
+  </article>
+</section>
+
+<!-- ===================== BLOK 2 ===================== -->
+<section class="block reveal" id="blok2" style="--blockc:var(--b2);--blockc-soft:#b0466b14">
+  <div class="block__head">
+    <div class="block__tag"><span class="nav__dot" style="background:var(--b2)"></span>Blok 02 · Mechanizm afektywny</div>
+    <h2>Biologiczne podstawy i uczenie się</h2>
+    <p class="block__intro">Skąd bierze się energia działania. Najpierw klasyczne teorie (instynkt, popęd, wzmocnienia, modelowanie), potem biologia pobudzenia: struktury mózgowe, prawo Yerkesa-Dodsona, teoria odwróconego kierunku i temperamentalne źródła pobudzenia (Eysenck, Gray). Myśl przewodnia: <b>popęd dostarcza energii, a uczenie się — kierunku</b>.</p>
+  </div>
+
+  <article class="topic" id="t2-1">
+    <div class="topic__head"><span class="topic__num">2.1</span><h3 class="topic__term">Motywacja jako instynkt</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Najwcześniejsze, biologiczne ujęcie wynikające z teorii ewolucji: zachowanie tłumaczone jest <b>wrodzonymi instynktami</b>. Założenie: celem każdego zachowania jest <b>przystosowanie do środowiska</b>; w toku ewolucji przewagę zyskały zachowania zwiększające szanse na <b>przeżycie i reprodukcję</b> (inne cele, np. panowanie nad światem, są drugorzędne).</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Pierwsze wyjaśnienie: „robimy to, bo tak nas zaprogramowała natura". Ewolucja premiowała zachowania, które pomagały <b>przeżyć i się rozmnożyć</b> — to one stały się naszymi wbudowanymi popędami.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Odruch ssania u noworodka, reakcja lękowa na nagły hałas, dbanie o potomstwo — zachowania, których nikt nie musiał uczyć, bo są ewolucyjnie „wgrane".</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t2-2">
+    <div class="topic__head"><span class="topic__num">2.2</span><h3 class="topic__term">Teoria popędu Hulla</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Clark Hull (1943): zachowanie wyjaśniane <b>mechanizmami biologicznymi</b>. <b>Popęd dostarcza energii</b>, a <b>uczenie się — kierunku</b> działania; emocje są <b>efektem ubocznym</b> motywacji (zaspokojenia lub niezaspokojenia popędu). Formuła: <b>zachowanie = popędy × nawyki</b>. Działanie zmierza do <b>redukcji popędu</b> (powrotu do równowagi).</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Popęd to „<b>paliwo</b>", nawyk to „<b>kierownica</b>". Mnożymy jedno przez drugie — bez paliwa nie ruszysz, bez kierownicy nie wiesz dokąd. Działamy, żeby <b>zredukować napięcie</b> popędu.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Pragnienie (popęd) napędza, a wyuczony nawyk (sięgnąć po butelkę z wodą) nadaje kierunek. Po napiciu się popęd słabnie — to redukcja popędu.</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t2-3">
+    <div class="topic__head"><span class="topic__num">2.3</span><h3 class="topic__term">Teoria uczenia się Skinnera</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>B.F. Skinner (lata 60.): <b>uczenie się następuje nawet bez redukcji popędu</b>. Odejście od wewnętrznego mechanizmu redukcji popędu na rzecz <b>zewnętrznych wzmocnień i nagród</b> (oraz kar). <b>Wzmacnianie częściowe (wybiórcze)</b> kształtuje wytrwałość. <b>Modyfikacja zachowań</b> = postępowanie w celu eliminacji niepożądanych zachowań i nabywania pożądanych. Energia, siła i kierunek zachowania zależą od wzmocnień.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Nie musisz być głodny, żeby się uczyć — wystarczą <b>nagrody i kary z zewnątrz</b>. Ciekawostka: nagradzanie <b>nieregularne</b> (częściowe) daje większą wytrwałość niż nagradzanie za każdym razem.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Automaty do gier działają na wzmocnieniu częściowym — wygrana pojawia się nieregularnie, co buduje wyjątkowo trwały (i trudny do wygaszenia) nawyk grania.</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t2-4">
+    <div class="topic__head"><span class="topic__num">2.4</span><h3 class="topic__term">Społeczne uczenie się Bandury</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Albert Bandura: wzmocnienia <b>nie muszą być tylko zewnętrzne</b>, a nawyki tworzą się <b>bez nagród i kar</b>. Nowe zachowanie jest wynikiem <b>modelowania</b> — naśladowania zachowań innych. Zachowanie wynika z informacji pozyskiwanych ze środowiska (zachowań innych ludzi i ich następstw). Obserwacja osoby, która dzięki swojemu zachowaniu uzyskuje nagrodę, to <b>wzmocnienie zastępcze</b> (vicarious reinforcement).</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Uczymy się też przez <b>podglądanie innych</b>. Jeśli widzę, że ktoś za coś dostaje nagrodę, „uczę się" tego zachowania, choć sam nagrody nie dostałem — to wzmocnienie zastępcze.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Dziecko widzi, że starsze rodzeństwo dostaje pochwałę za sprzątanie — i samo zaczyna sprzątać, choć jeszcze nikt go za to nie nagrodził (uczenie przez model + wzmocnienie zastępcze).</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t2-5">
+    <div class="topic__head"><span class="topic__num">2.5</span><h3 class="topic__term">Rola nawyków i automatyzmów</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Nawyki <b>upraszczają funkcjonowanie</b> i redukują wysiłek wkładany w codzienne życie — odpowiadają za <b>odciążenie pamięci roboczej</b> (automatyzacja reakcji „odciąża mózg" od wysiłku). Im większy postęp, tym więcej nawyków (dobrych, złych i neutralnych). Najbardziej pożądane są nawyki, które <b>pomagają utrzymać motywację</b> i ułatwiają wprowadzanie pozytywnych zmian.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Nawyk to „<b>działanie na autopilocie</b>" — robisz coś bez świadomego wysiłku, więc mózg ma wolne moce na ważniejsze rzeczy. Dlatego dobre nawyki są na wagę złota: niosą Cię, gdy brakuje motywacji.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Mycie zębów rano nie wymaga decyzji ani siły woli — robisz to automatycznie. Ta sama zasada działa na nawyki nauki czy treningu: gdy się zautomatyzują, nie trzeba się do nich zmuszać.</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t2-6">
+    <div class="topic__head"><span class="topic__num">2.6</span><h3 class="topic__term">Struktury mózgowe pobudzenia motywacyjnego</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Pobudzenie motywacyjne (lub hamowanie) przejawia się w aktywacji <b>CUN</b> (centralny układ nerwowy), na który składają się <b>SUN</b> (somatyczny — silniej powiązany z celowym, świadomym działaniem) i <b>AUN</b> (autonomiczny — względnie niezależny od CUN). CUN jest pobudzany dzięki <b>tworowi siatkowatemu (RAS</b>, Reticular Activating System), zlokalizowanemu w rdzeniu przedłużonym: kontroluje stan pobudzenia, czuwania i przytomności; dzieli się na układ wstępujący (do wzgórza, podwzgórza, kory) i zstępujący. Pobudzenie jest efektem pracy <b>podwzgórza</b> → cz. współczulna AUN → aktywacja <b>rdzenia nadnerczy</b> → wydzielanie <b>epinefryny i norepinefryny</b> (wpływają na siłę emocji, nie ich treść — ta zależy od kontekstu).</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p><b>RAS</b> to „<b>włącznik czuwania</b>" mózgu — reguluje, jak bardzo jesteśmy pobudzeni. Podwzgórze uruchamia nadnercza, te wyrzucają adrenalinę/noradrenalinę, które <b>podkręcają siłę</b> przeżycia — ale o tym, <i>co</i> czujemy, decyduje sytuacja.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Mocna kawa i głośna muzyka „podkręcają" RAS — czujesz się pobudzony i gotowy do działania. Czy ta energia stanie się ekscytacją czy złością, zależy od kontekstu.</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t2-7">
+    <div class="topic__head"><span class="topic__num">2.7</span><h3 class="topic__term">Pobudzenie a afekt</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Zależność między pobudzeniem a kolorytem afektu jest <b>różna dla różnych układów</b>: między <b>pobudzeniem autonomicznym (AUN) a afektem</b> zachodzi zależność <b>odwróconego U</b> (umiarkowane pobudzenie sprzyja pozytywnemu afektowi, skrajne — obniżają go), natomiast między <b>pobudzeniem korowym a afektem</b> zależność jest <b>liniowa</b>. Pobudzenie AUN w <b>dłuższym czasie</b> manifestuje się stresem i negatywnym afektem (Eysenck).</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Trochę pobudzenia poprawia nastrój, za dużo — psuje (krzywa „odwróconego U" dla układu autonomicznego). Ale jeśli pobudzenie AUN <b>trwa długo</b>, zamienia się w stres i negatywny afekt.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Lekka ekscytacja przed występem poprawia samopoczucie; panika je rujnuje. A jeśli napięcie utrzymuje się tygodniami (AUN „na wysokich obrotach") — pojawia się chroniczny stres.</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t2-8">
+    <div class="topic__head"><span class="topic__num">2.8</span><h3 class="topic__term">Pobudzenie a efektywność: prawo Yerkesa-Dodsona</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p><b>Hipoteza optymalnej stymulacji</b> (Eysenck, Yerkes-Dodson). <b>Dwa prawa Yerkesa-Dodsona (1908)</b>: (1) efektywność rośnie wraz z pobudzeniem do pewnego optimum, potem spada (odwrócone U); (2) <b>optymalny poziom pobudzenia zależy od trudności zadania</b> — dla zadań łatwych wyższe pobudzenie pomaga, dla trudnych i nowych szkodzi (zaburza uwagę i koncentrację). Wsparcie z badań nad <b>deprywacją sensoryczną</b> (zbyt niskie pobudzenie → spadek efektywności, halucynacje) i nad <b>lękiem</b>.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Jest „złoty środek" pobudzenia. Im <b>trudniejsze i nowsze</b> zadanie, tym <b>niżej</b> leży ten optymalny punkt. Badania nad deprywacją sensoryczną pokazały drugą stronę: <b>brak bodźców</b> też rujnuje działanie (po dobach pojawiają się halucynacje).</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Egzamin (zadanie trudne, nowe): zbyt wysokie pobudzenie dezorganizuje myślenie. Prosty bieg na czas (zadanie łatwe): wysoka adrenalina pomaga. Czytanie bajki dziecku wymaga „podkręcenia się", by zrobić to z zaangażowaniem.</p></div>
+    </div>
+  </article>
+
+  <div class="widget">
+    <div class="widget__title">Krzywa Yerkesa-Dodsona</div>
+    <div class="widget__desc">Przesuń suwak pobudzenia i przełącz trudność zadania. Zobacz, jak optimum przesuwa się w lewo dla zadań trudnych i nowych.</div>
+    <div id="yd-mount"></div>
+  </div>
+
+  <article class="topic" id="t2-9">
+    <div class="topic__head"><span class="topic__num">2.9</span><h3 class="topic__term">Teoria odwróconego kierunku (Apter)</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p><b>Reversal theory</b> (Michael Apter, od lat 80.). Ludzie w jednych sytuacjach <b>dążą do dostymulowania</b>, w innych je <b>ograniczają</b> — i <b>przechodzą (przełączają się) z jednego stanu w drugi</b>. <b>Cele teliczne</b> wyznaczone są motywem osiągnięć: dominuje efektywność, nastawienie na wynik i przyszłość (zasada skuteczności). <b>Cele parateliczne</b> mają charakter przyjemnościowy: koncentracja na teraźniejszości, powiększaniu przyjemności i trwaniu samej czynności (zasada przyjemności). Apter wyróżnia <b>4 pary stanów metamotywacyjnych</b>.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Czasem chcemy „dać czadu" (więcej bodźców), czasem wyciszyć się — i <b>przeskakujemy</b> między tymi trybami. Cel <b>teliczny</b> = „liczy się wynik" (skuteczność). Cel <b>parateliczny</b> = „liczy się sama zabawa, tu i teraz" (przyjemność).</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Jedziesz w trasę z tempomatem, słuchasz muzyki, czerpiesz radość (parateliczny). Nagle robi się niebezpiecznie na drodze — przeskakujesz na cel teliczny (skupienie, bezpieczeństwo, wynik). To samo z grą w piłkę: z zabawy (parateliczny) przechodzi w skuteczność drużyny (teliczny).</p></div>
+    </div>
+    <details class="deep">
+      <summary>Cztery pary stanów metamotywacyjnych Aptera</summary>
+      <div class="deep__body">
+        <p><b>teliczny – parateliczny</b>: cele (poważnie, na wynik) ↔ zabawa (przyjemność, tu i teraz).</p>
+        <p><b>konformistyczny – negatywistyczny</b>: ugodowo-konwencjonalny ↔ prowokująco-niekonwencjonalny.</p>
+        <p><b>władzy – współodczuwania</b>: rywalizujący ↔ uczuciowy.</p>
+        <p><b>autyczny – alloiczny</b>: uwaga skierowana na siebie ↔ uwaga skierowana na innych.</p>
+      </div>
+    </details>
+  </article>
+
+  <article class="topic" id="t2-10">
+    <div class="topic__head"><span class="topic__num">2.10</span><h3 class="topic__term">Źródła pobudzenia: cecha vs stan (Eysenck, Gray)</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Pobudzenie ma dwa źródła. <b>(1) Niezależne od otoczenia = cecha osoby</b> (pobudzenie osobowościowe, afektywność): wymiary <b>ekstrawersja–introwersja</b> oraz <b>neurotyzm–stabilność</b> (Eysenck), a także <b>impulsywność–lęk</b> (Gray). <b>(2) Zależne od otoczenia = stan</b> (pobudzenie sytuacyjne, wynik interakcji osoby z sytuacją): przeciążenie informacyjne/stymulacyjne, dysonans poznawczy, ekspozycja na ocenę (egzamin, rywalizacja). U Graya: <b>BIS</b> (behawioralny układ hamujący — lęk, neurotyczność) i <b>BAS</b> (układ nawiązywania kontaktu — impulsywność, nadzieja).</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Pobudzenie bierze się albo z <b>tego, jacy jesteśmy</b> (introwertyk pobudza się szybciej, ekstrawertyk potrzebuje silniejszych bodźców), albo z <b>sytuacji</b> (tłok, egzamin, konflikt). Gray dodaje dwa systemy: <b>BIS</b> = „hamulec/lęk", <b>BAS</b> = „gaz/dążenie do nagrody".</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Introwertyk na głośnej imprezie szybko czuje przebodźcowanie (cecha), a każdy zdaje egzamin w napięciu (stan). Osoba z silnym BAS rwie się do nagród i ryzyka; z silnym BIS — hamuje i wycofuje się wobec zagrożenia.</p></div>
+    </div>
+  </article>
+</section>
+
+<!-- ===================== BLOK 3 ===================== -->
+<section class="block reveal" id="blok3" style="--blockc:var(--b3);--blockc-soft:#4a8a6f14">
+  <div class="block__head">
+    <div class="block__tag"><span class="nav__dot" style="background:var(--b3)"></span>Blok 03 · Potrzeby</div>
+    <h2>Potrzeby jako motywy działania</h2>
+    <p class="block__intro">Co popycha nas „od środka". Od hierarchii Maslowa, przez trzy uniwersalne potrzeby psychologiczne (autonomia, kompetencja, relacje), po potrzebę osiągnięć i klasyczny model motywacji osiągnięć Atkinsona. Klucz: <b>potrzeba jest dyspozycją — ludzie różnią się jej siłą i tym, co ją zaspokaja</b>.</p>
+  </div>
+
+  <article class="topic" id="t3-1">
+    <div class="topic__head"><span class="topic__num">3.1</span><h3 class="topic__term">Potrzeba jako dyspozycja</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Potrzeby są <b>źródłem działania</b>. Potrzeba jest <b>dyspozycją</b> — ludzie różnią się potrzebami (ich <b>siłą</b>) albo ich <b>gratyfikatorami</b> w wyniku uczenia się. Przyczynami działania są <b>cele</b> (zachęty pozytywne) i <b>zagrożenia</b> (zachęty negatywne) — Atkinson, Birch (1978), Weiner (1974). Emocje współtowarzyszące motywacji prowadzą do ekspresji zachowania, służą adaptacji i <b>wzmacniają</b> konkretne zachowania (duma, satysfakcja — prawo efektu Thorndike'a, 1913).</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Potrzeba to nie chwilowy kaprys, lecz <b>trwała skłonność</b>. Dwie osoby mogą mieć tę samą potrzebę, ale o różnej sile — i zaspokajać ją czym innym (bo nauczyły się różnych „gratyfikatorów").</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Potrzebę uznania jeden zaspokaja awansem w pracy, drugi lajkami w sieci, trzeci pochwałą trenera — ta sama dyspozycja, różne gratyfikatory wyuczone w życiu.</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t3-2">
+    <div class="topic__head"><span class="topic__num">3.2</span><h3 class="topic__term">Hierarchia potrzeb Maslowa</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Abraham Maslow (1943, 1970): potrzeby układają się w <b>hierarchię</b> — od podstawowych (deficytowych) po wyższe (wzrostu). Od dołu: <b>fizjologiczne → bezpieczeństwa → przynależności → szacunku → poznawcze → estetyczne → samoaktualizacji</b>. Zasadniczo niższe potrzeby muszą być (przynajmniej częściowo) zaspokojone, by aktywowały się wyższe.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Drabina potrzeb: najpierw <b>przetrwanie i bezpieczeństwo</b>, potem <b>więzi i uznanie</b>, na końcu <b>rozwój i stawanie się sobą</b>. Trudno myśleć o samorealizacji, gdy jesteś głodny i przerażony.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Człowiek w kryzysie (brak jedzenia, dachu) nie zajmuje się rozwojem pasji — całą energię pochłaniają potrzeby z dołu piramidy. Gdy są zaspokojone, „budzą się" potrzeby wyższe.</p></div>
+    </div>
+  </article>
+
+  <div class="widget">
+    <div class="widget__title">Piramida potrzeb Maslowa</div>
+    <div class="widget__desc">Kliknij poziom, aby zobaczyć opis i przykład. Niższe poziomy (deficytu) zwykle muszą być zaspokojone, zanim aktywują się wyższe (wzrostu).</div>
+    <div id="maslow-mount"></div>
+  </div>
+
+  <article class="topic" id="t3-3">
+    <div class="topic__head"><span class="topic__num">3.3</span><h3 class="topic__term">Podstawowe potrzeby psychologiczne (Deci i Ryan)</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Model podstawowych potrzeb psychologicznych (Deci & Ryan, 1985, 1991): <b>autonomia, kompetencja i relacje z innymi</b> (autonomy, competence, relatedness). Są <b>biologicznie zdeterminowane (wewnętrzne)</b>, stanowią <b>wartości</b> (nie braki!), które sprzyjają wyznaczaniu zgodnych z nimi celów; ukierunkowują na szukanie szans i korzyści. Są <b>wyższe</b> (poza egzystencjalnymi) i <b>uniwersalne</b> (Ryan, Deci, 2000). Ich zaspokojenie skutkuje aktywnością, <b>motywacją wewnętrzną</b> i satysfakcją życiową.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Trzy „witaminy psychiczne": <b>autonomia</b> (czuję, że to mój wybór), <b>kompetencja</b> (radzę sobie, rozwijam się), <b>relacje</b> (jestem z innymi, należę). Różnica wobec Maslowa: to nie braki do zapchania, lecz <b>wartości</b>, które nas napędzają — i które karmią motywację wewnętrzną.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Praca, w której masz wpływ na to, jak ją wykonujesz (autonomia), rozwijasz umiejętności (kompetencja) i masz dobry zespół (relacje), motywuje wewnętrznie — chce się ją robić dla niej samej.</p></div>
+    </div>
+    <div class="note note--tip"><span class="note__icon">→</span><div>Te trzy potrzeby to fundament <b>teorii autodeterminacji (SDT)</b> — wielkiej syntezy całego kursu (Blok 7). Zapamiętaj je teraz; wrócą jako warunek motywacji wewnętrznej.</div></div>
+  </article>
+
+  <article class="topic" id="t3-4">
+    <div class="topic__head"><span class="topic__num">3.4</span><h3 class="topic__term">Potrzeba osiągnięć (McClelland)</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>David McClelland: obok potrzeb <b>afiliacji</b> i <b>władzy</b> wyróżnia <b>potrzebę osiągnięć (mistrzostwa)</b> — najważniejszą w wyjaśnianiu zachowań i powodzenia życiowego. <b>Wrodzone</b> jest osiąganie zadowolenia z osiągnięcia, ale <b>odczuwanie i wzmacnianie</b> tej potrzeby jest <b>nabyte</b> (nagradzanie wyników, style wychowawcze). Środowisko może nauczyć, że <b>samo doskonalenie się ma wartość nagradzającą</b>; kolejne cele umożliwiają ciągły rozwój i satysfakcję z nowych umiejętności.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Trzy wielkie potrzeby społeczne: <b>osiągnięć</b> („chcę być dobry/lepszy"), <b>afiliacji</b> („chcę być z ludźmi"), <b>władzy</b> („chcę mieć wpływ"). Radość z mistrzostwa jest wrodzona, ale to, czy ją <b>rozwiniemy</b>, zależy od wychowania i nagród.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Dziecko chwalone za wysiłek i postępy (a nie tylko za wynik) uczy się, że samo doskonalenie się jest nagradzające — i wyrasta na osobę o wysokiej potrzebie osiągnięć.</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t3-5">
+    <div class="topic__head"><span class="topic__num">3.5</span><h3 class="topic__term">Teoria motywacji osiągnięć Atkinsona</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Poznawcza teoria motywacji Johna Atkinsona (1957, 1966) i McClellanda. Kierunek motywacji: <b>dążenie</b> (potrzeba osiągnięć) vs <b>unikanie niepowodzenia</b> (lęk przed niepowodzeniem) — orientacja dążeniowa vs unikająca, zależnie od dominacji jednej z potrzeb. Siła motywacji = <b>subiektywna wartość celu × oczekiwanie</b> (prawdopodobieństwo sukcesu lub porażki). <b>Wartość celu a prawdopodobieństwo</b>: relacja ujemna (im łatwiej osiągalny, tym mniej cenny). <b>Motywacja a prawdopodobieństwo</b>: relacja „dzwonu" — najsilniejsza przy <b>średnim poziomie trudności</b> (~50%).</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Najbardziej motywują nas cele „<b>50/50</b>" — ani pewne, ani beznadziejne. Co pewne, mało cenne („i tak wygram"); co niemożliwe, zniechęca. Plus: zależy, czy bardziej Cię ciągnie <b>chęć sukcesu</b>, czy <b>strach przed porażką</b>.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Mecz z rywalem dokładnie na Twoim poziomie mobilizuje najbardziej. Z dużo słabszym — nuda („wygram bez wysiłku"); z dużo silniejszym — rezygnacja („nie ma szans").</p></div>
+    </div>
+  </article>
+
+  <div class="widget">
+    <div class="widget__title">Atkinson: motywacja a prawdopodobieństwo sukcesu</div>
+    <div class="widget__desc">Przesuń suwak prawdopodobieństwa sukcesu zadania. Zobacz, jak subiektywna wartość celu spada wraz z łatwością, a motywacja osiąga szczyt przy ~50%.</div>
+    <div id="atkinson-mount"></div>
+  </div>
+</section>
+
+<!-- ===================== BLOK 4 ===================== -->
+<section class="block reveal" id="blok4" style="--blockc:var(--b4);--blockc-soft:#4a77b514">
+  <div class="block__head">
+    <div class="block__tag"><span class="nav__dot" style="background:var(--b4)"></span>Blok 04 · Mechanizm poznawczy</div>
+    <h2>Cele, oczekiwania i przekonania jako motywy</h2>
+    <p class="block__intro">Poznawcze ujęcie motywacji. Założenie wstępne: <b>zachowanie wynika z reprezentacji poznawczych</b> — oczekiwań, wartości, celów i przekonań. Tu poznasz teorię celów, poczucie własnej skuteczności i model celów osiągnięć 2×2 — z którego płyną realne konsekwencje dla rozwoju i jakości działania.</p>
+  </div>
+
+  <article class="topic" id="t4-1">
+    <div class="topic__head"><span class="topic__num">4.1</span><h3 class="topic__term">Poznawcze ujęcie motywacji</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Założenie: <b>zachowanie wynika z reprezentacji poznawczych</b>. Reprezentacjami są m.in. <b>oczekiwania</b> (sąd o przyszłych zdarzeniach), <b>wartości</b> (ocena znaczenia czynności albo wyniku), <b>cele</b> (stabilne ponadsytuacyjnie punkty w przestrzeni życia) oraz <b>przekonania</b> na temat świata i siebie. Poznawcze ujęcie motywacji <b>nie jest jednak wolne od emocji</b>.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Tu motywacja rodzi się w <b>głowie</b>: z tego, czego się spodziewam, co cenię, do czego dążę i w co wierzę. Ale „poznawcze" nie znaczy „beznamiętne" — emocje cały czas są w tle.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Bierzesz dodatkowy projekt, bo spodziewasz się awansu (oczekiwanie), cenisz rozwój (wartość), chcesz zostać liderem zespołu (cel) i wierzysz, że dasz radę (przekonanie o sobie).</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t4-2">
+    <div class="topic__head"><span class="topic__num">4.2</span><h3 class="topic__term">Teoria celów (Locke i Latham)</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Teoria celów Locke'a i Lathama (1990). <b>Cel motywuje do działania</b>; funkcje celu: <b>kieruje uwagą, mobilizuje siły, podtrzymuje wytrwałość, ułatwia opracowanie strategii</b>. Podjęcie się celu zależy od jego <b>cech</b> (konkretny, wewnętrzny, <b>lekko przewyższający</b> standard dotychczasowych zadań) oraz od <b>poczucia własnej skuteczności</b>. Ograniczenie: cele rzadko wyjaśniają zachowanie w długiej perspektywie — <b>po osiągnięciu celu traci on moc motywacyjną</b> i trzeba wyznaczyć nowy.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Dobry cel robi cztery rzeczy: <b>skupia, napędza, podtrzymuje, ułatwia plan</b>. Najlepiej działa cel <b>konkretny i odrobinę trudniejszy</b> niż to, co już umiesz. Haczyk: gdy go osiągniesz, „gaśnie" — trzeba postawić kolejny.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>„Przebiec 5 km w 28 minut" (konkretny, lekko trudny) motywuje lepiej niż mgliste „więcej biegać". Po osiągnięciu czasu trzeba wyznaczyć nowy cel, by utrzymać motywację.</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t4-3">
+    <div class="topic__head"><span class="topic__num">4.3</span><h3 class="topic__term">Poczucie własnej skuteczności (self-efficacy)</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Albert Bandura: <b>poczucie własnej skuteczności (self-efficacy)</b> to <b>przekonanie o własnych kompetencjach</b> — że potrafimy osiągnąć cel. Sprzyja <b>poczuciu bycia autorem celu</b> i podejmowaniu trudniejszych zadań. Jest kluczowym czynnikiem decydującym o tym, czy w ogóle podejmiemy się celu i jak długo wytrwamy mimo przeszkód.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>To wewnętrzne „<b>dam radę</b>". Nie chodzi o realne umiejętności, lecz o <b>wiarę</b> w nie. Wysokie self-efficacy → bierzesz się za trudniejsze rzeczy i nie odpuszczasz po pierwszej porażce.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Dwie osoby o podobnych zdolnościach: ta z wyższym poczuciem skuteczności zgłasza się do trudniejszego zadania i dłużej przy nim trwa, bo wierzy, że je opanuje.</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t4-4">
+    <div class="topic__head"><span class="topic__num">4.4</span><h3 class="topic__term">Cele osiągnięć 2×2</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Cele osiągnięć krzyżują dwa wymiary: <b>treść standardu</b> (cel <b>mistrzostwa</b> — względem siebie/zadania vs cel <b>wykazania się</b> — względem innych) oraz <b>kierunek</b> (<b>dążenie</b> vs <b>unikanie</b>). Daje to 4 typy: <b>mistrzostwa-dążenie</b> („robię coś najlepiej, jak potrafię"), <b>mistrzostwa-unikanie</b> („nie chcę zrobić tego gorzej, niż umiem"), <b>wykazania się-dążenie</b> („chcę być lepszy od innych"), <b>wykazania się-unikanie</b> („nie chcę wypaść gorzej / skompromitować się"). Cel to <b>myśl, standard, do którego dążymy</b>; dążenie i unikanie to stała dyspozycja.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Dwa pytania: <b>z kim się mierzysz</b> (z sobą/zadaniem = mistrzostwo, czy z innymi = wykazanie się) i <b>czy gonisz sukces, czy uciekasz od porażki</b> (dążenie vs unikanie). Cztery kombinacje — i różne skutki.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>„Nauczę się tego materiału jak najlepiej" (mistrzostwa-dążenie) vs „byle nie wypaść gorzej od grupy" (wykazania się-unikanie) — to samo zadanie, zupełnie inna motywacja i efekt.</p></div>
+    </div>
+  </article>
+
+  <div class="widget">
+    <div class="widget__title">Macierz celów osiągnięć 2×2</div>
+    <div class="widget__desc">Kliknij ćwiartkę, aby zobaczyć opis, typowe myślenie i konsekwencje psychologiczne. Cele dążeniowe sprzyjają rozwojowi; unikowe — obniżają motywację i jakość.</div>
+    <div id="goals-mount"></div>
+  </div>
+
+  <article class="topic" id="t4-5">
+    <div class="topic__head"><span class="topic__num">4.5</span><h3 class="topic__term">Konsekwencje celów dążeniowych i unikowych</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Konsekwencją realizacji <b>celów dążeniowych</b> (zarówno mistrzostwa, jak i wykazania się) jest <b>wzrost motywacji</b> do poprawiania jakości działań, rozwój osoby i sposobu myślenia dzięki nowym doświadczeniom. W przypadku <b>celów unikowych</b> motywacja do wykonywania zadań i dbania o jakość jest <b>niższa — następuje spadek motywacji</b>.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Gonienie sukcesu (dążenie) <b>napędza rozwój i jakość</b>. Uciekanie od porażki (unikanie) <b>zjada motywację</b> — działasz „byle przetrwać", a nie „jak najlepiej". Dlatego kierunek celu ma realne skutki.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Student z celem mistrzostwa-dążenia uczy się, by zrozumieć i się rozwinąć (rośnie jakość). Student z celem wykazania-unikania uczy się „byle zdać i się nie ośmieszyć" — robi minimum, jakość spada.</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t4-6">
+    <div class="topic__head"><span class="topic__num">4.6</span><h3 class="topic__term">Motywacyjna rola oczekiwań</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Teoria oczekiwań opiera się na założeniu, że jednostka <b>motywuje się przez prawdopodobieństwo zrealizowania swoich potrzeb</b>. Jeśli osoba ma określone pragnienia i dąży do ich spełnienia, powinna być <b>przekonana, że realizując zadanie, otrzyma satysfakcjonującą ją nagrodę</b>. Oczekiwanie (sąd o przyszłości) wiąże wysiłek z wynikiem, a wynik z nagrodą.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Motywuje nas <b>wiara, że się opłaci</b>: „jeśli włożę wysiłek → osiągnę wynik → dostanę coś, na czym mi zależy". Zerwij którekolwiek ogniwo tego łańcucha, a motywacja gaśnie.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Pracownik daje z siebie więcej, jeśli wierzy, że lepszy wynik realnie przełoży się na premię. Jeśli „i tak premii nie ma" albo „premia jest losowa" — wysiłek przestaje mieć sens.</p></div>
+    </div>
+  </article>
+</section>
+
+<!-- ===================== BLOK 5 ===================== -->
+<section class="block reveal" id="blok5" style="--blockc:var(--b5);--blockc-soft:#8a6fb014">
+  <div class="block__head">
+    <div class="block__tag"><span class="nav__dot" style="background:var(--b5)"></span>Blok 05 · Ja i sprawczość</div>
+    <h2>Ja, samoocena i potrzeba kontroli</h2>
+    <p class="block__intro">Motywacja związana z obrazem siebie. Od humanistycznej wizji samorealizacji (Rogers), przez samoocenę jako motyw i ukryte teorie o własnych zdolnościach (Dweck), po potrzebę kontroli i umiejscowienie kontroli (Rotter). Klucz: <b>poczucie sprawczości i wartości siebie kieruje wyborem celów</b>.</p>
+  </div>
+
+  <article class="topic" id="t5-1">
+    <div class="topic__head"><span class="topic__num">5.1</span><h3 class="topic__term">Psychologia humanistyczna (Maslow, Rogers)</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Psychologia humanistyczna (Maslow, Rogers). Wg Carla Rogersa podstawowym celem życiowym jest <b>rozwój tożsamości i samorealizacja</b>. <b>Rozwój self jest wrodzony i ciągły</b> — obejmuje kompetencje odróżniania dobra i zła, rozpoznawania korzyści i szkody oraz relacje z innymi. W interakcji ze środowiskiem rozwija się <b>potrzeba akceptacji</b>, oznaczająca wrażliwość na wzmocnienia społeczne.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Człowiek z natury dąży do <b>stawania się sobą</b> i rozwoju. To „self" rośnie przez całe życie, a po drodze rodzi się <b>potrzeba bycia akceptowanym</b> przez innych.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Osoba, która porzuca nielubianą, ale „bezpieczną" pracę, by realizować powołanie — działa zgodnie z wrodzonym dążeniem do samorealizacji.</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t5-2">
+    <div class="topic__head"><span class="topic__num">5.2</span><h3 class="topic__term">Potrzeba akceptacji i terapia skoncentrowana na osobie</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Samoocena jest <b>efektem internalizacji akceptacji innych</b>; pozytywny obraz siebie jest niezbędny do samorealizacji. <b>Terapia skoncentrowana na osobie</b> (person-centered therapy, Rogers) stawia trzy warunki: <b>bezwarunkowa akceptacja / pozytywny stosunek</b> (unconditional positive regard), <b>zgodność ze sobą / autentyczność</b> (congruence) oraz <b>empatyczne rozumienie</b> (empathic understanding).</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Nasze poczucie wartości w dużej mierze „<b>wsiąka</b>" z akceptacji innych. Rogers mówił, że leczy relacja oparta na trzech filarach: <b>akceptacji bez warunków, byciu prawdziwym i empatii</b>.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Terapeuta, który przyjmuje klienta bez oceniania (UPR), jest wobec niego szczery (congruence) i wczuwa się w jego przeżycia (empatia) — tworzy warunki do rozwoju i zmiany.</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t5-3">
+    <div class="topic__head"><span class="topic__num">5.3</span><h3 class="topic__term">Samoocena i jej funkcja motywacyjna</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Samoocena to <b>ocena złożona z myśli i uczuć wartościujących „ja"</b>. Jako motyw: ludzie <b>szukają i pragną pozytywnej oceny</b> — we własnym mniemaniu i w oczach innych. <b>Wysoka samoocena</b>: poczucie własnej wartości, dumy, wiara w zdolności, poczucie mocy i sprawczości; efekty: pewność siebie, niezależność, ciekawość, przedsiębiorczość, wytrwałość, odporność na kryzysy. <b>Niska</b>: poczucie wstydu i winy z przekonania o niskich kompetencjach ważnych dla jednostki; wstyd powoduje poczucie bezwartościowości. Poczucie wartości wynika z <b>kompetencji</b>, więc odnosi się do dziedzin życia (Harter); <b>globalna samoocena</b> to uogólniona, względnie trwała ocena siebie (Strelau).</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Samoocena to „<b>jak siebie oceniam i co przy tym czuję</b>". Jako motyw popycha nas do <b>szukania potwierdzenia własnej wartości</b>. Wysoka daje odwagę i wytrwałość; niska — wstyd i wycofanie.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Osoba z wysoką samooceną zgłasza się do wystąpienia (szuka potwierdzenia, znosi ryzyko); z niską — rezygnuje, bo chęć uniknięcia wstydu przeważa.</p></div>
+    </div>
+    <div class="note"><span class="note__icon">◆</span><div>Ważne: trudne zadanie powoduje niepewność <b>niezależnie</b> od poziomu samooceny — ale u osób z <b>wysoką</b> samooceną to uczucie nie jest silnym napięciem i nie powoduje cierpienia. Okresowo samoocena bywa niższa (to naturalne); w dłuższym czasie jest <b>stabilna</b>.</div></div>
+  </article>
+
+  <article class="topic" id="t5-4">
+    <div class="topic__head"><span class="topic__num">5.4</span><h3 class="topic__term">Źródła i trwałość samooceny</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p><b>Źródła:</b> wartości społeczne/kulturowe i cenione przez ważne osoby; <b>trudność osiągnięcia standardu</b> (wyznaczanego społecznie lub samodzielnie) jest powodem niskiej samooceny; ocenianie siebie (atrybucje wewnętrzne w sukcesie, zewnętrzne w porażce); środowisko i wychowanie (doświadczanie sukcesu w autentycznych dziedzinach); geny (niska samoocena a lęk); płeć (M nieco > K — być może inne kryteria: M przez działanie, K przez relacje). <b>Trwałość niskiej samooceny:</b> potrzeba przewidywalności obrazu „ja"; osoby o niskiej samoocenie są <b>bardziej wrażliwe na wzmocnienia negatywne niż pozytywne</b> i <b>preferują zadania mniej ambitne</b> (Dweck, 1991) — chęć uniknięcia wstydu jest silniejsza niż chęć odczuwania dumy.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Samoocenę budują: <b>kultura, ważni ludzie, własne sukcesy i porażki, geny</b>. Niska samoocena <b>sama się utrzymuje</b>: taka osoba mocniej reaguje na krytykę i wybiera łatwiejsze zadania, by <b>nie ryzykować wstydu</b> — a przez to nie zbiera dowodów własnej wartości.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Osoba o niskiej samoocenie unika ambitnych wyzwań („wolę nie ryzykować kompromitacji"), więc nie doświadcza sukcesów, które mogłyby tę samoocenę podnieść — błędne koło.</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t5-5">
+    <div class="topic__head"><span class="topic__num">5.5</span><h3 class="topic__term">Teoria rozwoju kompetencji — Mindset (Dweck)</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>The Mindset theory (Carol Dweck, 1988). To, co czujemy, wybieramy i spostrzegamy, zależy od przyzwyczajeń kształtujących <b>ukryte teorie świata</b> (basic beliefs). Istnieją <b>dwie ukryte teorie inteligencji/zdolności</b>: przekonanie o <b>stałości</b> (fixed mindset — zdolności są niezmienne) i o <b>zmienności/rozwoju</b> (growth mindset — zdolności można rozwijać). <b>Wiara w rozwojową teorię zdolności jest korzystnym elementem poznawczym</b> w wyznaczaniu i realizacji celów.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Dwa przekonania o sobie: „<b>jaki jestem, taki zostanę</b>" (stałość) vs „<b>mogę się rozwinąć</b>" (rozwój). Druga wersja pomaga — bo porażkę traktujesz jako etap nauki, a nie wyrok o Twoich zdolnościach.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Po słabym sprawdzianie: fixed mindset → „nie mam głowy do matematyki" (poddaje się); growth mindset → „jeszcze tego nie umiem, popracuję" (próbuje dalej).</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t5-6">
+    <div class="topic__head"><span class="topic__num">5.6</span><h3 class="topic__term">Potrzeba sprawowania kontroli</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Poczucie <b>sprawowania kontroli</b> (nad otoczeniem i sobą) pozwala <b>przewidywać wydarzenia</b>, daje poczucie bezpieczeństwa i aktywuje inne potrzeby (np. kompetencji). <b>Panowanie nad sytuacją jest ważniejsze niż same umiejętności.</b> Osoby z poczuciem kontroli <b>żyją dłużej</b> (Rodin, Langer, 1977), zdrowieją szybciej, rzadziej zapadają na choroby krążenia; <b>brak kontroli obniża odporność immunologiczną</b> (lęk, stres, depresja → osłabienie układu odpornościowego). Geneza: geny (~30%), uczenie się (wartości, kultura), czynniki poznawcze (myślenie o sobie i otoczeniu).</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Poczucie „<b>mam wpływ</b>" to jedna z najważniejszych potrzeb — daje bezpieczeństwo, zdrowie, a nawet dłuższe życie. Co ciekawe: ważniejsze bywa <b>poczucie panowania</b> nad sytuacją niż realne umiejętności.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Pensjonariusze domu opieki, którym dano realny wpływ na codzienne decyzje (Rodin, Langer), byli zdrowsi i żyli dłużej niż ci pozbawieni takiego wpływu.</p></div>
+    </div>
+    <div class="note note--tip"><span class="note__icon">→</span><div>Pułapka kontroli: ludzie próbują kontrolować <b>rzeczy niekontrolowalne</b> i rezygnują z kontroli nad <b>kontrolowalnymi</b>. Kluczowa kompetencja (zob. modlitwa o pogodę ducha) to <b>rozróżnianie</b> jednych od drugich.</div></div>
+  </article>
+
+  <article class="topic" id="t5-7">
+    <div class="topic__head"><span class="topic__num">5.7</span><h3 class="topic__term">Umiejscowienie kontroli (Rotter)</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Koncepcja umiejscowienia kontroli Juliana Rottera (1966). <b>Wewnętrzne lub zewnętrzne umiejscowienie kontroli</b> jest <b>charakterystyką osoby</b> (uogólnioną cechą, aspektem osobowości i obrazu siebie) i ściśle wiąże się z osobistą odpowiedzialnością za sytuację (personalization). <b>Wewnętrzne</b>: przypisuję sobie wpływ na zdarzenia („jestem sprawcza"). <b>Zewnętrzne</b>: przypisuję wynik czynnikom zewnętrznym (los, inni ludzie). Większość ludzi ma raczej wewnętrzne, ale nikt nie jest skrajnie „tylko taki" — życie nie jest czarno-białe.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Dwa style myślenia o przyczynach: „<b>to zależy ode mnie</b>" (wewnętrzne) vs „<b>to los/inni</b>" (zewnętrzne). To trwała cecha, choć każdy ma jej trochę z obu stron, zależnie od dziedziny życia.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Po oblanym egzaminie: wewnętrzne → „za mało się przyłożyłem" (i biorę się do pracy); zewnętrzne → „pytania były niesprawiedliwe" (przyczyna poza mną).</p></div>
+    </div>
+  </article>
+</section>
+
+<!-- ===================== BLOK 6 ===================== -->
+<section class="block reveal" id="blok6" style="--blockc:var(--b6);--blockc-soft:#c0563a14">
+  <div class="block__head">
+    <div class="block__tag"><span class="nav__dot" style="background:var(--b6)"></span>Blok 06 · Style wyjaśniania</div>
+    <h2>Optymizm, nadzieja, bezradność i depresja</h2>
+    <p class="block__intro">Jak sposób wyjaśniania zdarzeń steruje motywacją i zdrowiem. Od wyuczonej bezradności (Seligman), przez style atrybucji i optymizm/pesymizm, po nadzieję (Snyder) i poznawczy model depresji (Beck). Klucz: <b>o bezradności i depresji decyduje styl wyjaśniania porażki, a nie sam fakt porażki</b>.</p>
+  </div>
+
+  <article class="topic" id="t6-1">
+    <div class="topic__head"><span class="topic__num">6.1</span><h3 class="topic__term">Wyuczona bezradność (Seligman)</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Model wyuczonej bezradności Martina Seligmana: bezradność pojawia się, gdy jednostka doświadcza sytuacji, w których <b>jej działania nie wpływają na wynik</b> (utrata poczucia kontroli). Obejmuje <b>bierność, pesymizm i symptomy depresji</b>. Skutki: <b>deficyt poznawczy</b> (przestaje rozumieć sytuację, nie przewiduje jej biegu), <b>deficyt motywacyjny</b> (brak motywacji do działania i angażowania się), <b>deficyt emocjonalny</b> (depresja, apatia, lęk, zmęczenie). Kluczowe: w kryzysie/porażce tylko <b>2/3 popada w bezradność, a 1/3 nie</b> — bo decyduje <b>styl wyjaśniania zdarzenia, a nie sam fakt porażki</b>.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Gdy wielokrotnie „<b>cokolwiek zrobię, i tak nic nie zmienia</b>", uczymy się przestać próbować — i przenosi się to na inne sytuacje. Ale nie każdy tak reaguje: o tym, czy popadniesz w bezradność, decyduje <b>jak tłumaczysz porażkę</b>, nie sama porażka.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Osoba długo bezskutecznie szukająca pracy przestaje wysyłać CV („i tak mnie nie wezmą") — mimo że pojawiają się realne szanse. To wyuczona bezradność z deficytem motywacyjnym.</p></div>
+    </div>
+    <div class="note note--tip"><span class="note__icon">→</span><div>To pojęcie pojawiło się też w module Emocje (jako skutek stresu niekontrolowalnego). Tu kluczowy jest jego <b>poznawczy</b> mechanizm: bezradność powstaje na skutek <b>pesymistycznych atrybucji</b> porażek i sukcesów — i właśnie dlatego jest <b>odwracalna</b> (zmiana stylu myślenia osłabia objawy).</div></div>
+  </article>
+
+  <article class="topic" id="t6-2">
+    <div class="topic__head"><span class="topic__num">6.2</span><h3 class="topic__term">Style wyjaśniania (atrybucji) — trzy wymiary</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Współcześnie wyróżnia się <b>3 wymiary atrybucji</b> źródeł zdarzeń: <b>(1) umiejscowienie</b> — wewnętrzne vs zewnętrzne (personalizacja, Rotter); <b>(2) stałość (permanence)</b> — trwałość vs zmienność przyczyny w czasie (Weiner, lata 70.); <b>(3) ogólność (pervasiveness)</b> — globalność vs lokalność/specyficzność, czyli zakres przestrzeni życia (Rosenbaum). <b>Atrybucje optymistyczne</b>: sukces tłumaczony przyczynami <b>wewnętrznymi, stałymi i ogólnymi</b>, porażka — <b>zewnętrznymi, zmiennymi i lokalnymi</b>. U pesymistów odwrotnie.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Każdą przyczynę oceniamy na trzech osiach: <b>czy to ja?</b> (umiejscowienie), <b>czy na stałe?</b> (stałość), <b>czy wszędzie?</b> (ogólność). Optymista: sukces „bo jestem dobry, zawsze i we wszystkim", porażka „przez przypadek, raz, tylko tu". Pesymista — na odwrót.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Po wygranej: optymista — „mam talent" (wewnętrzne, stałe, ogólne); po porażce — „rywal miał dziś dobry dzień" (zewnętrzne, zmienne, lokalne). Pesymista: porażka „jestem skończony" (wewnętrzne, stałe, ogólne).</p></div>
+    </div>
+  </article>
+
+  <div class="widget">
+    <div class="widget__title">Eksplorator stylu atrybucji</div>
+    <div class="widget__desc">Wybierz typ zdarzenia (sukces/porażka) i ustaw trzy wymiary. Zobacz, czy taki sposób wyjaśniania jest optymistyczny czy pesymistyczny — i co z niego wynika.</div>
+    <div id="attrib-mount"></div>
+  </div>
+
+  <article class="topic" id="t6-3">
+    <div class="topic__head"><span class="topic__num">6.3</span><h3 class="topic__term">Optymizm i pesymizm — trzy ujęcia</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Optymizm/pesymizm rozumiany jest trojako: <b>(1) jako inklinacja pozytywna</b> (Czapiński — optymizm to efekt inklinacji pozytywnej, pesymizm to efekt negatywności; zależy od rodzaju sytuacji oraz poczucia sprawstwa i kontroli, ma też podłoże biologiczne); <b>(2) jako cecha osobowości</b> (Scheier, Carver, 1985 — <b>oczekiwanie korzystnego rozwoju zdarzeń</b> niezależnie od zdolności i umiejętności); <b>(3) jako styl wyjaśniania</b> (Seligman — kategoria poznawcza związana ze spostrzeganiem, ocenianiem i wnioskowaniem, odnosząca się do przeszłości, teraźniejszości i przyszłości). Pomiar cechy: <b>LOT-R</b> (Life Orientation Test-Revised, adapt. Juczyński).</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Trzy odpowiedzi na pytanie „czym jest optymizm": <b>chwilowym nastawieniem</b> (Czapiński), <b>trwałą cechą</b> „spodziewam się dobra" (Scheier-Carver) albo <b>sposobem tłumaczenia zdarzeń</b> (Seligman). Cechę mierzy test LOT-R.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Pozycja z LOT-R: „W niepewnych czasach zwykle oczekuję najlepszych zdarzeń" — kto się zgadza, ma wysoki optymizm jako cechę (Scheier-Carver).</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t6-4">
+    <div class="topic__head"><span class="topic__num">6.4</span><h3 class="topic__term">Konsekwencje optymizmu</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Optymiści są <b>otwarci</b> na innych i nowe zdarzenia (pesymiści wycofani), <b>zdrowsi</b> (mniej infekcji, nowotworów, depresji, prób samobójczych) i szybciej zdrowieją. Cechuje ich <b>większa aktywność, silniejsza motywacja i wytrwałość</b>, akceptacja odroczonych gratyfikacji, wyższa odporność na stres, lepsze radzenie sobie ze stratą (PTG zamiast PTSD), wyższe osiągnięcia szkolne, sportowe i zawodowe. <b>Ale:</b> optymizm to tylko jeden z wielu czynników zdrowia i szczęścia — <b>pesymizm także bywa wartościowy</b> (ostrożność, realizm).</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Optymiści generalnie <b>zdrowsi, wytrwalsi i skuteczniejsi</b> — bo nie poddają się po porażce i wierzą, że warto próbować. Ale to nie cudowny lek: czasem <b>pesymizm chroni</b> (przewiduje ryzyko, hamuje brawurę).</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Optymistyczny sprzedawca po serii odmów dzwoni dalej (wytrwałość) i ma lepsze wyniki. Ale pesymistyczny inżynier, który zakłada najgorsze, zaprojektuje bezpieczniejszy most.</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t6-5">
+    <div class="topic__head"><span class="topic__num">6.5</span><h3 class="topic__term">Nadzieja jako dyspozycja (Snyder)</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Nadzieja (Snyder i in., 1991, 2000) to <b>wiara w siebie: przekonanie, że cel można osiągnąć, i wiedza, jak to zrobić</b>. Elementy: 1. cele, 2. <b>motywacja do działania (will power)</b>, 3. <b>strategie działania (way power)</b>. Dwa komponenty myślenia: <b>myślenie kierunkowe (pathway thinking)</b> — opracowanie celu i rozwiązań, oraz <b>myślenie sprawcze (agentic thinking)</b> — podejmowanie działań, by dojść do celu. Osoby pełne nadziei mają <b>więcej celów</b>, tworzą <b>więcej dróg</b> do nich i wybierają trudniejsze cele. Nadzieja jest <b>lepszym prognostykiem sukcesów w nauce i sporcie niż poczucie własnej skuteczności</b>.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Nadzieja = <b>„chcę" + „wiem jak"</b>: <b>siła woli</b> (will power) plus <b>pomysł na drogę</b> (way power). To nie bierne „oby się udało", lecz aktywne „mam cel, znam ścieżki i ruszam". Dlatego przewiduje sukcesy lepiej niż samo „dam radę".</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Pozycja ze skali nadziei Snydera: „Nawet kiedy inni dają za wygraną, ja wiem, że jestem w stanie znaleźć sposób rozwiązania problemu" — łączy wytrwałość (will) i szukanie dróg (way).</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t6-6">
+    <div class="topic__head"><span class="topic__num">6.6</span><h3 class="topic__term">Optymizm vs nadzieja</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p><b>Optymizm</b> (Scheier, Carver) to oczekiwanie pomyślnych wyników, <b>orientacja na wartość/cel</b>, bardziej <b>poznawcza</b> i względnie niezależna od faktów i własnych możliwości. <b>Nadzieja</b> (Snyder) to przekonanie o sukcesie <b>w oparciu o szacowaną własną skuteczność</b> (wytrwałość + umiejętność znajdowania rozwiązań), <b>orientacja behawioralna</b> (jakich działań wymaga cel), z silnym komponentem <b>emocjonalnym, duchowym i egzystencjalnym</b>. <b>Optymizm słabiej wiąże się z osiąganiem celów niż nadzieja.</b> Nadzieja obejmuje element niepewności, więc osoba pełna nadziei ponosi mniejsze koszty psychologiczne przy rozczarowaniu.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Optymizm mówi „<b>będzie dobrze</b>" (oczekiwanie wyniku). Nadzieja mówi „<b>osiągnę to, bo wiem jak i wytrwam</b>" (oczekiwanie + plan + sprawczość). Dlatego nadzieja <b>lepiej przekłada się na realne osiągnięcia</b>.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Przed trudnym projektem: optymista zakłada, że „jakoś się ułoży"; osoba pełna nadziei ma konkretne ścieżki działania i determinację, by je realizować — i częściej dochodzi do celu.</p></div>
+    </div>
+    <div class="tablewrap">
+      <table class="cmp">
+        <thead><tr><th>Wymiar</th><th>Optymizm (Scheier, Carver)</th><th>Nadzieja (Snyder)</th></tr></thead>
+        <tbody>
+          <tr><td>Istota</td><td>Oczekiwanie pomyślnych wyników</td><td>Wiara: „osiągnę cel i wiem jak"</td></tr>
+          <tr><td>Orientacja</td><td>Na wartość / cel (że nastąpi)</td><td>Behawioralna (jak do celu dojść)</td></tr>
+          <tr><td>Komponent</td><td>Bardziej poznawczy</td><td>Emocjonalny, duchowy, egzystencjalny</td></tr>
+          <tr><td>Zależność od możliwości</td><td>Względnie niezależny od faktów</td><td>Oparta na szacowanej skuteczności</td></tr>
+          <tr><td>Związek z osiągnięciami</td><td class="neg">Słabszy</td><td class="pos">Silniejszy</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </article>
+
+  <article class="topic" id="t6-7">
+    <div class="topic__head"><span class="topic__num">6.7</span><h3 class="topic__term">Pozytywny Kapitał Psychologiczny (PsyCap)</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p><b>Pozytywny Kapitał Psychologiczny (PsyCap)</b> (Seligman, 1998) obejmuje cztery zasoby: <b>1. poczucie sprawstwa (efficacy)</b>, <b>2. optymizm (optimism)</b>, <b>3. nadzieja (hope)</b>, <b>4. prężność/sprężystość (resiliency)</b>. To wiązka pozytywnych zasobów psychologicznych wspierających działanie zorientowane na cel i radzenie sobie z trudnościami.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Cztery „<b>aktywa psychiczne</b>", które razem napędzają skuteczność: <b>wiara w siebie + optymizm + nadzieja + odporność</b>. Im więcej tego kapitału, tym lepiej radzisz sobie z wyzwaniami.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Pracownik z wysokim PsyCap po niepowodzeniu projektu: wierzy w swoje kompetencje (efficacy), zakłada dobry finał (optymizm), ma plan B (nadzieja) i szybko się podnosi (prężność).</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t6-8">
+    <div class="topic__head"><span class="topic__num">6.8</span><h3 class="topic__term">Depresja: czynniki biologiczne, wyuczone i poznawcze</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Depresja (bezradność, utrata poczucia kontroli, bierność, negatywny afekt) ma przyczyny w trzech grupach czynników. <b>Biologiczne:</b> procesy neurochemiczne (niższy poziom <b>dopaminy, serotoniny, noradrenaliny</b>), aktywacja półkul (silniejsza prawej przy emocjach negatywnych), czynnik genetyczny (bliźnięta jednojajowe zapadają częściej). <b>Wyuczone:</b> utrata poczucia kontroli nad zdarzeniami (model wyuczonej bezradności Seligmana). <b>Poznawcze:</b> pesymistyczny styl wyjaśniania, negatywne schematy poznawcze świata i siebie — <b>model Becka</b>. Inne przyczyny utraty kontroli: celowe działania innych ludzi (→ złość, nie depresja), obrona niskiej samooceny, skłonność do rozpamiętywania, perfekcjonizm.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Trzy źródła depresji: <b>biologia</b> (neuroprzekaźniki, geny, półkule), <b>wyuczona bezradność</b> („nie mam wpływu") i <b>sposób myślenia</b> (pesymizm, negatywne schematy — model Becka). Te dwa ostatnie są <b>poznawcze i odwracalne</b> — stąd skuteczność terapii poznawczej.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Beck: osoba z depresją <b>selekcjonuje fakty zgodnie z negatywnym obrazem świata</b> — pomija pochwały, skupia się na krytyce. Zmiana tych schematów (CBT) realnie redukuje objawy.</p></div>
+    </div>
+    <div class="note"><span class="note__icon">◆</span><div><b>Pesymizm a depresja:</b> pesymistyczny styl wyjaśniania sprzyja samoograniczającym przekonaniom, utracie sprawstwa i demotywacji, a w konsekwencji może prowadzić do depresji. Dowody: częstsze objawy u pesymistów, a <b>zmiana stylu myślenia na optymistyczny redukuje objawy</b> (najlepiej: łączenie psychoterapii i farmakoterapii).</div></div>
+  </article>
+</section>
+
+<!-- ===================== BLOK 7 ===================== -->
+<section class="block reveal" id="blok7" style="--blockc:var(--b7);--blockc-soft:#2f8e8f14">
+  <div class="block__head">
+    <div class="block__tag"><span class="nav__dot" style="background:var(--b7)"></span>Blok 07 · Wielka synteza</div>
+    <h2>Teoria autodeterminacji i pasja</h2>
+    <p class="block__intro">Temat zamykający kurs — i klamra spinająca wszystko wcześniej. <b>Teoria autodeterminacji (SDT)</b> to makroteoria motywacji, rozwoju, zdrowia i szczęścia. Motywacja jest <b>wrodzona</b>, ale <b>niejednorodna</b> — rozciąga się na kontinuum od kontrolowanej do w pełni autonomicznej. Na koniec: dualistyczny model pasji i podsumowanie obu mechanizmów motywacyjnych.</p>
+  </div>
+
+  <article class="topic" id="t7-1">
+    <div class="topic__head"><span class="topic__num">7.1</span><h3 class="topic__term">Teoria autodeterminacji jako makroteoria</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Teoria autodeterminacji (Self-Determination Theory, Deci & Ryan) to <b>uniwersalna makroteoria</b> motywacji, rozwoju, zdrowia i szczęścia (rozkwitu). Założenia: <b>zachowania człowieka wynikają z jego woli i natury</b> — człowiek ma wolę i chce coś robić; <b>dążenie do funkcjonalnego i szczęśliwego życia jest naturalną potrzebą</b>. <b>Motywacja jest wrodzona</b> (każdy rodzi się z chęcią działania — jak małe dzieci, szczęśliwe, gdy eksplorują w warunkach bezpieczeństwa) i <b>niejednorodna</b> — rozciąga się od wewnętrznej do zewnętrznej. Fundamentem są trzy podstawowe potrzeby psychologiczne: <b>autonomia, kompetencja, relacje</b>.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>To „<b>wielka teoria wszystkiego</b>" w motywacji — tłumaczy zachowanie w wielu obszarach życia (edukacja, praca, zdrowie) i łączy je z dobrostanem. Dwie tezy: chęć działania jest <b>wrodzona</b>, a motywacja ma <b>różne odcienie</b> — od „muszę" do „chcę". Karmią ją trzy potrzeby z Bloku 3.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Małe dziecko, gdy czuje się bezpiecznie, samo z siebie eksploruje, dotyka, próbuje — nikt go nie musi „motywować". To wrodzona, wewnętrzna motywacja w czystej postaci; ograniczenie jej czyni człowieka nieszczęśliwym.</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t7-2">
+    <div class="topic__head"><span class="topic__num">7.2</span><h3 class="topic__term">Kontinuum autodeterminacji i typy regulacji</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Motywacja układa się na <b>kontinuum</b> od <b>braku autodeterminacji</b> do <b>całkowitej autodeterminacji</b>: <b>amotywacja → motywacja zewnętrzna → motywacja wewnętrzna</b>. Wewnątrz wyróżnia się <b>typy regulacji zachowania</b>: <b>zewnętrzna</b> (kary i nagrody), <b>zintrojektowana/włączona</b> (robię to, by uniknąć kary lub poczucia winy), <b>zidentyfikowana</b> (to, co robię, jest dla mnie ważne), <b>zintegrowana</b> (jest spójne z tym, kim jestem), <b>wewnętrzna</b> (sama aktywność jest przyjemna). Im dalej w prawo, tym bardziej zachowanie jest „własne".</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Motywacja to nie „jest albo jej nie ma" — to <b>suwak</b> od „w ogóle mi się nie chce" (amotywacja) przez różne „muszę/powinienem" aż po „robię to, bo to lubię" (wewnętrzna). Po drodze pięć stopni regulacji, coraz bardziej „moich".</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Nauka: amotywacja („po co to komu") → zewnętrzna („uczę się dla oceny") → zintrojektowana („wstyd byłoby oblać") → zidentyfikowana („to ważne dla mojej kariery") → zintegrowana („jestem osobą, która się rozwija") → wewnętrzna („ten temat mnie fascynuje").</p></div>
+    </div>
+  </article>
+
+  <div class="widget">
+    <div class="widget__title">Kontinuum autodeterminacji</div>
+    <div class="widget__desc">Kliknij kolejne przystanki — od amotywacji po motywację wewnętrzną. Każdy typ regulacji ma swój opis, przykładowe „zdanie w głowie" oraz rodzaj regulacji (kontrolująca vs autonomiczna).</div>
+    <div id="sdt-mount"></div>
+  </div>
+
+  <article class="topic" id="t7-3">
+    <div class="topic__head"><span class="topic__num">7.3</span><h3 class="topic__term">Regulacja kontrolująca vs autonomiczna</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Typy regulacji grupują się w dwa <b>rodzaje regulacji zachowania</b>: <b>kontrolująca</b> — przyczyna zachowania jest <b>„na zewnątrz" mnie</b> (regulacja zewnętrzna i zintrojektowana; działam pod presją kar, nagród, winy, wstydu); <b>autonomiczna</b> — przyczyna zachowania jest <b>„wewnątrz" mnie</b> (regulacja zidentyfikowana, zintegrowana i wewnętrzna; działam, bo to dla mnie ważne, spójne ze mną lub przyjemne). Autonomiczna regulacja sprzyja wytrwałości, dobrostanowi i jakości działania.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Dwa „obozy" na suwaku: <b>kontrolująca</b> = „<b>coś/ktoś mnie zmusza</b>" (presja z zewnątrz lub poczucie winy), <b>autonomiczna</b> = „<b>to mój wybór</b>". Im więcej regulacji autonomicznej, tym lepsza wytrwałość i samopoczucie.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Dwie osoby biegają. Pierwsza, bo „trzeba schudnąć, bo wstyd" (kontrolująca — szybko porzuci). Druga, bo „lubię to i czuję się sobą, gdy biegam" (autonomiczna — wytrwa latami).</p></div>
+    </div>
+  </article>
+
+  <article class="topic" id="t7-4">
+    <div class="topic__head"><span class="topic__num">7.4</span><h3 class="topic__term">Dualistyczny model pasji (Vallerand)</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Dualistyczny model pasji (Robert Vallerand i in.). <b>Pasja</b> to skłonność do wykonywania aktywności, która spełnia <b>pięć kryteriów</b>: człowiek musi (1) <b>nazwać</b> tę aktywność, (2) ją <b>lubić</b>, (3) uważać za <b>ważną</b>, (4) <b>inwestować</b> w nią czas i energię, (5) traktować jako <b>element własnego Ja</b> (bez niej „nie czuję się sobą"). Ok. <b>80% populacji</b> ma pasję. Dwa typy: <b>pasja harmonijna</b> — realizowana w oparciu o <b>regulację autonomiczną</b>; pasjonat sam decyduje, kiedy ją uprawia, i nie zaniedbuje innych obszarów życia. <b>Pasja obsesyjna</b> — <b>aktywność kieruje człowiekiem</b> (pasja kontroluje zachowanie); pasjonat uprawia ją mimo wszystko, kosztem zdrowia czy innych sfer.</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Pasja to coś, co <b>lubisz, cenisz, w co inwestujesz i co jest częścią Ciebie</b>. Może być <b>harmonijna</b> („ja kieruję pasją" — zdrowa, autonomiczna) albo <b>obsesyjna</b> („pasja kieruje mną" — przejmuje kontrolę, każe działać mimo szkód).</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Rowerzyści: <b>harmonijny</b> jeździ od kwietnia do października, w zimie odpuszcza, dba o równowagę. <b>Obsesyjny</b> jeździ cały rok i kontynuuje nawet z kontuzją — pasja przejęła stery.</p></div>
+    </div>
+    <div class="note note--tip"><span class="note__icon">→</span><div>To pojęcie pojawiło się też w module Emocje (regulacja i dobrostan). Tu widać jego <b>motywacyjny korzeń</b>: typ pasji wynika wprost z <b>rodzaju regulacji</b> z poprzedniego zagadnienia — harmonijna z autonomicznej, obsesyjna z kontrolującej.</div></div>
+  </article>
+
+  <article class="topic" id="t7-5">
+    <div class="topic__head"><span class="topic__num">7.5</span><h3 class="topic__term">Podsumowanie procesów motywacyjnych</h3></div>
+    <div class="topic__body">
+      <div class="slot slot--def"><span class="slot__label">Definicja</span><p>Motywacja do działania (dążenie–unikanie/hamowanie) wynika z dwóch współdziałających mechanizmów: <b>afektywnego (biologicznego)</b> oraz <b>poznawczego (uczenia się i schematów poznawczych)</b>. Przykłady ich współgry: <b>(1)</b> ciekawość, zainteresowanie, pasje, twórczość, optymizm, nadzieja, miłość (potrzeba eksploracji, obserwacja innych, styl wyjaśniania); <b>(2)</b> lęk-strach, nieśmiałość, stres, zachowania agresywne (pobudliwość AUN, systemy BIS i BAS Graya); <b>(3)</b> uzależnienia substancjalne i behawioralne (regulacja nastroju-emocji, uczenie się radzenia sobie, samokontrola — poczucie wpływu i decyzja).</p></div>
+      <div class="slot slot--plain"><span class="slot__label">Po prostu</span><p>Cały kurs sprowadza się do <b>dwóch silników</b> działających razem: <b>afektywnego</b> (biologia, emocje, pobudzenie) i <b>poznawczego</b> (myślenie, cele, nauczone schematy). Z ich współgry powstaje wszystko — od pasji i nadziei, przez lęk i agresję, po uzależnienia.</p></div>
+      <div class="slot slot--ex"><span class="slot__label">Przykład</span><p>Uzależnienie: mechanizm afektywny (chęć regulacji nastroju, ulga) + poznawczy (wyuczone radzenie sobie, przekonania o kontroli) — żeby je zrozumieć i przerwać, trzeba zadziałać na oba.</p></div>
+    </div>
+  </article>
+</section>
+
+<!-- ===================== QUIZ ===================== -->
+<section class="block reveal" id="quiz" style="--blockc:var(--ink);--blockc-soft:#22201a10">
+  <div class="block__head">
+    <div class="block__tag"><span class="nav__dot" style="background:var(--ink)"></span>Powtórka · Sprawdź się</div>
+    <h2>Quiz powtórkowy</h2>
+    <p class="block__intro">20 pytań zamkniętych z całego materiału — od mechanizmów kierunku po teorię autodeterminacji. Kliknij odpowiedź, by od razu zobaczyć, czy jest poprawna i dlaczego. Wynik liczy się na bieżąco.</p>
+  </div>
+  <div id="quiz-score" class="quiz-score" aria-live="polite"></div>
+  <div id="quiz-mount"></div>
+  <button id="quiz-reset" class="quiz-reset" type="button">↺ Zacznij quiz od nowa</button>
+</section>
+
+<footer class="footer">
+  <p><b>Motywacja — kurs egzaminacyjny.</b> Materiał opracowany na podstawie dwóch wykładów dr hab. Elżbiety Kasprzak (UKW, 2024-25), notatek oraz bazy zagadnień egzaminacyjnych. To <b>Część 2 z 2</b> — moduł Emocje (dr Basińska) stanowi osobną stronę.</p>
+  <p style="margin-top:.6rem">Układ każdego zagadnienia: <b>Definicja → Po prostu → Przykład</b>. Modele interaktywne (kontinuum SDT, cele 2×2, krzywa Atkinsona, piramida Maslowa, eksplorator atrybucji, krzywa Yerkesa-Dodsona) służą lepszemu zrozumieniu — nie zastępują lektury źródeł. Powodzenia na egzaminie. ◆</p>
+</footer>
+
+  </div><!-- /#content -->
+  </main>
+</div><!-- /.layout -->
+
+<style>
+/* ===== quiz ===== */
+.quiz-q{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:1.1rem 1.25rem;margin-bottom:1rem;box-shadow:var(--shadow)}
+.quiz-q__num{font-family:'Space Mono';font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:.5rem}
+.quiz-q__text{font-family:'Space Grotesk';font-weight:600;font-size:1.04rem;line-height:1.35;color:var(--ink);margin-bottom:.85rem}
+.quiz-opt{display:flex;align-items:flex-start;gap:.65rem;width:100%;text-align:left;background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:.6rem .8rem;margin-bottom:.5rem;cursor:pointer;font-family:inherit;font-size:.92rem;color:var(--ink-soft);line-height:1.4;transition:border-color .15s,background .15s}
+.quiz-opt:hover:not(:disabled){border-color:var(--accent);background:#fff}
+.quiz-opt:disabled{cursor:default}
+.quiz-opt__key{flex:0 0 auto;width:1.4rem;height:1.4rem;border-radius:6px;background:var(--paper-2);display:flex;align-items:center;justify-content:center;font-family:'Space Mono';font-size:.74rem;font-weight:700;color:var(--ink-soft)}
+.quiz-opt.correct{border-color:#2f7a4f;background:#2f7a4f12;color:var(--ink)}
+.quiz-opt.correct .quiz-opt__key{background:#2f7a4f;color:#fff}
+.quiz-opt.wrong{border-color:#be5039;background:#be503912;color:var(--ink)}
+.quiz-opt.wrong .quiz-opt__key{background:#be5039;color:#fff}
+.quiz-opt.dim{opacity:.55}
+.quiz-fb{font-size:.86rem;line-height:1.5;color:var(--ink-soft);margin-top:.5rem;padding:.6rem .8rem;border-radius:9px;background:var(--paper-2);display:none}
+.quiz-fb.show{display:block}
+.quiz-fb b{color:var(--ink)}
+.quiz-score{position:sticky;top:.5rem;z-index:5;background:var(--accent);color:#fff;font-family:'Space Mono';font-size:.82rem;font-weight:700;padding:.5rem .9rem;border-radius:99px;display:inline-block;margin-bottom:1.1rem;box-shadow:var(--shadow)}
+.quiz-reset{font-family:inherit;font-size:.85rem;font-weight:600;color:var(--ink-soft);background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:.55rem 1rem;cursor:pointer;margin-top:.4rem;transition:border-color .15s,color .15s}
+.quiz-reset:hover{border-color:var(--accent);color:var(--ink)}
+
+/* ===== SVG / interactive widgets ===== */
+.svg-widget{width:100%}
+.w-controls{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:.9rem}
+.w-label{font-family:'Space Mono';font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint)}
+.chip-btn{font-family:'Space Mono';font-size:.74rem;font-weight:700;letter-spacing:.02em;background:var(--paper);border:1.5px solid var(--line);border-radius:99px;padding:.34rem .8rem;color:var(--ink-soft);cursor:pointer;transition:all .15s}
+.chip-btn:hover{border-color:var(--accent)}
+.chip-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip-btn.tealactive{background:var(--warm);border-color:var(--warm);color:#fff}
+input[type=range]{-webkit-appearance:none;appearance:none;height:6px;border-radius:99px;background:var(--line);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:var(--shadow);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:var(--shadow);cursor:pointer}
+.w-readout{font-family:'Space Mono';font-size:.78rem;color:var(--ink-soft);font-weight:700}
+.w-svg{width:100%;height:auto;display:block;background:var(--paper);border-radius:10px;border:1px solid var(--line-soft)}
+.w-axis{stroke:var(--ink-faint);stroke-width:1.5}
+.w-grid{stroke:var(--line);stroke-width:1;stroke-dasharray:3 4}
+.w-curve{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round}
+.w-curve2{fill:none;stroke:var(--warm);stroke-width:2.5;stroke-dasharray:5 4}
+.w-axislabel{font-family:'Space Mono';font-size:11px;fill:var(--ink-faint)}
+.w-marker{fill:var(--accent)}
+.w-markerline{stroke:var(--accent);stroke-width:1.5;stroke-dasharray:3 3}
+.w-panel{background:var(--paper-2);border-radius:10px;padding:.85rem 1rem;margin-top:.9rem;font-size:.9rem;line-height:1.5;color:var(--ink-soft);min-height:3rem}
+.w-panel b{color:var(--ink)}
+.w-panel .w-tag{display:inline-block;font-family:'Space Mono';font-size:.66rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:.15rem .5rem;border-radius:5px;margin-bottom:.4rem}
+.w-tag--ctrl{background:#c0563a1f;color:#a8472e}
+.w-tag--auto{background:#2f8e8f1f;color:#1f6e64}
+
+/* maslow */
+.maslow-row{cursor:pointer;transition:opacity .15s}
+.maslow-row:hover{opacity:.85}
+.maslow-lbl{font-family:'Space Grotesk';font-weight:600;font-size:12.5px;fill:#fff;pointer-events:none}
+.maslow-row.sel .maslow-seg{stroke:var(--ink);stroke-width:2.5}
+
+/* goals 2x2 */
+.goals-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.55rem;margin-bottom:.3rem}
+.goal-cell{border:1.5px solid var(--line);border-radius:11px;padding:.8rem .85rem;cursor:pointer;background:var(--card);transition:all .15s;text-align:left}
+.goal-cell:hover{border-color:var(--accent);transform:translateY(-1px)}
+.goal-cell.sel{border-color:var(--accent);background:#b5602a0d;box-shadow:var(--shadow)}
+.goal-cell__t{font-family:'Space Grotesk';font-weight:600;font-size:.9rem;color:var(--ink);line-height:1.2;margin-bottom:.2rem}
+.goal-cell__s{font-family:'Space Mono';font-size:.64rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.goal-cell__s.pos{color:#2f7a4f}
+.goal-cell__s.neg{color:#be5039}
+
+/* sdt continuum */
+.sdt-track{display:flex;gap:.3rem;margin-bottom:.2rem;overflow-x:auto;padding-bottom:.3rem}
+.sdt-stop{flex:1 1 0;min-width:5.2rem;border:1.5px solid var(--line);border-radius:9px;padding:.55rem .4rem;cursor:pointer;background:var(--card);text-align:center;transition:all .15s}
+.sdt-stop:hover{border-color:var(--accent)}
+.sdt-stop.sel{border-color:var(--accent);background:#b5602a0d;box-shadow:var(--shadow)}
+.sdt-stop__n{font-family:'Space Mono';font-size:.6rem;font-weight:700;color:var(--ink-faint);display:block}
+.sdt-stop__t{font-family:'Space Grotesk';font-weight:600;font-size:.74rem;color:var(--ink);line-height:1.15;margin-top:.15rem;display:block}
+.sdt-scale{display:flex;justify-content:space-between;font-family:'Space Mono';font-size:.64rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint);margin:.3rem .2rem .2rem}
+.sdt-gradient{height:6px;border-radius:99px;background:linear-gradient(90deg,#c0563a,#c2722e,#b5a02a,#6f9a4e,#2f8e8f);margin:.1rem .2rem .7rem}
+.attrib-toggles{display:flex;flex-direction:column;gap:.55rem;margin-bottom:.3rem}
+.attrib-toggle{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.attrib-toggle__lbl{font-family:'Space Mono';font-size:.7rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-faint);flex:0 0 7rem}
+</style>
+
+<script>
+/* ===================== helpers ===================== */
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, kids){
+  const n = document.createElement(tag);
+  if(attrs) for(const k in attrs){ if(k==="class") n.className=attrs[k]; else if(k==="html") n.innerHTML=attrs[k]; else n.setAttribute(k,attrs[k]); }
+  if(kids) (Array.isArray(kids)?kids:[kids]).forEach(c=>{ if(c==null)return; n.appendChild(typeof c==="string"?document.createTextNode(c):c); });
+  return n;
+}
+function svgEl(tag, attrs){
+  const n = document.createElementNS(SVGNS, tag);
+  if(attrs) for(const k in attrs) n.setAttribute(k, attrs[k]);
+  return n;
+}
+
+/* ===================== Yerkes-Dodson ===================== */
+(function(){
+  const mount = document.getElementById("yd-mount");
+  if(!mount) return;
+  const W=560, H=300, padL=52, padR=24, padT=24, padB=46;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  // difficulty -> peak arousal position (0..1) and sigma
+  const diffs = {
+    latwe:  {label:"łatwe",  peak:0.74, sigma:0.30, color:"#4a8a6f"},
+    srednie:{label:"średnie",peak:0.50, sigma:0.24, color:"#b5602a"},
+    trudne: {label:"trudne", peak:0.30, sigma:0.18, color:"#b0466b"}
+  };
+  let curDiff="srednie", arousal=0.5;
+
+  const wrap = el("div",{class:"svg-widget"});
+  const controls = el("div",{class:"w-controls"});
+  controls.appendChild(el("span",{class:"w-label"},"Trudność zadania:"));
+  const btns={};
+  Object.keys(diffs).forEach(k=>{
+    const b=el("button",{class:"chip-btn"+(k===curDiff?" active":""),type:"button"},diffs[k].label);
+    b.onclick=()=>{curDiff=k;Object.keys(btns).forEach(j=>btns[j].classList.toggle("active",j===curDiff));draw();};
+    btns[k]=b; controls.appendChild(b);
+  });
+  wrap.appendChild(controls);
+
+  const sliderRow = el("div",{class:"w-controls"});
+  sliderRow.appendChild(el("span",{class:"w-label"},"Pobudzenie:"));
+  const slider=el("input",{type:"range",min:"0",max:"100",value:"50",style:"flex:1;min-width:140px"});
+  sliderRow.appendChild(slider);
+  const readout=el("span",{class:"w-readout"});
+  sliderRow.appendChild(readout);
+  wrap.appendChild(sliderRow);
+
+  const svg=svgEl("svg",{viewBox:`0 0 ${W} ${H}`,class:"w-svg"});
+  wrap.appendChild(svg);
+  const panel=el("div",{class:"w-panel"});
+  wrap.appendChild(panel);
+  mount.appendChild(wrap);
+
+  function perf(a, d){ return Math.exp(-Math.pow(a-d.peak,2)/(2*d.sigma*d.sigma)); }
+  function X(t){ return padL + t*plotW; }
+  function Y(v){ return padT + (1-v)*plotH; }
+
+  function draw(){
+    slider.value=Math.round(arousal*100);
+    svg.innerHTML="";
+    // axes
+    svg.appendChild(svgEl("line",{x1:padL,y1:padT,x2:padL,y2:padT+plotH,class:"w-axis"}));
+    svg.appendChild(svgEl("line",{x1:padL,y1:padT+plotH,x2:padL+plotW,y2:padT+plotH,class:"w-axis"}));
+    // grid + optimum line
+    const d=diffs[curDiff];
+    const optX=X(d.peak);
+    svg.appendChild(svgEl("line",{x1:optX,y1:padT,x2:optX,y2:padT+plotH,class:"w-grid"}));
+    const optLbl=svgEl("text",{x:optX,y:padT-8,"text-anchor":"middle",class:"w-axislabel"});
+    optLbl.textContent="optimum"; svg.appendChild(optLbl);
+    // curve
+    let dstr="";
+    for(let i=0;i<=100;i++){ const t=i/100; const x=X(t), y=Y(perf(t,d)); dstr+=(i===0?"M":"L")+x.toFixed(1)+" "+y.toFixed(1)+" "; }
+    const path=svgEl("path",{d:dstr,class:"w-curve"}); path.style.stroke=d.color; svg.appendChild(path);
+    // marker
+    const mp=perf(arousal,d);
+    const mx=X(arousal), my=Y(mp);
+    svg.appendChild(svgEl("line",{x1:mx,y1:padT+plotH,x2:mx,y2:my,class:"w-markerline"}));
+    const mc=svgEl("circle",{cx:mx,cy:my,r:7,class:"w-marker"}); mc.style.fill=d.color; svg.appendChild(mc);
+    // axis labels
+    const xl=svgEl("text",{x:padL+plotW/2,y:H-12,"text-anchor":"middle",class:"w-axislabel"}); xl.textContent="siła pobudzenia →"; svg.appendChild(xl);
+    const yl=svgEl("text",{x:16,y:padT+plotH/2,"text-anchor":"middle",class:"w-axislabel",transform:`rotate(-90 16 ${padT+plotH/2})`}); yl.textContent="efektywność →"; svg.appendChild(yl);
+    // readout + panel
+    const pct=Math.round(mp*100);
+    readout.textContent=Math.round(arousal*100)+"% · efekt. "+pct+"%";
+    let verdict;
+    if(mp>0.85) verdict="<b>Blisko optimum.</b> Dla zadania <b>"+d.label+"</b> to poziom pobudzenia dający najwyższą efektywność.";
+    else if(arousal<d.peak) verdict="<b>Za niskie pobudzenie.</b> Działanie jest niepełne — brakuje mobilizacji (por. deprywacja sensoryczna).";
+    else verdict="<b>Za wysokie pobudzenie.</b> Nadmiar dezorganizuje uwagę i koncentrację — szczególnie dotkliwy przy zadaniach trudnych.";
+    panel.innerHTML="Drugie prawo Yerkesa-Dodsona: optimum przesuwa się w lewo dla zadań trudniejszych. "+verdict;
+  }
+  slider.oninput=()=>{arousal=(+slider.value)/100;draw();};
+  draw();
+})();
+
+/* ===================== Maslow pyramid ===================== */
+(function(){
+  const mount=document.getElementById("maslow-mount");
+  if(!mount) return;
+  const levels=[
+    {t:"Samoaktualizacja", c:"#2f8e8f", d:"Potrzeba stawania się tym, kim potencjalnie możemy być — pełni rozwoju i realizacji potencjału.", ex:"Artysta tworzący dla samego rozwoju; człowiek realizujący życiowe powołanie."},
+    {t:"Estetyczne", c:"#4a8a6f", d:"Potrzeba piękna, harmonii, porządku i symetrii.", ex:"Dbanie o estetykę otoczenia, poszukiwanie piękna w sztuce i naturze."},
+    {t:"Poznawcze", c:"#6f9a4e", d:"Potrzeba wiedzy, rozumienia, eksploracji i sensu.", ex:"Ciekawość świata, nauka nowych rzeczy dla samej satysfakcji poznania."},
+    {t:"Szacunku", c:"#b5a02a", d:"Potrzeba uznania, prestiżu, poczucia kompetencji i wartości.", ex:"Dążenie do osiągnięć, uznania w grupie, poczucia własnej wartości."},
+    {t:"Przynależności", c:"#c2722e", d:"Potrzeba więzi, miłości, akceptacji i przynależności do grupy.", ex:"Bliskie relacje, przyjaźnie, poczucie bycia częścią wspólnoty."},
+    {t:"Bezpieczeństwa", c:"#c0563a", d:"Potrzeba stabilności, ochrony, przewidywalności i wolności od lęku.", ex:"Stały dach nad głową, praca, zdrowie, poczucie bezpieczeństwa."},
+    {t:"Fizjologiczne", c:"#a8472e", d:"Podstawowe potrzeby przetrwania: jedzenie, woda, sen, oddech.", ex:"Głód, pragnienie, sen — gdy niezaspokojone, dominują nad wszystkim."}
+  ];
+  const W=520,H=320,apexX=W/2,topY=18,baseY=H-58,baseHalf=210;
+  const n=levels.length, bandH=(baseY-topY)/n;
+  const wrap=el("div",{class:"svg-widget"});
+  const svg=svgEl("svg",{viewBox:`0 0 ${W} ${H}`,class:"w-svg"});
+  wrap.appendChild(svg);
+  const panel=el("div",{class:"w-panel"},"Kliknij poziom piramidy, aby zobaczyć opis i przykład.");
+  wrap.appendChild(panel);
+  mount.appendChild(wrap);
+
+  let sel=-1;
+  const rows=[];
+  function widthAt(y){ return baseHalf*( (y-topY)/(baseY-topY) ); }
+  levels.forEach((lv,i)=>{
+    const yTop=topY+i*bandH, yBot=yTop+bandH;
+    const wTop=widthAt(yTop), wBot=widthAt(yBot);
+    const pts=`${apexX-wTop},${yTop} ${apexX+wTop},${yTop} ${apexX+wBot},${yBot} ${apexX-wBot},${yBot}`;
+    const g=svgEl("g",{class:"maslow-row"});
+    const poly=svgEl("polygon",{points:pts,class:"maslow-seg"}); poly.style.fill=lv.c;
+    g.appendChild(poly);
+    const yMid=(yTop+yBot)/2+4;
+    const tx=svgEl("text",{x:apexX,y:yMid,"text-anchor":"middle",class:"maslow-lbl"}); tx.textContent=lv.t;
+    g.appendChild(tx);
+    g.onclick=()=>{ sel=i; rows.forEach((r,j)=>r.classList.toggle("sel",j===i));
+      panel.innerHTML="<b>"+lv.t+".</b> "+lv.d+"<br><span style='color:var(--ink-faint)'>Przykład:</span> "+lv.ex+(i>=4?" <span style='color:#1f6e64'>(potrzeba wzrostu)</span>":" <span style='color:#a8472e'>(potrzeba deficytu)</span>"); };
+    rows.push(g); svg.appendChild(g);
+  });
+  // base label
+  const bl=svgEl("text",{x:apexX,y:H-30,"text-anchor":"middle",class:"w-axislabel"}); bl.textContent="deficyt (dół) → wzrost (góra)"; svg.appendChild(bl);
+})();
+
+/* ===================== Atkinson bell ===================== */
+(function(){
+  const mount=document.getElementById("atkinson-mount");
+  if(!mount) return;
+  const W=560,H=300,padL=52,padR=24,padT=22,padB=46;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  let P=0.5;
+  const wrap=el("div",{class:"svg-widget"});
+  const row=el("div",{class:"w-controls"});
+  row.appendChild(el("span",{class:"w-label"},"P(sukcesu):"));
+  const slider=el("input",{type:"range",min:"5",max:"95",value:"50",style:"flex:1;min-width:140px"});
+  row.appendChild(slider);
+  const readout=el("span",{class:"w-readout"});
+  row.appendChild(readout);
+  wrap.appendChild(row);
+  const legend=el("div",{class:"w-controls",style:"gap:1rem"});
+  legend.appendChild(el("span",{class:"w-label",style:"color:#b5602a"},"● motywacja"));
+  legend.appendChild(el("span",{class:"w-label",style:"color:#2f8e8f"},"╌ subiektywna wartość celu"));
+  wrap.appendChild(legend);
+  const svg=svgEl("svg",{viewBox:`0 0 ${W} ${H}`,class:"w-svg"});
+  wrap.appendChild(svg);
+  const panel=el("div",{class:"w-panel"});
+  wrap.appendChild(panel);
+  mount.appendChild(wrap);
+
+  function X(t){return padL+t*plotW;}
+  function Y(v){return padT+(1-v)*plotH;}
+  const motiv=p=>4*p*(1-p);   // bell, peak 1 at p=0.5
+  const value=p=>1-p;          // decreasing line
+
+  function draw(){
+    slider.value=Math.round(P*100);
+    svg.innerHTML="";
+    svg.appendChild(svgEl("line",{x1:padL,y1:padT,x2:padL,y2:padT+plotH,class:"w-axis"}));
+    svg.appendChild(svgEl("line",{x1:padL,y1:padT+plotH,x2:padL+plotW,y2:padT+plotH,class:"w-axis"}));
+    // 50% gridline
+    svg.appendChild(svgEl("line",{x1:X(0.5),y1:padT,x2:X(0.5),y2:padT+plotH,class:"w-grid"}));
+    const gl=svgEl("text",{x:X(0.5),y:padT-6,"text-anchor":"middle",class:"w-axislabel"}); gl.textContent="0.5"; svg.appendChild(gl);
+    // value line
+    let vstr="";
+    for(let i=0;i<=100;i++){const t=i/100;vstr+=(i===0?"M":"L")+X(t).toFixed(1)+" "+Y(value(t)).toFixed(1)+" ";}
+    svg.appendChild(svgEl("path",{d:vstr,class:"w-curve2"}));
+    // motivation bell
+    let mstr="";
+    for(let i=0;i<=100;i++){const t=i/100;mstr+=(i===0?"M":"L")+X(t).toFixed(1)+" "+Y(motiv(t)).toFixed(1)+" ";}
+    svg.appendChild(svgEl("path",{d:mstr,class:"w-curve"}));
+    // markers
+    const mx=X(P);
+    svg.appendChild(svgEl("line",{x1:mx,y1:padT,x2:mx,y2:padT+plotH,class:"w-markerline"}));
+    svg.appendChild(svgEl("circle",{cx:mx,cy:Y(motiv(P)),r:7,class:"w-marker"}));
+    const vc=svgEl("circle",{cx:mx,cy:Y(value(P)),r:6}); vc.style.fill="#2f8e8f"; svg.appendChild(vc);
+    // labels
+    const xl=svgEl("text",{x:padL+plotW/2,y:H-12,"text-anchor":"middle",class:"w-axislabel"}); xl.textContent="prawdopodobieństwo sukcesu (łatwość) →"; svg.appendChild(xl);
+    readout.textContent=Math.round(P*100)+"%";
+    let v;
+    if(P>=0.42&&P<=0.58) v="<b>Szczyt motywacji.</b> Cel o średniej trudności (~50%) najsilniej mobilizuje — równowaga zachęty sukcesu i ryzyka porażki.";
+    else if(P<0.42) v="<b>Cel trudny.</b> Wysoka wartość celu, ale niskie oczekiwanie sukcesu — motywacja spada (zbyt małe szanse zniechęcają).";
+    else v="<b>Cel łatwy.</b> Wysokie oczekiwanie sukcesu, ale niska wartość celu („i tak wygram”) — motywacja spada.";
+    panel.innerHTML=v+" Zwróć uwagę: <b>subiektywna wartość maleje</b>, im łatwiejszy cel (relacja ujemna).";
+  }
+  slider.oninput=()=>{P=(+slider.value)/100;draw();};
+  draw();
+})();
+
+/* ===================== Goals 2x2 ===================== */
+(function(){
+  const mount=document.getElementById("goals-mount");
+  if(!mount) return;
+  const cells=[
+    {t:"Mistrzostwo · dążenie", s:"dążenie", pos:true, think:"„Robię to najlepiej, jak potrafię.”", desc:"Dążenie do mistrzostwa jako drogi do sukcesu — punktem odniesienia jest własny rozwój i opanowanie zadania.", cons:"Wzrost motywacji, rozwój osoby i myślenia, najwyższa jakość działania."},
+    {t:"Wykazanie się · dążenie", s:"dążenie", pos:true, think:"„Chcę być lepszy od innych.”", desc:"Realizacja zadania w relacji do standardu innych — osiągnąć tyle samo lub więcej niż oni.", cons:"Wzrost motywacji do poprawy jakości; napęd przez porównania społeczne."},
+    {t:"Mistrzostwo · unikanie", s:"unikanie", pos:false, think:"„Boję się, że nie zrobię tego dobrze.”", desc:"Unikanie mistrzostwa z powodu przewidywania porażki — lęk, że nie wykonamy czegoś najlepiej, jak umiemy.", cons:"Spadek motywacji; działanie hamowane przez lęk przed własną niedoskonałością."},
+    {t:"Wykazanie się · unikanie", s:"unikanie", pos:false, think:"„Byle się nie ośmieszyć.”", desc:"Unikanie zadania w obawie przed kompromitacją — „inni potrafią, a ja nie”, więc nie podejmuję działania.", cons:"Spadek motywacji i jakości; wycofanie, by uniknąć wstydu."}
+  ];
+  const wrap=el("div",{class:"svg-widget"});
+  const head=el("div",{class:"w-controls",style:"justify-content:space-between"});
+  head.appendChild(el("span",{class:"w-label"},"← mistrzostwo / wykazanie się →"));
+  head.appendChild(el("span",{class:"w-label"},"dążenie (góra) / unikanie (dół)"));
+  wrap.appendChild(head);
+  const grid=el("div",{class:"goals-grid"});
+  const panel=el("div",{class:"w-panel"},"Kliknij ćwiartkę, aby poznać typ celu, typowe myślenie i konsekwencje psychologiczne.");
+  const cellEls=[];
+  cells.forEach((c,i)=>{
+    const cell=el("button",{class:"goal-cell",type:"button"},[
+      el("div",{class:"goal-cell__t"},c.t),
+      el("div",{class:"goal-cell__s "+(c.pos?"pos":"neg")},c.pos?"▲ dążeniowy":"▼ unikowy")
+    ]);
+    cell.onclick=()=>{ cellEls.forEach((e,j)=>e.classList.toggle("sel",j===i));
+      panel.innerHTML="<b>"+c.t+".</b> "+c.desc+"<br><span style='color:var(--ink-faint)'>Myślenie:</span> "+c.think+"<br><span style='color:var(--ink-faint)'>Konsekwencje:</span> <span style='color:"+(c.pos?"#2f7a4f":"#be5039")+"'>"+c.cons+"</span>"; };
+    cellEls.push(cell); grid.appendChild(cell);
+  });
+  wrap.appendChild(grid);
+  wrap.appendChild(panel);
+  mount.appendChild(wrap);
+})();
+
+/* ===================== Attribution explorer ===================== */
+(function(){
+  const mount=document.getElementById("attrib-mount");
+  if(!mount) return;
+  let ev="sukces"; // sukces | porazka
+  let loc="wew", sta="stale", gen="ogolne";
+  const wrap=el("div",{class:"svg-widget"});
+
+  // event toggle
+  const evRow=el("div",{class:"w-controls"});
+  evRow.appendChild(el("span",{class:"w-label"},"Zdarzenie:"));
+  const evBtns={};
+  [["sukces","Sukces"],["porazka","Porażka"]].forEach(([k,lbl])=>{
+    const b=el("button",{class:"chip-btn"+(k===ev?" active":""),type:"button"},lbl);
+    b.onclick=()=>{ev=k;Object.keys(evBtns).forEach(j=>evBtns[j].classList.toggle("active",j===ev));draw();};
+    evBtns[k]=b; evRow.appendChild(b);
+  });
+  wrap.appendChild(evRow);
+
+  const toggles=el("div",{class:"attrib-toggles"});
+  function mkToggle(labelText, key, optA, optB){
+    const row=el("div",{class:"attrib-toggle"});
+    row.appendChild(el("span",{class:"attrib-toggle__lbl"},labelText));
+    const bA=el("button",{class:"chip-btn",type:"button"},optA[1]);
+    const bB=el("button",{class:"chip-btn",type:"button"},optB[1]);
+    function upd(){ const v=state[key]; bA.classList.toggle("active",v===optA[0]); bB.classList.toggle("active",v===optB[0]); }
+    bA.onclick=()=>{state[key]=optA[0];upd();draw();};
+    bB.onclick=()=>{state[key]=optB[0];upd();draw();};
+    row._upd=upd; row.appendChild(bA); row.appendChild(bB);
+    toggles.appendChild(row); return row;
+  }
+  const state={loc,sta,gen};
+  const tLoc=mkToggle("Umiejscowienie","loc",["wew","Wewnętrzne"],["zew","Zewnętrzne"]);
+  const tSta=mkToggle("Stałość","sta",["stale","Stałe"],["zmienne","Zmienne"]);
+  const tGen=mkToggle("Ogólność","gen",["ogolne","Ogólne"],["lokalne","Lokalne"]);
+  wrap.appendChild(toggles);
+  const panel=el("div",{class:"w-panel"});
+  wrap.appendChild(panel);
+  mount.appendChild(wrap);
+  [tLoc,tSta,tGen].forEach(t=>t._upd());
+
+  function draw(){
+    // optimistic profile: success = wew+stale+ogolne ; failure = zew+zmienne+lokalne
+    const isSucc=ev==="sukces";
+    const optimisticSet = isSucc ? {loc:"wew",sta:"stale",gen:"ogolne"} : {loc:"zew",sta:"zmienne",gen:"lokalne"};
+    let optCount=0;
+    ["loc","sta","gen"].forEach(k=>{ if(state[k]===optimisticSet[k]) optCount++; });
+    let tag, tagClass, verdict;
+    if(optCount===3){ tag="Styl optymistyczny"; tagClass="w-tag--auto";
+      verdict=isSucc? "Sukces tłumaczony jako <b>wewnętrzny, stały i ogólny</b> — „to dzięki mnie, zawsze i we wszystkim”. Buduje pewność siebie i nadzieję."
+                     : "Porażka tłumaczona jako <b>zewnętrzna, zmienna i lokalna</b> — „pech, raz, tylko tu”. Chroni motywację i sprzyja kolejnym próbom.";
+    } else if(optCount===0){ tag="Styl pesymistyczny"; tagClass="w-tag--ctrl";
+      verdict=isSucc? "Sukces tłumaczony jako <b>zewnętrzny, zmienny i lokalny</b> — „przypadek, raz, tylko tu”. Nie wzmacnia poczucia wartości."
+                     : "Porażka tłumaczona jako <b>wewnętrzna, stała i ogólna</b> — „jestem skończony, zawsze, we wszystkim”. To prosta droga do wyuczonej bezradności i demotywacji.";
+    } else { tag="Styl mieszany"; tagClass="";
+      verdict="Część wymiarów wyjaśniasz optymistycznie, część pesymistycznie. Pełny optymizm to <b>"+(isSucc?"sukces: wewnętrzny + stały + ogólny":"porażka: zewnętrzna + zmienna + lokalna")+"</b>.";
+    }
+    const tagStyle = tagClass? "" : "background:var(--paper);color:var(--ink-soft);";
+    panel.innerHTML="<span class='w-tag "+tagClass+"' style='"+tagStyle+"'>"+tag+"</span><br>"+verdict;
+  }
+  draw();
+})();
+
+/* ===================== SDT continuum ===================== */
+(function(){
+  const mount=document.getElementById("sdt-mount");
+  if(!mount) return;
+  const stops=[
+    {n:"0", t:"Amotywacja", type:"none", think:"„Po co to komu? Nie ma sensu.”", desc:"Brak intencji działania i poczucia sprawstwa — całkowity brak autodeterminacji. Człowiek nie widzi związku między działaniem a wynikiem."},
+    {n:"1", t:"Zewnętrzna", type:"ctrl", think:"„Robię to dla nagrody / żeby uniknąć kary.”", desc:"Regulacja zewnętrzna — zachowanie sterowane karami i nagrodami z zewnątrz. Najmniej autonomiczna forma motywacji zewnętrznej."},
+    {n:"2", t:"Zintrojektowana", type:"ctrl", think:"„Robię to, żeby uniknąć poczucia winy / wstydu.”", desc:"Regulacja włączona — presja pochodzi z wnętrza, ale wciąż ma charakter przymusu (poczucie winy, wstyd, ochrona ego). Nadal kontrolująca."},
+    {n:"3", t:"Zidentyfikowana", type:"auto", think:"„Robię to, bo jest to dla mnie ważne.”", desc:"Regulacja zidentyfikowana — jednostka uznaje wartość i znaczenie działania, akceptuje je jako własne. Pierwszy stopień regulacji autonomicznej."},
+    {n:"4", t:"Zintegrowana", type:"auto", think:"„Robię to, bo jest spójne z tym, kim jestem.”", desc:"Regulacja zintegrowana — działanie w pełni zgodne z wartościami i tożsamością osoby. Najbardziej dojrzała forma motywacji zewnętrznej."},
+    {n:"5", t:"Wewnętrzna", type:"auto", think:"„Robię to, bo sama czynność jest przyjemna.”", desc:"Motywacja wewnętrzna — działanie dla samej satysfakcji i przyjemności płynącej z czynności. Całkowita autodeterminacja."}
+  ];
+  const wrap=el("div",{class:"svg-widget"});
+  const scale=el("div",{class:"sdt-scale"});
+  scale.appendChild(el("span",{},"brak autodeterminacji"));
+  scale.appendChild(el("span",{},"pełna autodeterminacja"));
+  wrap.appendChild(scale);
+  wrap.appendChild(el("div",{class:"sdt-gradient"}));
+  const track=el("div",{class:"sdt-track"});
+  const panel=el("div",{class:"w-panel"},"Kliknij przystanek na kontinuum, aby zobaczyć opis, typowe „zdanie w głowie” i rodzaj regulacji.");
+  const stopEls=[];
+  stops.forEach((s,i)=>{
+    const st=el("button",{class:"sdt-stop",type:"button"},[
+      el("span",{class:"sdt-stop__n"},s.n),
+      el("span",{class:"sdt-stop__t"},s.t)
+    ]);
+    st.onclick=()=>{ stopEls.forEach((e,j)=>e.classList.toggle("sel",j===i));
+      let tag="", tstyle="";
+      if(s.type==="ctrl"){tag="Regulacja kontrolująca — przyczyna „na zewnątrz” mnie";}
+      else if(s.type==="auto"){tag="Regulacja autonomiczna — przyczyna „wewnątrz” mnie";}
+      else {tag="Brak motywacji";}
+      const tcls = s.type==="ctrl"?"w-tag--ctrl":(s.type==="auto"?"w-tag--auto":"");
+      const tsty = tcls?"":"background:var(--paper);color:var(--ink-soft);";
+      panel.innerHTML="<span class='w-tag "+tcls+"' style='"+tsty+"'>"+tag+"</span><br><b>"+s.t+".</b> "+s.desc+"<br><span style='color:var(--ink-faint)'>Zdanie w głowie:</span> "+s.think; };
+    stopEls.push(st); track.appendChild(st);
+  });
+  wrap.appendChild(track);
+  wrap.appendChild(panel);
+  mount.appendChild(wrap);
+})();
+
+/* ===================== QUIZ ===================== */
+(function(){
+  const mount=document.getElementById("quiz-mount");
+  if(!mount) return;
+  const Q=[
+    {q:"Co — według mechanizmów kierunku zachowania — wyznacza przedmiot działania?", o:["Popęd","Cel","Potrzeba biologiczna","Instynkt"], a:1, fb:"To <b>cel</b> wyznacza przedmiot zachowania, a nie popęd ani potrzeba. Ten sam głód można zaspokoić kanapką, sałatką albo odłożyć (post)."},
+    {q:"Formuła teorii popędu Hulla brzmi:", o:["zachowanie = popędy + nawyki","zachowanie = popędy × nawyki","zachowanie = potrzeby × cele","zachowanie = wzmocnienia × kary"], a:1, fb:"Hull: <b>zachowanie = popędy × nawyki</b>. Popęd daje energię, uczenie się (nawyk) — kierunek."},
+    {q:"Który system (Metcalfe, Mischel) NASILA się w stresie?", o:["Zimny","Gorący","Oba tak samo","Żaden"], a:1, fb:"<b>System gorący</b> (emocjonalny, impulsywny) nasila się w stresie; system zimny (refleksyjny) w stresie słabnie."},
+    {q:"Wzmocnienie zastępcze (vicarious) to pojęcie z teorii:", o:["Skinnera","Hulla","Bandury","Maslowa"], a:2, fb:"Bandura: obserwacja osoby, która za swoje zachowanie uzyskuje nagrodę, działa jak <b>wzmocnienie zastępcze</b>."},
+    {q:"Wzmacnianie częściowe (wybiórcze) u Skinnera szczególnie sprzyja:", o:["Szybkiemu wygaszaniu","Wytrwałości zachowania","Redukcji popędu","Modelowaniu"], a:1, fb:"Wzmacnianie <b>częściowe</b> kształtuje wytrwałość — zachowanie jest trudniejsze do wygaszenia (np. automaty do gier)."},
+    {q:"Główna funkcja nawyków i automatyzmów w funkcjonowaniu to:", o:["Zwiększanie pobudzenia","Odciążenie pamięci roboczej","Wzmacnianie lęku","Redukcja samooceny"], a:1, fb:"Nawyki <b>odciążają pamięć roboczą</b> — automatyzacja reakcji uwalnia zasoby poznawcze na ważniejsze zadania."},
+    {q:"Twór siatkowaty (RAS) jest zlokalizowany w:", o:["Korze przedczołowej","Rdzeniu przedłużonym","Ciele migdałowatym","Móżdżku"], a:1, fb:"RAS (Reticular Activating System) leży w <b>rdzeniu przedłużonym</b> i kontroluje stan pobudzenia, czuwania i przytomności."},
+    {q:"Drugie prawo Yerkesa-Dodsona mówi, że optymalny poziom pobudzenia:", o:["Jest stały dla wszystkich zadań","Zależy od trudności zadania","Jest zawsze maksymalny","Nie istnieje"], a:1, fb:"Optimum <b>zależy od trudności</b>: dla zadań trudnych i nowych jest niższe (wysokie pobudzenie dezorganizuje uwagę)."},
+    {q:"W teorii odwróconego kierunku Aptera cel parateliczny to:", o:["Nastawienie na wynik i przyszłość","Charakter przyjemnościowy, tu i teraz","Unikanie stymulacji","Cel władzy"], a:1, fb:"Cel <b>parateliczny</b> ma charakter przyjemnościowy — koncentracja na teraźniejszości i trwaniu samej czynności (teliczny = na wynik)."},
+    {q:"W koncepcji Graya system BAS odpowiada za:", o:["Hamowanie i lęk","Dążenie do nagrody (impulsywność, nadzieja)","Redukcję popędu","Samoocenę"], a:1, fb:"BAS (układ nawiązywania kontaktu) = dążenie do nagrody, impulsywność, nadzieja. BIS = hamowanie i lęk."},
+    {q:"Trzy podstawowe potrzeby psychologiczne wg Deci i Ryana to:", o:["Bezpieczeństwo, miłość, szacunek","Autonomia, kompetencja, relacje","Głód, sen, prokreacja","Władza, osiągnięcia, afiliacja"], a:1, fb:"To <b>autonomia, kompetencja i relacje</b> — i są <b>wartościami</b> (nie brakami), uniwersalnymi, wewnętrznymi."},
+    {q:"Według teorii Atkinsona motywacja osiągnięć jest najsilniejsza przy zadaniu o prawdopodobieństwie sukcesu około:", o:["10%","50%","90%","100%"], a:1, fb:"Relacja „dzwonu”: motywacja jest najsilniejsza przy <b>średnim poziomie trudności (~50%)</b> — równowaga zachęty sukcesu i ryzyka porażki."},
+    {q:"W teorii celów Locke'a i Lathama cel po osiągnięciu:", o:["Wzmacnia się","Traci moc motywacyjną","Staje się stały","Zmienia w popęd"], a:1, fb:"Po osiągnięciu cel <b>traci moc motywacyjną</b> — trzeba wyznaczyć nowy, by utrzymać motywację."},
+    {q:"Cel „wykazania się — unikanie” to:", o:["Robię coś najlepiej, jak potrafię","Chcę być lepszy od innych","Nie podejmuję zadania, by się nie ośmieszyć","Unikam mistrzostwa z lęku przed własną porażką"], a:2, fb:"Cel wykazania się-unikanie: <b>unikam zadania w obawie przed kompromitacją</b> wobec innych („inni potrafią, a ja nie”)."},
+    {q:"Konsekwencją realizacji celów UNIKOWYCH jest zwykle:", o:["Wzrost motywacji i jakości","Spadek motywacji","Rozwój osoby","Wzrost samooceny"], a:1, fb:"Cele unikowe → <b>spadek motywacji</b> i niższa jakość działania. Cele dążeniowe → wzrost motywacji i rozwój."},
+    {q:"Growth mindset (Dweck) to przekonanie, że zdolności:", o:["Są stałe i niezmienne","Można rozwijać","Zależą tylko od genów","Nie mają znaczenia"], a:1, fb:"Teoria rozwoju (growth mindset): zdolności <b>można rozwijać</b> — porażka to etap nauki, nie wyrok. Sprzyja realizacji celów."},
+    {q:"Wewnętrzne umiejscowienie kontroli (Rotter) oznacza, że osoba:", o:["Przypisuje wynik losowi i innym","Przypisuje sobie wpływ na zdarzenia","Nie odczuwa kontroli","Unika odpowiedzialności"], a:1, fb:"Wewnętrzne umiejscowienie: „<b>to zależy ode mnie</b>” — przypisuję sobie sprawczość. Zewnętrzne: los, inni ludzie."},
+    {q:"Według Seligmana to, czy człowiek popadnie w wyuczoną bezradność, zależy przede wszystkim od:", o:["Samego faktu porażki","Stylu wyjaśniania zdarzenia","Liczby porażek","Wieku"], a:1, fb:"Decyduje <b>styl wyjaśniania</b>, a nie sam fakt porażki — w kryzysie tylko 2/3 popada w bezradność, 1/3 nie."},
+    {q:"Optymistyczna atrybucja SUKCESU to przypisanie go czynnikom:", o:["Zewnętrznym, zmiennym, lokalnym","Wewnętrznym, stałym, ogólnym","Zewnętrznym, stałym, ogólnym","Wewnętrznym, zmiennym, lokalnym"], a:1, fb:"Optymista tłumaczy sukces przyczynami <b>wewnętrznymi, stałymi i ogólnymi</b> („dzięki mnie, zawsze, we wszystkim”); porażkę — odwrotnie."},
+    {q:"Nadzieja wg Snydera składa się z:", o:["Tylko siły woli","Siły woli (will power) i umiejętności znajdowania dróg (way power)","Tylko optymizmu","Genów i kultury"], a:1, fb:"Nadzieja = <b>will power</b> (motywacja, myślenie sprawcze) + <b>way power</b> (strategie, myślenie kierunkowe). Lepszy prognostyk sukcesu niż self-efficacy."},
+    {q:"Regulacja zintrojektowana (SDT) oznacza działanie, by:", o:["Zdobyć nagrodę zewnętrzną","Uniknąć poczucia winy lub wstydu","Zrobić coś przyjemnego","Wyrazić swoją tożsamość"], a:1, fb:"Regulacja zintrojektowana (włączona): robię to, by <b>uniknąć winy/wstydu</b>. To wciąż regulacja <b>kontrolująca</b> — presja, choć z wnętrza."},
+    {q:"Które typy regulacji są AUTONOMICZNE (przyczyna „wewnątrz” mnie)?", o:["Zewnętrzna i zintrojektowana","Zidentyfikowana, zintegrowana i wewnętrzna","Tylko wewnętrzna","Amotywacja"], a:1, fb:"Autonomiczne: <b>zidentyfikowana, zintegrowana, wewnętrzna</b>. Kontrolujące: zewnętrzna i zintrojektowana."},
+    {q:"Pasja obsesyjna (Vallerand) charakteryzuje się tym, że:", o:["Pasjonat sam decyduje, kiedy ją uprawia","Aktywność kieruje człowiekiem","Nie zaniedbuje innych sfer życia","Wynika z regulacji autonomicznej"], a:1, fb:"W pasji <b>obsesyjnej</b> aktywność kieruje człowiekiem (kontroluje zachowanie) — uprawia ją mimo szkód. Harmonijna = autonomiczna, „ja kieruję pasją”."}
+  ];
+  let score=0, answered=0;
+  const scoreEl=document.getElementById("quiz-score");
+  function updateScore(){ scoreEl.textContent="Wynik: "+score+" / "+answered+(answered<Q.length?"  (odpowiedziano "+answered+"/"+Q.length+")":"  ✓ koniec!"); }
+  updateScore();
+
+  Q.forEach((item,qi)=>{
+    const card=el("div",{class:"quiz-q"});
+    card.appendChild(el("div",{class:"quiz-q__num"},"Pytanie "+(qi+1)+" z "+Q.length));
+    card.appendChild(el("div",{class:"quiz-q__text"},item.q));
+    const opts=[];
+    const fb=el("div",{class:"quiz-fb"});
+    item.o.forEach((opt,oi)=>{
+      const key=String.fromCharCode(65+oi);
+      const b=el("button",{class:"quiz-opt",type:"button"},[
+        el("span",{class:"quiz-opt__key"},key),
+        el("span",{},opt)
+      ]);
+      b.onclick=()=>{
+        if(b.disabled) return;
+        opts.forEach(o=>o.disabled=true);
+        const correct=oi===item.a;
+        if(correct){ b.classList.add("correct"); score++; }
+        else { b.classList.add("wrong"); opts[item.a].classList.add("correct"); }
+        opts.forEach((o,j)=>{ if(j!==oi&&j!==item.a) o.classList.add("dim"); });
+        answered++; updateScore();
+        fb.innerHTML=(correct?"<b>✓ Dobrze.</b> ":"<b>✗ Niepoprawnie.</b> ")+item.fb;
+        fb.classList.add("show");
+      };
+      opts.push(b); card.appendChild(b);
+    });
+    card.appendChild(fb);
+    mount.appendChild(card);
+  });
+
+  document.getElementById("quiz-reset").onclick=()=>{
+    score=0; answered=0; updateScore();
+    mount.querySelectorAll(".quiz-opt").forEach(b=>{ b.disabled=false; b.classList.remove("correct","wrong","dim"); });
+    mount.querySelectorAll(".quiz-fb").forEach(f=>f.classList.remove("show"));
+    document.getElementById("quiz").scrollIntoView({behavior:"smooth"});
+  };
+})();
+
+/* ===================== search ===================== */
+(function(){
+  const input=document.getElementById("searchInput");
+  const hint=document.getElementById("searchHint");
+  if(!input) return;
+  const topics=Array.from(document.querySelectorAll(".topic"));
+  const blocks=Array.from(document.querySelectorAll(".block"));
+  const quiz=document.getElementById("quiz");
+  const content=document.getElementById("content");
+  const noRes=el("div",{class:"no-results"},"Brak wyników. Spróbuj innego słowa (np. „popęd”, „cel”, „atrybucja”, „pasja”).");
+  content.appendChild(noRes);
+  const defaultHint=hint.textContent;
+
+  function clearMarks(node){
+    node.querySelectorAll("mark").forEach(m=>{ const t=document.createTextNode(m.textContent); m.replaceWith(t); });
+    node.normalize();
+  }
+  function mark(node, term){
+    const walker=document.createTreeWalker(node, NodeFilter.SHOW_TEXT, null);
+    const texts=[]; let n; while(n=walker.nextNode()) texts.push(n);
+    const re=new RegExp("("+term.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","gi");
+    texts.forEach(t=>{
+      if(t.parentNode && /^(SCRIPT|STYLE|MARK)$/.test(t.parentNode.nodeName)) return;
+      if(re.test(t.nodeValue)){
+        const span=el("span");
+        span.innerHTML=t.nodeValue.replace(re,"<mark>$1</mark>");
+        t.replaceWith(span);
+        while(span.firstChild) span.parentNode.insertBefore(span.firstChild,span);
+        span.remove();
+      }
+    });
+  }
+
+  function run(){
+    const term=input.value.trim().toLowerCase();
+    topics.forEach(t=>clearMarks(t));
+    if(!term){
+      topics.forEach(t=>t.style.display="");
+      blocks.forEach(b=>b.style.display="");
+      if(quiz) quiz.style.display="";
+      noRes.classList.remove("show");
+      hint.textContent=defaultHint;
+      return;
+    }
+    if(quiz) quiz.style.display="none";
+    let count=0;
+    topics.forEach(t=>{
+      const hit=t.textContent.toLowerCase().includes(term);
+      t.style.display=hit?"":"none";
+      if(hit){ count++; mark(t, term); }
+    });
+    blocks.forEach(b=>{
+      if(b.id==="quiz") return;
+      const anyVisible=b.querySelectorAll(".topic").length===0 ? false :
+        Array.from(b.querySelectorAll(".topic")).some(t=>t.style.display!=="none");
+      b.style.display=anyVisible?"":"none";
+    });
+    noRes.classList.toggle("show",count===0);
+    hint.textContent=count===0?"Brak wyników":(count+" "+(count===1?"trafienie":"trafień"));
+  }
+  input.addEventListener("input",run);
+})();
+
+/* ===================== nav active state ===================== */
+(function(){
+  const links=Array.from(document.querySelectorAll("#navList a"));
+  const map={}; links.forEach(a=>{ const id=a.getAttribute("href").slice(1); map[id]=a; });
+  const sections=Object.keys(map).map(id=>document.getElementById(id)).filter(Boolean);
+  if(!("IntersectionObserver" in window)||!sections.length) return;
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        links.forEach(a=>a.classList.remove("active"));
+        const a=map[e.target.id]; if(a) a.classList.add("active");
+      }
+    });
+  },{rootMargin:"-20% 0px -70% 0px",threshold:0});
+  sections.forEach(s=>obs.observe(s));
+})();
+
+/* ===================== scroll reveal ===================== */
+(function(){
+  const els=Array.from(document.querySelectorAll(".reveal"));
+  if(!("IntersectionObserver" in window)){ els.forEach(e=>e.classList.add("in")); return; }
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add("in"); obs.unobserve(e.target); } });
+  },{rootMargin:"0px 0px -8% 0px",threshold:.05});
+  els.forEach(e=>obs.observe(e));
+})();
+
+/* ===================== mobile menu ===================== */
+(function(){
+  const btn=document.getElementById("menuBtn");
+  const sidebar=document.getElementById("sidebar");
+  const scrim=document.getElementById("scrim");
+  if(!btn) return;
+  function close(){ sidebar.classList.remove("open"); scrim.classList.remove("show"); }
+  btn.onclick=()=>{ const open=sidebar.classList.toggle("open"); scrim.classList.toggle("show",open); };
+  scrim.onclick=close;
+  document.querySelectorAll("#navList a").forEach(a=>a.addEventListener("click",close));
+})();
+
+</script>
+</body>
+</html>
