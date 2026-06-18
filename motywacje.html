@@ -337,6 +337,12 @@ mark{background:#f2c14e66;color:inherit;padding:0 .1em;border-radius:3px}
     </div>
     <div class="note note--tip"><span class="note__icon">→</span><div>Analogiczne ujęcia tego samego podziału: <b>droga korowa–podkorowa</b> (LeDoux), <b>remembering self / experiencing self</b>, <b>slow/fast thinking</b> oraz metafora <b>słoń i jeździec</b> (zob. D. Kahneman, <i>Pułapki myślenia</i>).</div></div>
   </article>
+
+  <div class="widget">
+    <div class="widget__title">System gorący vs zimny — co wygrywa pod presją?</div>
+    <div class="widget__desc">Dwa tryby przetwarzania (Metcalfe i Mischel, 1999). Kliknij wymiar, aby zobaczyć kontrast, i przełącz <b>„Pod stresem"</b> — zobaczysz kluczowy haczyk: stres nasila gorący i wycisza zimny.</div>
+    <div id="hotcold-mount"></div>
+  </div>
 </section>
 
 <!-- ===================== BLOK 2 ===================== -->
@@ -643,6 +649,12 @@ mark{background:#f2c14e66;color:inherit;padding:0 .1em;border-radius:3px}
     </div>
   </article>
 
+  <div class="widget">
+    <div class="widget__title">Fixed vs growth mindset — ta sama sytuacja, inna reakcja</div>
+    <div class="widget__desc">Dwie ukryte teorie zdolności (Dweck, 1988). Wybierz sytuację, a zobaczysz, jak każde nastawienie ją interpretuje i jaka jest tego konsekwencja motywacyjna.</div>
+    <div id="mindset-mount"></div>
+  </div>
+
   <article class="topic" id="t5-6">
     <div class="topic__head"><span class="topic__num">5.6</span><h3 class="topic__term">Potrzeba sprawowania kontroli</h3></div>
     <div class="topic__body">
@@ -921,6 +933,57 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .attrib-toggles{display:flex;flex-direction:column;gap:.55rem;margin-bottom:.3rem}
 .attrib-toggle{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
 .attrib-toggle__lbl{font-family:'Space Mono';font-size:.7rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-faint);flex:0 0 7rem}
+
+  /* ===== DODATKI: 2 nowe widżety nauki (namespace hc- / ms-) ===== */
+  /* --- Widżet: system gorący vs zimny (blok 1) --- */
+  .hc-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.2rem}
+  .hc-col{border:1.5px solid var(--line);border-radius:12px;padding:.7rem .8rem;background:var(--card);transition:opacity .25s,border-color .25s,background .25s,transform .25s}
+  .hc-col.hot{border-color:#c0563a55}
+  .hc-col.cold{border-color:#4a77b555}
+  .hc-col__h{font-family:'Space Grotesk';font-weight:700;font-size:.96rem;display:flex;align-items:center;gap:.4rem;margin-bottom:.1rem}
+  .hc-col.hot .hc-col__h{color:#b0492f}
+  .hc-col.cold .hc-col__h{color:#3c6296}
+  .hc-col__sub{font-family:'Space Mono';font-size:.62rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:.5rem}
+  .hc-col.intense{transform:scale(1.025);box-shadow:var(--shadow)}
+  .hc-col.hot.intense{border-color:#c0563a;background:#c0563a0f}
+  .hc-col.cold.intense{border-color:#4a77b5;background:#4a77b50d}
+  .hc-col.faded{opacity:.42}
+  .hc-attr{font-size:.82rem;line-height:1.5;color:var(--ink-soft);padding:.12rem 0}
+  .hc-attr b{color:var(--ink);font-weight:600}
+  .hc-dims{display:flex;flex-wrap:wrap;gap:.4rem;margin:.9rem 0 .2rem}
+  .hc-dim{font-family:'Space Mono';font-size:.7rem;font-weight:700;letter-spacing:.02em;background:var(--paper);border:1.5px solid var(--line);border-radius:99px;padding:.32rem .72rem;color:var(--ink-soft);cursor:pointer;transition:all .15s}
+  .hc-dim:hover{border-color:var(--blockc)}
+  .hc-dim.sel{background:var(--blockc);border-color:var(--blockc);color:#fff}
+  .hc-stress{display:flex;align-items:center;gap:.55rem;margin:.5rem 0 .9rem;flex-wrap:wrap}
+  .hc-toggle{position:relative;width:42px;height:23px;border-radius:99px;background:var(--line);border:none;cursor:pointer;transition:background .2s;flex:0 0 auto}
+  .hc-toggle::after{content:"";position:absolute;top:2.5px;left:2.5px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s}
+  .hc-toggle.on{background:#c0563a}
+  .hc-toggle.on::after{transform:translateX(19px)}
+  .hc-stress__lbl{font-family:'Space Mono';font-size:.72rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-faint)}
+  .hc-stress__cap{font-size:.82rem;color:var(--ink-soft);line-height:1.45;width:100%;display:none}
+  .hc-stress__cap.show{display:block}
+  .hc-stress__cap b{color:#b0492f}
+
+  /* --- Widżet: mindset fixed vs growth (blok 5) --- */
+  .ms-sits{display:flex;flex-wrap:wrap;gap:.45rem;margin-bottom:.9rem}
+  .ms-panels{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+  .ms-card{border:1.5px solid var(--line);border-radius:12px;padding:.8rem .85rem;background:var(--card);min-height:7.5rem}
+  .ms-card.fixed{border-top:3px solid #be5039}
+  .ms-card.growth{border-top:3px solid #2f7a4f}
+  .ms-card__h{font-family:'Space Grotesk';font-weight:700;font-size:.92rem;line-height:1.2;margin-bottom:.08rem}
+  .ms-card.fixed .ms-card__h{color:#a8412c}
+  .ms-card.growth .ms-card__h{color:#256340}
+  .ms-card__tag{font-family:'Space Mono';font-size:.6rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:.55rem}
+  .ms-card__interp{font-size:.86rem;line-height:1.5;color:var(--ink);margin-bottom:.55rem}
+  .ms-card__interp .ms-think{color:var(--ink-soft);font-style:italic}
+  .ms-cons{font-family:'Space Mono';font-size:.66rem;font-weight:700;letter-spacing:.02em;text-transform:uppercase;display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .5rem;border-radius:6px}
+  .ms-card.fixed .ms-cons{color:#be5039;background:#be50390f}
+  .ms-card.growth .ms-cons{color:#2f7a4f;background:#2f7a4f12}
+
+  @media (max-width:560px){
+    .hc-grid,.ms-panels{grid-template-columns:1fr}
+  }
+
 </style>
 
 <script>
@@ -1393,6 +1456,90 @@ function svgEl(tag, attrs){
     hint.textContent=count===0?"Brak wyników":(count+" "+(count===1?"trafienie":"trafień"));
   }
   input.addEventListener("input",run);
+})();
+
+
+/* ===================== System gorący vs zimny (Metcalfe-Mischel) ===================== */
+(function(){
+  const mount=document.getElementById("hotcold-mount");
+  if(!mount) return;
+  const DIMS=[
+    {k:"Tempo", hot:"szybki", cold:"wolny", plain:"Gorący reaguje błyskawicznie, zanim zdążysz pomyśleć; zimny potrzebuje chwili namysłu."},
+    {k:"Styl", hot:"emocjonalny, odruchowy", cold:"refleksyjny", plain:"Gorący działa na emocjach i odruchu; zimny — na świadomym rozważaniu."},
+    {k:"Gratyfikacja", hot:"natychmiastowa", cold:"odroczona (wyższe cele)", plain:"Gorący chce nagrody TERAZ; zimny potrafi czekać dla ważniejszego celu."},
+    {k:"Złożoność", hot:"prosty", cold:"złożony, trwały", plain:"Gorący jest prosty i ulotny; zimny — złożony i stabilny w czasie."},
+    {k:"Pod stresem", hot:"NASILA się", cold:"SŁABNIE", plain:"Kluczowy haczyk egzaminacyjny: stres podkręca gorący i wycisza zimny — dlatego pod presją trudniej o samokontrolę."},
+    {k:"Sterowanie", hot:"przez bodźce (z zewnątrz)", cold:"przez jednostkę (od wewnątrz)", plain:"Gorącym rządzą bodźce z otoczenia; zimnym — sama osoba (intencja, plan)."},
+    {k:"Rozwój", hot:"pojawia się wcześniej", cold:"rozwija się później", plain:"Gorący jest rozwojowo pierwotny; zimny dojrzewa później."}
+  ];
+  let sel=0, stress=false;
+  const wrap=el("div",{class:"svg-widget"});
+  const strow=el("div",{class:"hc-stress"});
+  const tgl=el("button",{class:"hc-toggle",type:"button","aria-label":"Przełącz stres"});
+  const scap=el("div",{class:"hc-stress__cap"});
+  strow.appendChild(tgl);
+  strow.appendChild(el("span",{class:"hc-stress__lbl"},"Pod stresem"));
+  strow.appendChild(scap);
+  const grid=el("div",{class:"hc-grid"});
+  const hot=el("div",{class:"hc-col hot"});
+  const cold=el("div",{class:"hc-col cold"});
+  grid.appendChild(hot); grid.appendChild(cold);
+  const dimrow=el("div",{class:"hc-dims"});
+  const dimEls=DIMS.map((d,i)=>{ const b=el("button",{class:"hc-dim",type:"button"},d.k); b.onclick=()=>{ sel=i; render(); }; dimrow.appendChild(b); return b; });
+  const panel=el("div",{class:"w-panel"});
+  wrap.appendChild(strow); wrap.appendChild(grid); wrap.appendChild(dimrow); wrap.appendChild(panel);
+  mount.appendChild(wrap);
+  tgl.onclick=()=>{ stress=!stress; if(stress){ const i=DIMS.findIndex(d=>d.k==="Pod stresem"); if(i>=0) sel=i; } render(); };
+  function render(){
+    dimEls.forEach((b,i)=>b.classList.toggle("sel",i===sel));
+    tgl.classList.toggle("on",stress);
+    hot.classList.toggle("intense",stress);
+    cold.classList.toggle("faded",stress);
+    scap.classList.toggle("show",stress);
+    scap.innerHTML="<b>Pod presją gorący się nasila, a zimny słabnie</b> — dlatego w stresie łatwiej ulec impulsowi, a trudniej trzymać się planu.";
+    const d=DIMS[sel];
+    hot.innerHTML='<div class="hc-col__h">Gorący</div><div class="hc-col__sub">emocjonalny · impulsywny</div><div class="hc-attr"><b>'+d.k+':</b> '+d.hot+'</div>';
+    cold.innerHTML='<div class="hc-col__h">Zimny</div><div class="hc-col__sub">refleksyjny · samokontrola</div><div class="hc-attr"><b>'+d.k+':</b> '+d.cold+'</div>';
+    panel.innerHTML='<span class="w-tag" style="background:#c0563a18;color:#b0492f">'+d.k+'</span><br>'+d.plain;
+  }
+  render();
+})();
+
+/* ===================== Mindset: fixed vs growth (Dweck) ===================== */
+(function(){
+  const mount=document.getElementById("mindset-mount");
+  if(!mount) return;
+  const SITS=[
+    {k:"Trudne wyzwanie",
+     fx:{interp:'<span class="ms-think">„A jak mi nie wyjdzie? Lepiej nie ryzykować."</span> Unika, by nie narazić się na porażkę.', cons:"unika wyzwań"},
+     gr:{interp:'<span class="ms-think">„Okazja, żeby się rozwinąć."</span> Podejmuje próbę mimo ryzyka.', cons:"podejmuje wyzwania"}},
+    {k:"Porażka",
+     fx:{interp:'<span class="ms-think">„Nie mam głowy do tego."</span> Traktuje jako wyrok o zdolnościach — poddaje się.', cons:"rezygnacja"},
+     gr:{interp:'<span class="ms-think">„Jeszcze tego nie umiem."</span> Traktuje jako etap nauki — próbuje dalej.', cons:"wytrwałość"}},
+    {k:"Wysiłek",
+     fx:{interp:'<span class="ms-think">„Skoro muszę się starać, to chyba nie jestem zdolny."</span>', cons:"zniechęcenie"},
+     gr:{interp:'<span class="ms-think">„Wysiłek mnie rozwija — tak właśnie się rośnie."</span>', cons:"zaangażowanie"}},
+    {k:"Jaki cel wybiera?",
+     fx:{interp:'Skłania się ku celom <b>wykazania się / unikowym</b> — chronić obraz własnych zdolności.', cons:"cel: nie ośmieszyć się"},
+     gr:{interp:'Skłania się ku celom <b>mistrzostwa / dążeniowym</b> — rozwijać kompetencje.', cons:"cel: nauczyć się"}}
+  ];
+  let sel=0;
+  const wrap=el("div",{class:"svg-widget"});
+  const sits=el("div",{class:"ms-sits"});
+  const sitEls=SITS.map((s,i)=>{ const b=el("button",{class:"chip-btn",type:"button"},s.k); b.onclick=()=>{ sel=i; render(); }; sits.appendChild(b); return b; });
+  const panels=el("div",{class:"ms-panels"});
+  const fx=el("div",{class:"ms-card fixed"});
+  const gr=el("div",{class:"ms-card growth"});
+  panels.appendChild(fx); panels.appendChild(gr);
+  wrap.appendChild(sits); wrap.appendChild(panels);
+  mount.appendChild(wrap);
+  function render(){
+    sitEls.forEach((b,i)=>b.classList.toggle("active",i===sel));
+    const s=SITS[sel];
+    fx.innerHTML='<div class="ms-card__h">Nastawienie na trwałość</div><div class="ms-card__tag">fixed mindset</div><div class="ms-card__interp">'+s.fx.interp+'</div><span class="ms-cons">▼ '+s.fx.cons+'</span>';
+    gr.innerHTML='<div class="ms-card__h">Nastawienie na rozwój</div><div class="ms-card__tag">growth mindset</div><div class="ms-card__interp">'+s.gr.interp+'</div><span class="ms-cons">▲ '+s.gr.cons+'</span>';
+  }
+  render();
 })();
 
 /* ===================== nav active state ===================== */
