@@ -694,7 +694,7 @@ html[data-theme="light"] .wn-overlay{background:hsl(38 25% 25% / .3)}
   </div>
 
   <!-- KONFIG: WERSJA — numer wersji aplikacji widoczny w stopce -->
-  <footer class="credit">Maciej Skiba | v1.12.0</footer>
+  <footer class="credit">Maciej Skiba | v1.12.1</footer>
   <div class="whatsnew-wrap">
     <button class="whatsnew-btn" onclick="openWhatsNew()">Co nowego?</button>
   </div>
@@ -2336,8 +2336,11 @@ const EXPLANATIONS = parseExplanations();
    odpowiedzi pod „💡 Wyjaśnieniem" pojawia się mały link „Powtórz
    w kursie".
    Kod: pierwsza litera = kurs ('e' = Emocje, 'm' = Motywacje),
-   dalej numer bloku (1-8). Numer 0 = brak pewnego dopasowania
-   bloku → link prowadzi do strony głównej danego kursu.
+   dalej numer bloku (1-8). Numer 0 = temat jest w kursie, ale bez
+   pewnego dopasowania bloku → link prowadzi do strony głównej kursu.
+   WAŻNE: jeśli pytania NIE MA w tej mapie, link „Powtórz w kursie"
+   w ogóle się nie pokazuje — używamy tego dla zagadnień, których nie
+   ma w żadnym kursie (by nie wysyłać użytkownika na próżno).
    ============================================================ */
 const COURSE_BLOCKS = {
   e: ['Emocje','Podstawowe pojęcia','Charakterystyka i klasyfikacje','Komponenty i funkcje','Teorie emocji','Neurofizjologia','Rozwój w ontogenezie','Stres','Regulacja i dobrostan'],
@@ -2356,10 +2359,14 @@ const COURSE_MAP = (function(){
   /* — Część II: Motywacje (motywacje.html) — */
   add('126-133','m1'); add('134-139,148-160','m2'); add('140-142,165-168','m3');
   add('143-147','m7'); add('161-164,193-195','m4'); add('169-176,184','m5'); add('177-183,185-192','m6');
-  /* — Pytania mieszane (196-240): kierujemy tam, gdzie realnie jest wyjaśnienie (0 = brak pewności co do bloku) — */
-  Object.assign(map, {196:'m0',197:'e0',198:'e0',199:'e1',200:'e0',201:'e0',202:'e6',203:'e0',204:'e8',205:'e8',
+  /* — Pytania mieszane (196-240): kierujemy tam, gdzie realnie jest wyjaśnienie.
+     CELOWO POMINIĘTE (brak wpisu = brak linku „Powtórz w kursie"): 200 i 201
+     (teoria „poszerzania i budowania" Fredrickson) oraz 203 (wpływ nastroju na
+     perswazję) — tych zagadnień nie ma w ŻADNYM kursie, więc nie wysyłamy tam
+     użytkownika na próżno. — */
+  Object.assign(map, {196:'e0',197:'e0',198:'e0',199:'e1',202:'e6',204:'e8',205:'e8',
     206:'e1',207:'m2',208:'m7',209:'m5',210:'m5',211:'e4',212:'e4',213:'e5',214:'e5',215:'e6',216:'e6',
-    217:'m0',218:'e6',219:'m3',220:'m5',221:'e4',222:'m2',223:'e1',224:'e1',225:'e2',226:'e2',227:'e2',
+    217:'e6',218:'e6',219:'m3',220:'m5',221:'e4',222:'m2',223:'e1',224:'e1',225:'e2',226:'e2',227:'e2',
     228:'e2',229:'e2',230:'e2',231:'e3',232:'e3',233:'e7',234:'e7',235:'e7',236:'e8',237:'e5',238:'e5',239:'e4',240:'e4'});
   return map;
 })();
