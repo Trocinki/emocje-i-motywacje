@@ -2285,6 +2285,14 @@ const THEORIES=[
   if(btn){btn.addEventListener('click',()=>{sb.classList.toggle('open');scrim.classList.toggle('show');});}
   if(scrim)scrim.addEventListener('click',close);
   document.querySelectorAll('#sidebar a').forEach(a=>a.addEventListener('click',close));
+
+  /* Pewny skok do bloku z linku „Powtórz w kursie" (np. emocje.html#blok4).
+     Strona jest długa, ma animacje pojawiania i fonty ładowane asynchronicznie,
+     więc natywny skok do kotwicy bywa zawodny — domykamy go po load i po fontach. */
+  if(location.hash && location.hash.length>1){
+    const jumpToHash=()=>{ const el=document.getElementById(decodeURIComponent(location.hash.slice(1))); if(el) el.scrollIntoView({behavior:'instant',block:'start'}); };
+    window.addEventListener('load',()=>{ jumpToHash(); if(document.fonts&&document.fonts.ready) document.fonts.ready.then(jumpToHash); setTimeout(jumpToHash,250); });
+  }
 })();
 
 </script>

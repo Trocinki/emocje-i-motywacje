@@ -1583,6 +1583,15 @@ function svgEl(tag, attrs){
   document.querySelectorAll("#navList a").forEach(a=>a.addEventListener("click",close));
 })();
 
+/* ===================== skok do bloku z linku „Powtórz w kursie" =====================
+   (np. motywacje.html#blok3). Strona ma animacje pojawiania i fonty ładowane
+   asynchronicznie, więc natywny skok do kotwicy domykamy po load i po fontach. */
+(function(){
+  if(!location.hash || location.hash.length<2) return;
+  const jumpToHash=()=>{ const el=document.getElementById(decodeURIComponent(location.hash.slice(1))); if(el) el.scrollIntoView({behavior:"instant",block:"start"}); };
+  window.addEventListener("load",()=>{ jumpToHash(); if(document.fonts&&document.fonts.ready) document.fonts.ready.then(jumpToHash); setTimeout(jumpToHash,250); });
+})();
+
 </script>
 </body>
 </html>
