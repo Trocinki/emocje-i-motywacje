@@ -209,7 +209,7 @@ mark{background:#dd7a3b33;color:inherit;border-radius:3px;padding:0 .1em}
   .slot{grid-template-columns:1fr;gap:.25rem}
   .slot__label{justify-self:start}
 }
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}.reveal{opacity:1!important;transform:none!important}}
 
 /* scroll reveal */
 .reveal{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease}
@@ -2277,7 +2277,10 @@ const THEORIES=[
 
   const rev=new IntersectionObserver((ents)=>{
     ents.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');rev.unobserve(e.target);}});
-  },{rootMargin:'0px 0px -8% 0px',threshold:.04});
+  // threshold:0 — odsłaniaj, gdy widoczny jest DOWOLNY fragment bloku. Przy threshold>0
+  // bardzo wysokie bloki (np. blok 4 „Teorie emocji", ~29 000 px) nigdy nie osiągały
+  // wymaganego udziału widoczności i pozostawały niewidoczne (pusta przerwa w treści).
+  },{rootMargin:'0px 0px -8% 0px',threshold:0});
   document.querySelectorAll('.reveal').forEach(r=>rev.observe(r));
 
   const btn=document.getElementById('menuBtn'), sb=document.getElementById('sidebar'), scrim=document.getElementById('scrim');

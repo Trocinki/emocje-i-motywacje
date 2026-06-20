@@ -1567,7 +1567,9 @@ function svgEl(tag, attrs){
   if(!("IntersectionObserver" in window)){ els.forEach(e=>e.classList.add("in")); return; }
   const obs=new IntersectionObserver(entries=>{
     entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add("in"); obs.unobserve(e.target); } });
-  },{rootMargin:"0px 0px -8% 0px",threshold:.05});
+  // threshold:0 — odsłaniaj przy dowolnym widocznym fragmencie; przy threshold>0 bardzo
+  // wysokie bloki mogłyby nigdy nie osiągnąć progu i zostać niewidoczne (jak blok 4 w emocje.html).
+  },{rootMargin:"0px 0px -8% 0px",threshold:0});
   els.forEach(e=>obs.observe(e));
 })();
 
