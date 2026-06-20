@@ -210,19 +210,20 @@ header.top{
 .btn-mode:hover{background:var(--accent);color:var(--on-accent);transform:translateY(-1px);
   box-shadow:0 8px 20px -8px hsl(var(--accent-h) 70% 45% / .5)}
 
-/* ====== Filtr zakresu pytań (Wszystkie / Emocje / Motywacje) ====== */
-.part-filter{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:18px}
-.part-filter__label{font-size:.8rem;color:var(--ink-soft);letter-spacing:.02em}
-.part-btn{
-  background:var(--glass);border:1px solid var(--line);color:var(--ink-soft);
-  padding:7px 14px;border-radius:10px;cursor:pointer;font-family:inherit;font-size:.85rem;font-weight:600;
-  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
-  transition:background .2s var(--ease),border-color .2s var(--ease),color .2s var(--ease),transform .2s var(--ease);
+/* ====== Zakres pytań — segmentowany przełącznik (w pasku narzędzi) ====== */
+.seg-wrap{display:inline-flex;align-items:center;gap:9px}
+.seg-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.11em;color:var(--ink-soft)}
+.seg{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:12px;
+  background:var(--field);border:1px solid var(--line);box-shadow:var(--edge)}
+.seg .part-btn{
+  background:transparent;border:none;color:var(--ink-soft);
+  padding:6px 13px;border-radius:9px;cursor:pointer;font-family:inherit;font-size:.82rem;font-weight:600;line-height:1.2;
+  transition:background .18s var(--ease),color .18s var(--ease);
 }
-.part-btn:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
-.part-btn.active{background:var(--accent);color:var(--on-accent);border-color:transparent;
-  box-shadow:0 8px 20px -10px hsl(var(--accent-h) 70% 45% / .55)}
-.part-btn.active:hover{transform:translateY(-1px);color:var(--on-accent)}
+.seg .part-btn:hover{color:var(--ink);background:var(--field-hover)}
+.seg .part-btn.active{background:var(--accent);color:var(--on-accent);
+  box-shadow:0 4px 12px -6px hsl(var(--accent-h) 70% 45% / .55)}
+.seg .part-btn.active:hover{color:var(--on-accent);background:var(--accent)}
 
 /* ====== Przyciski „Kurs" — wyróżnione (lecz kompaktowe) kafle do materiałów nauki ====== */
 .course-row{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;width:100%;margin-bottom:14px}
@@ -638,6 +639,14 @@ html[data-theme="light"] .wn-overlay{background:hsl(38 25% 25% / .3)}
 
   <div class="toolbar">
     <button class="btn-mode" id="btn-mode" onclick="toggleMode()">🎓 Tryb testu</button>
+    <div class="seg-wrap">
+      <span class="seg-label">Zakres</span>
+      <div class="seg" role="group" aria-label="Zakres pytań">
+        <button class="part-btn active" data-part="all" type="button" onclick="setPartFilter('all')">Wszystkie</button>
+        <button class="part-btn" data-part="emocje" type="button" onclick="setPartFilter('emocje')">Emocje</button>
+        <button class="part-btn" data-part="motywacje" type="button" onclick="setPartFilter('motywacje')">Motywacje</button>
+      </div>
+    </div>
     <div class="tool-cluster">
       <button class="tool-icon" id="browse-open-btn" onclick="openBrowse('all')" title="Przeglądaj wszystkie pytania (bez odpowiadania)" aria-label="Przeglądaj pytania">📖</button>
       <button class="tool-icon" id="fav-open-btn" onclick="openBrowse('fav')" title="Twoje ulubione pytania" aria-label="Ulubione pytania">★<span id="fav-count" class="tool-badge hidden">0</span></button>
@@ -673,13 +682,6 @@ html[data-theme="light"] .wn-overlay{background:hsl(38 25% 25% / .3)}
       </div>
     </div>
     <input type="file" id="import-file" accept="application/json,.json" class="hidden">
-  </div>
-
-  <div class="part-filter" role="group" aria-label="Zakres pytań">
-    <span class="part-filter__label">Zakres pytań:</span>
-    <button class="part-btn active" data-part="all" type="button" onclick="setPartFilter('all')">Wszystkie</button>
-    <button class="part-btn" data-part="emocje" type="button" onclick="setPartFilter('emocje')">Emocje</button>
-    <button class="part-btn" data-part="motywacje" type="button" onclick="setPartFilter('motywacje')">Motywacje</button>
   </div>
 
   <div id="progress"><div></div></div>
