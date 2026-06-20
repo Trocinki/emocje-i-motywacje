@@ -210,20 +210,22 @@ header.top{
 .btn-mode:hover{background:var(--accent);color:var(--on-accent);transform:translateY(-1px);
   box-shadow:0 8px 20px -8px hsl(var(--accent-h) 70% 45% / .5)}
 
-/* ====== Zakres pytań — segmentowany przełącznik (w pasku narzędzi) ====== */
+/* ====== Zakres pytań — segmentowany przełącznik z płynnie sunącym wskaźnikiem ====== */
 .seg-wrap{display:inline-flex;align-items:center;gap:9px}
 .seg-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.11em;color:var(--ink-soft)}
-.seg{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:12px;
+.seg{position:relative;display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:12px;
   background:var(--field);border:1px solid var(--line);box-shadow:var(--edge)}
+.seg__thumb{position:absolute;top:3px;left:3px;width:0;height:0;z-index:0;border-radius:9px;
+  background:var(--accent);box-shadow:0 4px 12px -6px hsl(var(--accent-h) 70% 45% / .55);
+  transition:transform .3s var(--ease),width .3s var(--ease),background .9s ease;
+  will-change:transform,width}
 .seg .part-btn{
-  background:transparent;border:none;color:var(--ink-soft);
+  position:relative;z-index:1;background:transparent;border:none;color:var(--ink-soft);
   padding:6px 13px;border-radius:9px;cursor:pointer;font-family:inherit;font-size:.82rem;font-weight:600;line-height:1.2;
-  transition:background .18s var(--ease),color .18s var(--ease);
+  transition:color .22s var(--ease);
 }
-.seg .part-btn:hover{color:var(--ink);background:var(--field-hover)}
-.seg .part-btn.active{background:var(--accent);color:var(--on-accent);
-  box-shadow:0 4px 12px -6px hsl(var(--accent-h) 70% 45% / .55)}
-.seg .part-btn.active:hover{color:var(--on-accent);background:var(--accent)}
+.seg .part-btn:hover{color:var(--ink)}
+.seg .part-btn.active,.seg .part-btn.active:hover{color:var(--on-accent)}
 
 /* ====== Przyciski „Kurs" — wyróżnione (lecz kompaktowe) kafle do materiałów nauki ====== */
 .course-row{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;width:100%;margin-bottom:14px}
@@ -258,6 +260,19 @@ header.top{
 .btn-course .bc-name{font-family:"Fraunces",serif;font-size:.98rem;font-weight:600;letter-spacing:-.01em}
 .btn-course.emo{--c1:#1c8a79;--c2:#0f5a50;--c-shadow:hsl(170 60% 22% / .6)}
 .btn-course.mot{--c1:#c47a3a;--c2:#9a481c;--c-shadow:hsl(24 60% 26% / .55)}
+/* połysk przesuwający się po kaflu przy najechaniu */
+.btn-course .bc-shine{
+  position:absolute;top:0;bottom:0;left:0;width:40%;pointer-events:none;
+  background:linear-gradient(100deg,transparent 0%,hsl(0 0% 100% / .28) 50%,transparent 100%);
+  transform:translateX(-220%) skewX(-16deg);opacity:0;
+}
+.btn-course:hover .bc-shine{opacity:1;animation:bcShine .85s var(--ease)}
+@keyframes bcShine{from{transform:translateX(-220%) skewX(-16deg)}to{transform:translateX(420%) skewX(-16deg)}}
+
+/* delikatny „pop" liczby przy wzroście wyniku / serii */
+#score,#streak{display:inline-block;transform-origin:left center}
+@keyframes statPop{0%{transform:scale(1)}32%{transform:scale(1.18)}100%{transform:scale(1)}}
+.stat-pop{animation:statPop .42s var(--ease)}
 
 /* ====== Mały link „Powtórz w kursie" pod wyjaśnieniem (dyskretny, nie przycisk) ====== */
 .course-jump{display:inline-flex;align-items:center;gap:7px;margin-top:13px;
@@ -628,10 +643,12 @@ html[data-theme="light"] .wn-overlay{background:hsl(38 25% 25% / .3)}
 
   <div class="course-row">
     <a class="btn-course emo" href="emocje.html" title="Otwórz kurs: Emocje (materiały do nauki)">
+      <span class="bc-shine" aria-hidden="true"></span>
       <span class="bc-ic">📗</span>
       <span class="bc-tx"><span class="bc-kick">Kurs · Część 1</span><span class="bc-name">Emocje</span></span>
     </a>
     <a class="btn-course mot" href="motywacje.html" title="Otwórz kurs: Motywacje (materiały do nauki)">
+      <span class="bc-shine" aria-hidden="true"></span>
       <span class="bc-ic">📙</span>
       <span class="bc-tx"><span class="bc-kick">Kurs · Część 2</span><span class="bc-name">Motywacje</span></span>
     </a>
@@ -642,6 +659,7 @@ html[data-theme="light"] .wn-overlay{background:hsl(38 25% 25% / .3)}
     <div class="seg-wrap">
       <span class="seg-label">Zakres</span>
       <div class="seg" role="group" aria-label="Zakres pytań">
+        <span class="seg__thumb" aria-hidden="true"></span>
         <button class="part-btn active" data-part="all" type="button" onclick="setPartFilter('all')">Wszystkie</button>
         <button class="part-btn" data-part="emocje" type="button" onclick="setPartFilter('emocje')">Emocje</button>
         <button class="part-btn" data-part="motywacje" type="button" onclick="setPartFilter('motywacje')">Motywacje</button>
@@ -2717,11 +2735,18 @@ function clearState(){
    ============================================================ */
 const $=id=>document.getElementById(id);
 
+let _prevScore=0, _prevStreak=0, _statsSeen=false;
+function pulseEl(el){ if(!el) return; el.classList.remove('stat-pop'); void el.offsetWidth; el.classList.add('stat-pop'); }
 function updateStats(){
   $('cur').textContent = Math.min(answered+1, activeBank.length);
   $('tot').textContent = activeBank.length;
   $('score').textContent = score;
   $('streak').textContent = streak;
+  if(_statsSeen){                                   // „pop" tylko przy realnym wzroście (nie na starcie/wznowieniu)
+    if(score  > _prevScore)  pulseEl($('score'));
+    if(streak > _prevStreak) pulseEl($('streak'));
+  }
+  _prevScore = score; _prevStreak = streak; _statsSeen = true;
   { const sm=$('streak-max'); if(sm) sm.textContent = maxStreak; }
   $('progress').firstElementChild.style.width = (answered/activeBank.length*100)+'%';
 
@@ -3259,6 +3284,31 @@ function updatePartUI(){
     b.classList.toggle('active', on);
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
+  positionSegThumb();                  // przesuń wskaźnik pod aktywny segment (płynnie)
+}
+/* Ustaw/przesuń sunący wskaźnik segmentu. animate=false → bez animacji (np. start, resize). */
+function positionSegThumb(animate){
+  const seg = document.querySelector('.seg'); if(!seg) return;
+  const thumb = seg.querySelector('.seg__thumb');
+  const active = seg.querySelector('.part-btn.active');
+  const first = seg.querySelector('.part-btn');
+  if(!thumb || !active || !first) return;
+  const apply = ()=>{
+    thumb.style.top    = active.offsetTop + 'px';
+    thumb.style.height = active.offsetHeight + 'px';
+    thumb.style.left   = first.offsetLeft + 'px';
+    thumb.style.width  = active.offsetWidth + 'px';
+    thumb.style.transform = 'translateX(' + (active.offsetLeft - first.offsetLeft) + 'px)';
+  };
+  if(animate === false){
+    const prev = thumb.style.transition;
+    thumb.style.transition = 'none';
+    apply();
+    void thumb.offsetWidth;            // wymuś reflow, żeby pominąć animację
+    thumb.style.transition = prev || '';
+  } else {
+    apply();
+  }
 }
 function setPartFilter(p){
   if(p === partFilter) return;                  // już aktywny
@@ -3712,6 +3762,10 @@ function init(){
 
   updateUIForMode();
   updatePartUI();
+  positionSegThumb(false);                                  // wskaźnik segmentu bez animacji na starcie
+  window.addEventListener('resize', ()=>positionSegThumb(false));
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>positionSegThumb(false));
+  window.addEventListener('load', ()=>positionSegThumb(false));
   
   if(loadState()){
     $('shuffle-toggle').checked=shuffleOn;
