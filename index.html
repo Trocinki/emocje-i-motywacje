@@ -177,7 +177,12 @@ header.top{
 #xp-stat .val{color:var(--gold);transition:color .9s ease}
 
 /* ====== Pasek narzędzi ====== */
-.toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+/* Pasek narzędzi jako siatka: rząd 1 = [tryby ............ ikony], rząd 2 = [zakres] na całą szerokość.
+   Dzięki kolumnie „auto" ikony (z menu) zawsze trzymają się prawej — także na wąskich ekranach. */
+.toolbar{display:grid;grid-template-columns:1fr auto;gap:14px 16px;align-items:center;margin-bottom:18px}
+.toolbar__modes{order:1;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.toolbar > .tool-cluster{order:2;margin-left:0}
+.toolbar > .seg-wrap{order:3;grid-column:1 / -1}
 .switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none;font-size:.92rem;color:var(--ink-soft)}
 .switch input{display:none}
 .track{
@@ -209,6 +214,10 @@ header.top{
 }
 .btn-mode:hover{background:var(--accent);color:var(--on-accent);transform:translateY(-1px);
   box-shadow:0 8px 20px -8px hsl(var(--accent-h) 70% 45% / .5)}
+/* stan aktywny (przycisk „Dodatkowe — Emocje" gdy jesteśmy w tej puli) */
+.btn-mode.active{background:var(--accent);color:var(--on-accent);border-color:transparent;
+  box-shadow:0 8px 20px -10px hsl(var(--accent-h) 70% 45% / .55)}
+.btn-mode.active:hover{background:var(--accent);color:var(--on-accent);transform:translateY(-1px)}
 
 /* ====== Zakres pytań — segmentowany przełącznik z płynnie sunącym wskaźnikiem ====== */
 .seg-wrap{display:inline-flex;align-items:center;gap:9px}
@@ -655,7 +664,10 @@ html[data-theme="light"] .wn-overlay{background:hsl(38 25% 25% / .3)}
   </div>
 
   <div class="toolbar">
-    <button class="btn-mode" id="btn-mode" onclick="toggleMode()">🎓 Tryb testu</button>
+    <div class="toolbar__modes">
+      <button class="btn-mode" id="btn-mode" onclick="toggleMode()">🎓 Tryb testu</button>
+      <button class="btn-mode btn-extra" id="btn-extra" onclick="enterExtraMode()" title="Dodatkowe pytania z Emocji (pula od studentki). Niedostępne w zwykłym trybie i bez powiązania z kursami.">📘 Pytania dodatkowe - Emocje</button>
+    </div>
     <div class="seg-wrap">
       <span class="seg-label">Zakres</span>
       <div class="seg" role="group" aria-label="Zakres pytań">
@@ -735,7 +747,7 @@ html[data-theme="light"] .wn-overlay{background:hsl(38 25% 25% / .3)}
   </div>
 
   <!-- KONFIG: WERSJA — numer wersji aplikacji widoczny w stopce -->
-  <footer class="credit">Maciej Skiba | v1.12.1</footer>
+  <footer class="credit">Maciej Skiba | v1.12.5</footer>
   <div class="whatsnew-wrap">
     <button class="whatsnew-btn" onclick="openWhatsNew()">Co nowego?</button>
   </div>
@@ -749,6 +761,7 @@ html[data-theme="light"] .wn-overlay{background:hsl(38 25% 25% / .3)}
     <div class="wn-ver">Najnowsze zmiany</div>
     <!-- KONFIG: CO-NOWEGO — lista zmian w okienku „Co nowego?" (najnowsze na górze) -->
     <ul class="wn-list">
+      <li><b>Pytania dodatkowe.</b> Zuzia Borek przyłączyła się do projektu i dała nam dodatkowe pytania z Emocji. Dziękujemy!</li>
       <li><b>Specjalne podziękowania dla:</b> Marty Łapki i Zuzi Czajkowskiej!</li>
       <li><b>Kursy do nauki.</b> Wyróżnione kafle <span class="wn-em">📗 Emocje</span> i <span class="wn-em">📙 Motywacje</span> na górze otwierają pełne materiały do egzaminu — definicje, teorie i przykłady w jednym miejscu.</li>
       <li><b>Nowy, jaśniejszy wygląd.</b> Strona startuje teraz w trybie jasnym, spójnym kolorystycznie z kursami. Tryb ciemny dalej włączysz przełącznikiem <span class="wn-em">Tryb jasny</span> w menu <span class="wn-em">⚙</span>.</li>
@@ -2327,10 +2340,11 @@ const explanationsText = `
 /* ============================================================
    PARSOWANIE
    ============================================================ */
-function parseAll(){
+/* Generyczny parser banku — używany dla głównej bazy ORAZ puli dodatkowej. */
+function parseBankFrom(qText, aText){
   const key={};
-  answersText.replace(/\((\d+)\)\s*-\s*([a-f](?:,[a-f])*)/gi,(m,id,ans)=>{ key[id]=ans.toLowerCase(); return m; });
-  const lines = questionsText.split('\n');
+  aText.replace(/\((\d+)\)\s*-\s*([a-f](?:,[a-f])*)/gi,(m,id,ans)=>{ key[id]=ans.toLowerCase(); return m; });
+  const lines = qText.split('\n');
   const out=[]; let cur=null;
   for(const raw of lines){
     const line=raw.trim();
@@ -2349,6 +2363,7 @@ function parseAll(){
   if(cur && key[cur.id] && cur.options.length) out.push(cur);
   return out;
 }
+function parseAll(){ return parseBankFrom(questionsText, answersText); }
 const BANK = parseAll();
 if(!BANK.length){
   try{ document.getElementById('question').textContent='Błąd: nie udało się wczytać bazy pytań.'; }catch(e){}
@@ -2356,9 +2371,9 @@ if(!BANK.length){
 
 /* Wyjaśnienia: mapa { numerPytania: tekst }. Pytania bez wpisu (np. od 112 w górę)
    po prostu nie mają wyjaśnienia — obsługuje to renderExplanation(). */
-function parseExplanations(){
+function parseExplanationsFrom(eText){
   const map={}; let cur=null;
-  explanationsText.split('\n').forEach(raw=>{
+  eText.split('\n').forEach(raw=>{
     const line=raw.trim();
     if(!line) return;
     const m=line.match(/^\((\d+)\)\s*(.*)$/);
@@ -2367,7 +2382,1136 @@ function parseExplanations(){
   });
   return map;
 }
+function parseExplanations(){ return parseExplanationsFrom(explanationsText); }
 const EXPLANATIONS = parseExplanations();
+
+/* ============================================================
+   KONFIG: DODATKOWE-PYTANIA (EMOCJE) — osobna pula od studentki.
+   Niezależna od głównej bazy (id 1001+), bez powiązania z kursami
+   emocje.html / motywacje.html. Dostępne tylko w trybie „Dodatkowe
+   pytania (Emocje)" — w zwykłym trybie się nie pojawiają.
+   Odpowiedzi zostały przebalansowane na ~równy rozkład A/B/C/D.
+   ============================================================ */
+const extraQuestionsText = `
+(1001) Jaka jest główna różnica pomiędzy pojęciem emocji a pojęciem uczucia w świetle zaprezentowanych materiałów wykładowych?
+a) Emocja to wyłącznie świadome przeżycie psychiczne, podczas gdy uczucie jest automatyczną zmianą fizjologiczną, której nie można kontrolować.
+b) Emocja jest stanem długotrwałym i pozbawionym konkretnego obiektu, a uczucie jest zawsze krótkotrwałą odpowiedzią na bodziec.
+c) Nie ma żadnej różnicy między tymi pojęciami, są one w psychologii stosowane całkowicie synonimicznie.
+d) Emocja obejmuje obiektywną zmianę w organizmie oraz gotowość do działania, natomiast uczucie to jej świadome przeżycie, które człowiek potrafi nazwać.
+(1002) Na czym polega opisana w materiałach hipoteza markerów somatycznych autorstwa Antonio Damasio?
+a) Emocje pomagają w podejmowaniu decyzji, ponieważ oznaczają dostępne opcje jako korzystne lub ryzykowne za pomocą sygnałów z ciała, w czym kluczową rolę odgrywa kora przedczołowa brzuszno-przyśrodkowa (vmPFC).
+b) Emocje zawsze utrudniają i paraliżują podejmowanie racjonalnych decyzji, ponieważ wywołują chaos w sygnałach płynących z narządów wewnętrznych.
+c) Ciało migdałowate jest jedyną strukturą odpowiedzialną za generowanie markerów somatycznych, całkowicie bez udziału struktur korowych.
+d) Markery somatyczne aktywują się wyłącznie po przeprowadzeniu pełnej, długotrwałej i w pełni świadomej analizy poznawczej danej sytuacji.
+(1003) Zgodnie z psychologiczną charakterystyką emocji według Klausa Scherera (2009), emocje są subiektywnie znaczące oraz intencjonalne. Co oznacza ich intencjonalność?
+a) Emocje są wywoływane wyłącznie przez czynniki wewnętrzne organizmu i w żadnym stopniu nie odnoszą się do relacji społecznych czy naruszenia norm.
+b) Intencjonalność emocji oznacza, że człowiek potrafi z wyprzedzeniem i w sposób w pełni kontrolowany zaplanować, jaką emocję odczuje w danej chwili.
+c) Emocje są nieintencjonalne i pojawiają się losowo, bez żadnego powiązania z subiektywną oceną znaczenia sytuacji.
+d) Emocje są zawsze „o czymś” – oznaczają, że są skierowane na konkretny obiekt lub zdarzenie, takie jak strata, zagrożenie, sukces czy relacja.
+(1004) W psychologii klinicznej aleksytymia jest obecnie rozpatrywana jako tak zwany czynnik transdiagnostyczny. Jak należy to rozumieć?
+a) Aleksytymia to całkowite wykluczenie możliwości odczuwania jakichwiek stanów pobudzenia fizjologicznego przez organizm.
+b) Aleksytymia to zaburzenie polegające na nadmiernej, patologicznej ekspresji emocjonalnej, utrudniającej funkcjonowanie w grupie.
+c) Jest to cecha, która może współwystępować z różnymi problemami psychicznymi i nasilać ogólne trudności w regulacji emocji u pacjenta.
+d) Aleksytymia to przejściowy i krótkotrwały stan silnego pobudzenia afektywnego, który mija samoistnie po ustąpieniu stresora.
+(1005) W kontekście regulacji emocjonalnej, jakie są udokumentowane w metaanalizach konsekwencje stosowania reinterpretacji poznawczej w porównaniu do tłumienia ekspresji?
+a) Reinterpretacja zmienia znaczenie sytuacji i sprzyja elastyczności oraz pozytywnemu afektowi, podczas gdy tłumienie ekspresji zmienia głównie to, co widać, zwiększając koszt fizjologiczny.
+b) Reinterpretacja polega wyłącznie na mechanicznym ukrywaniu oznak przeżywanych emocji, przez co generuje potężny dystres psychiczny.
+c) Obie strategie mają dokładnie takie same, neutralne konsekwencje dla zdrowia psychicznego oraz funkcjonowania społecznego człowieka.
+d) Tłumienie ekspresji sprzyja znacznie większej elastyczności poznawczej i budowaniu autentyczności w relacjach niż reinterpretacja.
+(1006) Jak w ontogenezie definiowany jest rozwój emocji oraz czym charakteryzuje się dojrzałość emocjonalna według zaprezentowanego materiału?
+a) Rozwój emocji zależy wyłącznie od biologicznego dojrzewania struktur podkorowych, a środowisko rodzinne nie ma na niego żadnego wpływu.
+b) Rozwój emocji to proces zmian w ekspresji, przeżywaniu, rozpoznawaniu, rozumieniu i regulacji emocji zachodzący od najwcześniejszych etapów życia w wyniku współdziałania dojrzewania biologicznego i doświadczeń społecznych, a dojrzałość emocjonalna to proces, nie stan.
+c) Dojrzałość emocjonalna jest trwałym, statycznym i niezmiennym stanem, który każdy człowiek automatycznie osiąga z dniem 18. roku życia.
+d) Rozwój emocjonalny stanowi odizolowany proces, który nie wykazuje żadnych powiązań z obszarem funkcjonowania poznawczego czy relacjami społecznymi.
+(1007) Opierając się na klasycznych teoriach stresu przedstawionych na wykładzie, jakie są podstawowe cechy charakteryzujące stres jako proces?
+a) W procesie stresu uczestniczą wyłącznie hormony tarczycy, a substancje takie jak adrenalina, noradrenalina czy kortyzol nie odgrywają w nim roli.
+b) Reakcja stresowa ma zawsze charakter wyłącznie dezadaptacyjny i destrukcyjny, nigdy nie pełniąc żadnych funkcji przystosowawczych w środowisku.
+c) Stres jest wyłącznie mechaniczną i automatyczną reakcją somatyczną organizmu, całkowicie niezależną od indywidualnej oceny poznawczej danej sytuacji.
+d) Stres wiąże się nierozerwalnie z oceną poznawczą sytuacji, obejmuje różnorodne reakcje emocjonalne oraz posiada zdolność do zmiany celów i priorytetów człowieka.
+(1008) W jaki sposób Carroll Izard w swojej teorii porządkuje biologię emocji i jak opisuje relacje pomiędzy systemami ich aktywacji?
+a) Według Izarda emocje mogą być uruchamiane wyłącznie drogą świadomego namysłu i głębokich procesów poznawczych jednostki.
+b) Zaproponował model czterech systemów aktywacji (procesy neuronalne, sensomotoryczne, afektywne i poznawcze), w którym poziom neuronalny jest zawsze aktywny.
+c) Procesy procesy sensomotoryczne w modelu Izarda wykluczają przesyłanie jakichkolwiek sygnałów z ciała czy mięśni mimicznych twarzy.
+d) Poziom poznawczy jest najniższym, najbardziej prymitywnym i zawsze aktywnym poziomem w całej hierarchii systemów Izarda.
+(1009) Jakie specyficzne funkcje w przetwarzaniu emocji przypisuje się lewej, a jakie prawej półkuli mózgu na podstawie slajdu dotyczącego lateralizacji?
+a) Obie półkule przetwarzają dokładnie te same emocje w sposób całkowicie symetryczny, a pojęcie lateralizacji nie ma zastosowania w afekcie.
+b) Lewa półkula odpowiada za emocje pozytywne, zachowania zbliżenia i werbalizację emocji, natomiast prawa za emocje negatywne, zachowania unikania i rozpoznawanie emocji.
+c) Werbalizacja emocji jest wyłączną domeną prawej półkuli, natomiast całościowe rozpoznawanie ekspresji emocjonalnej u innych – lewej półkuli.
+d) Lewa półkula odpowiada wyłącznie za emocje negatywne i zachowania unikania, podczas gdy prawa przetwarza emocje pozytywne.
+(1010) W modelach teoretycznych afekt traktowany jest jako pojęcie nadrzędne. W jaki sposób definiuje się go w przestrzeni modeli wymiarowych (np. Russella)?
+a) Afekt stanowi wyłącznie świadome, głęboko przemyślane i zwerbalizowane przeżycie o charakterze ściśle refleksyjnym.
+b) Afekt to synonim pojęcia nastroju, charakteryzujący się zawsze stałym, bardzo niskim pobudzeniem i całkowitym brakiem ukierunkowania.
+c) Modele wymiarowe kategorycznie odrzucają istnienie wymiaru walencji, skupiając się wyłącznie na czasie trwania danego stanu psychicznego.
+d) Afekt to ogólny termin obejmujący wszystkie stany emocjonalne (emocje, nastroje, uczucia, preferencje), opisywany przez dwa główne wymiary: walencję i pobudzenie.
+(1011) Na czym polega ocena wtórna (secondary appraisal) w klasycznym modelu stresu Richarda Lazarusa i Susan Folkman?
+a) Na powtórnej analizie sytuacji po upływie kilku tygodni od zakończenia działania stresora.
+b) Na automatycznym, nieświadomym pobudzeniu układu współczulnego i wyrzucie adrenaliny.
+c) Na ocenie własnych zasobów, umiejętności i możliwości poradzenia sobie z zaistniałą sytuacją stresową.
+d) Na ustaleniu, czy napotkane zdarzenie stanowi dla człowieka bezpośrednią stratę, zagrożenie czy wyzwanie.
+(1012) Który z hormonów jest kluczowy dla wolniejszej, długofalowej reakcji stresowej i jest wydzielany przez tzw. oś HPA (podwzgórze-przysadka-nadnercza)?
+a) Adrenalina
+b) Noradrenalina
+c) Kortyzol
+d) Tyksyna
+(1013) Czym w koncepcji Bruce'a McEwena różni się proces allostazy od obciążenia allostatycznego (allostatic load)?
+a) Allostaza to proces osiągania stabilności (homeostazy) poprzez zmianę w odpowiedzi na wyzwania, a obciążenie allostatyczne to skumulowane „zużycie” organizmu wynikające z przewlekłego stresu.
+b) Pojęcia te są synonimami i opisują wyłącznie krótkotrwałe działanie dopaminy w sytuacjach lękowych.
+c) Obciążenie allostatyczne to stan idealnej odporności psychicznej, podczas gdy allostaza oznacza całkowite załamanie mechanizmów obronnych.
+d) Allostaza dotyczy wyłącznie stresu psychologicznego, natomiast obciążenie allostatyczne odnosi się tylko do urazów mechanicznych ciała.
+(1014) Jak w modelu czterech systemów aktywacji emocji Carrolla Izarda opisywana jest relacja czasowa i rozwojowa między poszczególnymi poziomami?
+a) Poziom poznawczy jest najbardziej pierwotny i rozwija się jako pierwszy, sterując pozostałymi systemami u niemowląt.
+b) System sensomotoryczny wyklucza jakiekolwiek przesyłanie sygnałów z mięśni mimicznych twarzy i rozwija się dopiero w wieku dorosłym.
+c) Hierarchia poziomów odzwierciedla rozwój emocji w ontogenezie, gdzie poziom poznawczy zaczyna działać dopiero po wykształceniu pełnej zdolności do tworzenia reprezentacji poznawczych.
+d) Wszystkie cztery systemy aktywują się jednocześnie od momentu narodzin i działają z taką samą intensywnością przez całe życie.
+(1015) Jaką funkcję według Antonio Damasio pełni interocepcja (interoception) w kontekście powstawania ludzkich uczuć?
+a) Służy do całkowitego blokowania i ignorowania sygnałów płynących z narządów wewnętrznych podczas silnego stresu.
+b) Występuje wyłącznie w stanach patologicznych i uniemożliwia utrzymanie homeostazy organizmu.
+c) Umożliwia tworzenie przez mózg „map” stanu organizmu, a uczucia są bezpośrednim efektem interpretacji tych map (gdy mózg odczytuje i reprezentuje stan ciała jako przeżycie).
+d) Jest procesem czysto zewnętrznym, odpowiedzialnym wyłącznie za obserwację i ocenę ekspresji mimicznej u innych ludzi.
+(1016) Na podstawie wykładu „Emocje jako mechanizm regulacji...”, w jaki sposób emocje wpływają na procesy uwagi i przetwarzania informacji?
+a) Emocje wpływają na poznanie wyłącznie w sposób dezadaptacyjny, prowadząc w każdej sytuacji do błędnych decyzji.
+b) To, co emocjonalnie istotne, szybciej zostaje zauważone, mocniej angażuje uwagę i częściej trafia do dalszej analizy poznawczej.
+c) Stany emocjonalne całkowicie wyłączają procesy pamięciowe, uniemożliwiając jakąkolwiek adaptację człowieka do świata.
+d) Emocje sprawiają, że organizm zaczyna traktować wszystkie bodźce napływające ze środowiska w sposób całkowicie jednakowy.
+(1017) Dlaczego rozwój emocji jest określany w ontogenezie jako oś całego rozwoju psychicznego dziecka?
+a) Ponieważ dojrzałość emocjonalna jest sztywnym, niezmiennym stanem, który kończy się w momencie osiągnięcia pełnoletności.
+b) Ponieważ emocje rozwijają się w sposób całkowicie odizolowany od dojrzewania biologicznego i norm społecznych.
+c) Ponieważ emocje w ontogenezie pełnią wyłącznie funkcję destrukcyjną dla procesów uczenia się i pamięci.
+d) Ponieważ emocje organizują cztery kluczowe obszary funkcjonowania: zachowanie, relacje społeczne, poznanie i motywację oraz zdrowie psychiczne.
+(1018) Jak definiuje się ogólne pojęcie afektu w przestrzeni modeli wymiarowych (np. kołowego modelu Jamesa Russella)?
+a) Jako pojęcie nadrzędne obejmujące wszelkie stany emocjonalne, które można opisać i sklasyfikować za pomocą dwóch głównych wymiarów: walencji oraz pobudzenia.
+b) Jako synonim długotrwałego i rozlanego nastroju o bardzo niskiej intensywności, pozbawionego komponentu fizjologicznego.
+c) Jako stan skrajnego, patologicznego wzburzenia, który uniemożliwia werbalizację jakichkolwiek stanów wewnętrznych.
+d) Jako proces poznawczy polegający wyłącznie na logicznej analizie zysków i strat przed podjęciem decyzji.
+(1019) Jaki ogólny wniosek neurofizjologiczny płynie z materiałów wykładowych na temat lokalizacji i generowania emocji w ludzkim mózgu?
+a) Za każdą pojedynczą emocję odpowiada dokładnie jedna, całkowicie odizolowana struktura podkorowa, działająca bez udziału kory.
+b) Kora mózgowa nie bierze żadnego udziału w procesach hamowania ani regulowania stanów afektywnych.
+c) Lateralizacja funkcjonalna mózgu udowadnia, że obie półkule przetwarzają sygnały emocjonalne w sposób w 100% symetryczny.
+d) Prawidłowe funkcjonowanie emocjonalne zależy od współpracy struktur odpowiedzialnych za szybką ocenę znaczenia i kontrolę korową, a trudności rzadko wynikają z zaburzenia tylko jednej struktury.
+(1020) Czemu przede wszystkim służą emocje w ujęciu biologicznym i ewolucyjnym, m.in. według koncepcji Antonio Damasio zawartych w prezentacji?
+a) Służą szeroko pojętej regulacji życia: wspierają utrzymanie równowagi organizmu (homeostazy) oraz ułatwiają adaptację do wymagań środowiska.
+b) Służą całkowitemu zablokowaniu reakcji behawioralnych na bodźce awersyjne.
+c) Służą wyłącznie celowej destabilizacji procesów myślowych i utrudnianiu komunikacji interpersonalnej.
+d) Służą wyeliminowaniu elastyczności poznawczej na rzecz sztywnych, automatycznych odruchów bezwarunkowych.
+(1021) Które z wymienionych emocji zaliczamy do grupy emocji samoświadomościowych (pochodnych/wtórnych), które wymagają wykształcenia poczucia „Ja” oraz odniesienia własnego zachowania do norm społecznych?
+a) Strach, złość, wstręt.
+b) Wstyd, poczucie winy, duma.
+c) Zaskoczenie, radość, smutek.
+d) Wszystkie emocje automatyczne.
+(1022) Zgodnie z kryteriami różnicującymi stany afektywne opisanymi na wykładzie, czym charakteryzuje się nastrój (mood) w porównaniu do emocji?
+a) Jest bardziej krótkotrwały, ma znacznie większą intensywność i zawsze posiada wyraźny, konkretny obiekt.
+b) Nastrój pojawia się wyłącznie w wyniku nagłego pobudzenia osi współczulnej i wyrzutu adrenaliny.
+c) Jest stanem długotrwałym, zazwyczaj o niższej intensywności i jest bardziej rozlany (często nie ma konkretnego, bezpośredniego obiektu).
+d) Nastrój nie posiada żadnego komponentu fizjologicznego ani subiektywnego przeżycia.
+(1023) Na podstawie charakterystyki klinicznej aleksytymii, jakie są jej trzy główne składowe (mierzone m.in. uznaną skalą TAS-20)?
+a) Trudność w identyfikacji uczuć, trudność w opisywaniu uczuć słowami oraz zewnętrznie zorientowany (operacyjny) styl myślenia.
+b) Całkowity brak reakcji fizjologicznych na stres, wysoka samoocena, skłonność do agresji.
+c) Nadmierna empatia, wysoka elastyczność poznawcza, bogate życie wyobrażeniowe.
+d) Przejściowy lęk sytuacyjny, wysoka ekspresyjność mimiczna, skłonność do głębokiej reinterpretacji.
+(1024) W świetle metaanalizy Hu i współpracowników (2014), jaki wpływ na relacje interpersonalne ma długofalowe stosowanie strategii tłumienia ekspresji?
+a) Zwiększa autentyczność jednostki i przyciąga innych ludzi, budując głębokie zaufanie społeczne.
+b) Całkowicie eliminuje potrzebę wchodzenia w jakiekolwiek interakcje społeczne.
+c) Może osłabiać autentyczność oraz responsywność (reagowanie na potrzeby partnera) w relacji.
+d) Nie wykazuje żadnego mierzalnego wpływu na funkcjonowanie społeczne i związki partnerskie.
+(1025) Jakie są trzy kolejne stadia reakcji na stres w ramach Ogólnego Zespołu Adaptacyjnego (GAS) opisanego historycznie przez Hansa Selyego?
+a) Pobudzenie neuronalne, proces sensomotoryczny, analiza poznawcza.
+b) Ocena pierwotna, ocena wtórna, ponowna ocena poznawcza.
+c) Reakcja alarmowa, stadium odporności (adaptacji), stadium wyczerpania.
+d) Allostaza, obciążenie allostatyczne, homeostaza dynamiczna.
+(1026) Co w świetle współczesnych badań (np. Berrios, Kreibig) oznaczają tzw. „emocje mieszane” (mixed emotions)?
+a) Błąd pomiarowy wynikający wyłącznie z braku koncentracji osoby badanej w kwestionariuszu.
+b) Stan, w którym człowiek nie odczuwa zupełnie nic i wykazuje całkowitą apatię wobec środowiska.
+c) Sytuację, w której lewa półkula mózgu całkowicie i trwale wyłącza działanie prawej półkuli.
+d) Jednoczesne lub bardzo bliskie czasowo doświadczanie emocji o przeciwstawnej walencji, np. jednoczesne odczuwanie radości i smutku.
+(1027) Czym według badaczy takich jak Kanner i Lazarus różnią się „codzienne uciążliwości” (daily hassles) od „poważnych wydarzeń życiowych” (major life events)?
+a) Codzienne uciążliwości mają charakter wyłącznie pozytywny (eustres), a poważne wydarzenia wyłącznie negatywny (dystres).
+b) Psychologia stresu całkowicie ignoruje codzienne uciążliwości, uznając je za nieistotne dla zdrowia psychicznego.
+c) Codzienne uciążliwości to drobne, powtarzające się irytacje (np. korki, zgubione klucze), które przez kumulację silnie obciążają organizm, podczas gdy poważne wydarzenia to rzadkie, przełomowe sytuacje (np. rozwód, śmierć).
+d) Poważne wydarzenia życiowe trwają maksymalnie kilka minut, a codzienne uciążliwości trwają nieprzerwanie przez dekady.
+(1028) W kontekście ontogenezy (rozwoju) emocji, na czym polega proces określany jako rodzicielska socjalizacja emocji (Eisenberg i in.)?
+a) Na całkowitym zakazie okazywania jakichkolwiek stanów afektywnych w kręgu rodzinnym.
+b) Na izolowaniu dziecka od wpływów rówieśników aż do momentu osiągnięcia pełnej dojrzałości korowej.
+c) Na genetycznym uwarunkowaniu poziomu dopaminy i serotoniny przekazywanym bezpośrednio potomstwu.
+d) Na procesie, w którym rodzice poprzez własne reakcje na emocje dziecka, modelowanie, rozmowy oraz aranżowanie środowiska kształtują jego kompetencje emocjonalne.
+(1029) W literaturze przedmiotu pojawia się nazwisko Lisy Feldman Barrett (2017). Z jakiej nowoczesnej perspektywy słynie ta badaczka w kontekście biologii i psychologii emocji?
+a) Z ortodoksyjnej teorii ewolucyjnej, twierdzącej, że w mózgu istnieją sztywne, wrodzone „ośrodki” dla każdej emocji podstawowej.
+b) Z teorii behawioralnej, całkowicie negującej istnienie jakichkolwiek stanów wewnętrznych i procesów mózgowych.
+c) Z teorii konstruowanych emocji (theory of constructed emotion), według której emocje są aktywnie tworzone przez mózg na bazie przewidywań, interocepcji i pojęć.
+d) Z teorii zakładającej, że emocje zależą wyłącznie od funkcjonowania hormonów tarczycy.
+(1030) Opierając się na badaniach nad dobrostanem i regulacją emocji (np. Kraiss i in., 2020), jaki ogólny wniosek można wyciągnąć w odniesieniu do osób z zaburzeniami psychicznymi?
+a) Osoby te nie posiadają żadnych mechanizmów regulacyjnych, ponieważ ich układ nerwowy utracił zdolność do interocepcji.
+b) Istnieje wyraźny związek między elastycznym stosowaniem adaptacyjnych strategii regulacji emocji a wyższym poziomem dobrostanu psychicznego u tych pacjentów.
+c) Dobrostan psychiczny zależy wyłącznie od czynników socjoekonomicznych, a strategie regulacji emocji nie mają dla niego znaczenia.
+d) Stosowanie tłumienia ekspresji jest jedyną skuteczną metodą trwałego podniesienia dobrostanu w tej grupie.
+(1031) Czym według koncepcji psychologicznych (np. Jarymowicz i Imbir) różnią się emocje automatyczne od emocji refleksyjnych?
+a) Obie grupy emocji różnią się wyłącznie czasem trwania, przy czym emocje automatyczne trwają zawsze minimum kilka dni.
+b) Emocje automatyczne wymagają głębokiego przetwarzania pojęciowego, natomiast refleksyjne opierają się na prostych odruchach bezwarunkowych.
+c) Emocje refleksyjne występują wyłącznie u niemowląt, a automatyczne wykształcają się dopiero w toku edukacji szkolnej.
+d) Emocje automatyczne powstają szybko, bez udziału świadomej refleksji i są powiązane z mechanizmami biologicznymi, podczas gdy refleksyjne wymagają struktur pojęciowych, oceny wartości oraz standardów „Ja”.
+(1032) Jak w zróżnicowaniu stanów afektywnych i dyspozycji (Wykład 1) definiuje się pojęcie namiętności (passions)?
+a) Jako synonim aleksytymii, oznaczający całkowitą niezdolność do przeżywania afektu pozytywnego.
+b) Jako chwilową, kilkusekundową i bardzo słabą reakcję na bodźce neutralne.
+c) Jako stan o dużym natężeniu, długotrwały, który silnie dominuje nad zachowaniem i myśleniem człowieka, ukierunkowany na konkretny obiekt lub cel.
+d) Jako stan całkowicie pozbawiony jakichkolwiek komponentów poznawczych i motywacyjnych.
+(1033) Jak przewlekły stres i stale podwyższony poziom kortyzolu (oś HPA) wpływają na układ odpornościowy człowieka w świetle prezentacji?
+a) Przewlekły stres nie ma żadnego mierzalnego wpływu na funkcjonowanie biologiczne organizmu.
+b) Wyłączają działanie układu nerwowego, pozostawiając aktywnym wyłącznie układ hormonalny tarczycy.
+c) Prowadzą do supresji (osłabienia) funkcji układu odpornościowego, zwiększając podatność na infekcje oraz utrudniając procesy gojenia.
+d) Powodują natychmiastowe wzmocnienie i trwałą odporność organizmu na wszelkie wirusy i bakterie.
+(1034) Jakie trzy główne komponenty składają się na kompetencje emocjonalne dziecka według literatury rozwoju w ontogenezie (np. Denham, 1998)?
+a) Pobudzenie wegetatywne, lęk sytuacyjny, styl operacyjny.
+b) Genetyka, inteligencja matematyczna, status socjoekonomiczny.
+c) Ekspresja emocji, rozumienie emocji (u siebie i innych) oraz regulacja emocji.
+d) Tłumienie ekspresji, izolacja społeczna, unikanie bodźców.
+(1035) W teorii Carrolla Izarda, w jaki sposób system sensomotoryczny może aktywować emocję drogą niepoznawczą?
+a) Poprzez impulsy generowane przez aktywność mięśni mimicznych twarzy i pętle sprzężenia zwrotnego (facial feedback mechanism).
+b) Działa tylko wtedy, gdy kora przedczołowa zostanie całkowicie uszkodzona.
+c) System sensomotoryczny nie uczestniczy w żaden sposób w procesie aktywacji stanów afektywnych.
+d) Wyłącznie poprzez zaawansowaną i logiczną analizę tekstu pisanego.
+(1036) Zgodnie z materiałami wykładowymi, w jaki sposób nadmiernie silne pobudzenie emocjonalne może zadziałać dezadaptacyjnie na procesy poznawcze?
+a) Zawsze przyspiesza procesy logicznego wyciągania wniosków z trudnych zadań matematycznych.
+b) Całkowicie eliminuje interocepcję, sprawiając, że sygnały z ciała przestają docierać do mózgu.
+c) Rozszerza pole uwagi tak mocno, że człowiek widzi absolutnie wszystkie bodźce we wszechświecie jednocześnie.
+d) Powoduje ekstremalne zwężenie pola uwagi, utratę elastyczności myślenia i może utrudniać racjonalną interpretację sytuacji oraz podejmowanie decyzji.
+(1037) Czym różni się radzenie sobie ze stresem skoncentrowane na zadaniu od skoncentrowanego na emocjach w klasycznej tradycji psychologicznej (Lazarus & Folkman)?
+a) Skoncentrowane na zadaniu dąży do przekształcenia obiektywnej sytuacji i usunięcia stresora, natomiast skoncentrowane na emocjach zmierza do regulacji i obniżenia trudnego napięcia psychicznego.
+b) Strategia skoncentrowana na zadaniu jest stosowana wyłącznie przez dzieci, a na emocjach przez dorosłych.
+c) Obie strategie są identyczne i polegają na natychmiastowym tłumieniu ekspresji mimicznej.
+d) Skoncentrowane na zadaniu polega na płaczu, a skoncentrowane na emocjach na udawaniu, że problem nie istnieje.
+(1038) Jaki wpływ na późniejszą regulację emocjonalną ma bezpieczna relacja przywiązania (attachment) u dziecka, opisywana w literaturze rozwojowej (np. Cassidy, 1994)?
+a) Sprawia, że dziecko staje się całkowicie zależne od dorosłych i nigdy nie wykształca dojrzałości emocjonalnej.
+b) Sprzyja otwartemu komunikowaniu stanów afektywnych, lepszemu rozumieniu emocji oraz skuteczniejszemu rozwijaniu autonomicznych strategii regulacji.
+c) Prowadzi bezpośrednio do wykształcenia głębokiej aleksytymii w wieku dorosłym.
+d) Uniemożliwia dziecku odczuwanie jakichkolwiek emocji negatywnych, takich jak złość czy smutek.
+(1039) Co dzieje się z pacjentami wykazującymi uszkodzenia kory przedczołowej brzuszno-przyśrodkowej (vmPFC) w testach decyzyjnych w świetle hipotezy Antonio Damasio?
+a) Podejmują wybitnie korzystne decyzje finansowe, ponieważ działają jak całkowicie bezbłędne komputery.
+b) Podejmują ryzykowne, niekorzystne decyzje, ponieważ ich mózg nie potrafi wygenerować automatycznych sygnałów ostrzegawczych z ciała (markerów somatycznych) na podstawie wcześniejszych doświadczeń.
+c) Tracą całkowicie zdolność posługiwania się mową i werbalizowania jakichkolwiek myśli.
+d) Wykazują nadmiernie rozwiniętą interocepcję, która paraliżuje ich ruchy.
+(1040) Która z poniższych cech charakteryzuje emocje podstawowe według autorów takich jak Ekman czy Levenson, odróżniając je od emocji pochodnych?
+a) Są konstruowane wyłącznie pod wpływem trendów w mediach społecznościowych i nie mają podłoża ewolucyjnego.
+b) Mają uniwersalny charakter kulturowy, charakterystyczny, wrodzony wzorzec ekspresji mimicznej oraz jasne znaczenie adaptacyjne.
+c) Pojawiają się w ontogenezie dopiero po wykształceniu pełnej, abstrakcyjnej samoświadomości moralnej.
+d) Są przetwarzane wyłącznie przez lewą kometę kory potylicznej i trwają wiele lat.
+(1041) Kompleksowy model procesu regulacji emocji Jamesa Grossa wyróżnia strategie ukierunkowane na antecedencje (przed reakcją) oraz ukierunkowane na reakcję. Która z wymienionych strategii jest klasyfikowana jako ukierunkowana bezpośrednio na reakcję (response-focused)?
+a) Tłumienie ekspresji (suppression).
+b) Przekierowanie uwagi.
+c) Modyfikacja sytuacji.
+d) Wybór sytuacji.
+(1042) Skala Socjalnego Przystosowania (SRRS) autorstwa Holmesa i Rahego mierzy siłę stresu za pomocą tzw. Jednostek Zmiany Życiowej (LCU). Co stanowi fundamentalne założenie tej klasycznej metody?
+a) Każda zmiana życiowa – zarówno negatywna (np. śmierć bliskiego), jak i obiektywnie pozytywna (np. ślub, awans) – wymaga od organizmu wysiłku adaptacyjnego i stanowi źródło stresu.
+b) Stres wywoływany jest wyłącznie przez wydarzenia o charakterze kryminalnym i patologicznym.
+c) Pozytywne wydarzenia życiowe całkowicie zerują poziom skumulowanego stresu w organizmie.
+d) Kwestionariusz SRRS bada wyłącznie mikrostresory dnia codziennego, całkowicie pomijając przełomowe wydarzenia życiowe.
+(1043) Na czym polega zjawisko wyuczonej bezradności (learned helplessness) opisane przez Martina Seligmana w kontekście psychologicznych teorii stresu?
+a) Na przekonaniu jednostki, że nie ma żadnego wpływu na bieg awersyjnych wydarzeń, co skutkuje biernością, apatią oraz zaniechaniem prób poprawy swojej sytuacji nawet wtedy, gdy pojawią się opcje kontroli.
+b) Na ewolucyjnej umiejętności natychmiastowego tłumienia aktywności osi HPA w sytuacjach lękowych.
+c) Na celowym udawaniu braku kompetencji w celu zmanipulowania otoczenia społecznego.
+d) Na nagłym i trwałym wzroście motywacji zadaniowej po napotkaniu pierwszej życiowej trudności.
+(1044) Jaka jest najważniejsza ewolucyjnie rola ciała migdałowatego (amygdala) w neurofizjologicznej strukturze przetwarzania emocjonalnego?
+a) Służy do szybkiej, automatycznej detekcji zagrożeń w środowisku, przypisywania bodźcom znaczenia afektywnego oraz inicjowania reakcji lękowych i obronnych.
+b) Odpowiada za precyzyjne planowanie długoterminowych strategii finansowych i logiczną analizę semantyczną tekstów.
+c) Jest korowym ośrodkiem odpowiedzialnym za gramatyczną poprawność wypowiadanych zdań o emocjach.
+d) Jest strukturą hamującą działanie układu współczulnego i obniżającą ciśnienie krwi w fazie alarmowej.
+(1045) Która podkorowa struktura mózgowa (omówiona w neurofizjologii) wykazuje silną, specyficzną aktywację zarówno podczas bezpośredniego doświadczania wstrętu (np. niesmaczny pokarm), jak i podczas obserwowania wyrazu wstrętu na twarzy innej osoby?
+a) Jądro ogoniaste.
+b) Wyspa (insula).
+c) Kora potyliczna.
+d) Brzuszna część nakrywki.
+(1046) W modelu regulacji emocji Jamesa Grossa, w jaki sposób definiuje się strategię określaną jako „przekierowanie uwagi” (deployment of attention)?
+a) Na aktywnym odwróceniu uwagi od emocjogennego bodźca i przeniesieniu jej na inny obiekt, myśl lub czynność (np. poprzez dystrakcję) bądź na intensywnym skupieniu na problemie (np. ruminacje).
+b) Na trwałej fizycznej ucieczce z miejsca, w którym rozgrywa się trudna sytuacja interpersonalna.
+c) Na zmianie logicznej interpretacji faktów na korzyść pacjenta.
+d) Na całkowitym i mechanicznym usunięciu z pamięci długotrwałej wspomnień o stresorze.
+(1047) Zgodnie z badaniami Ponsa, Harrisa i de Rosnay (2004) nad rozwojem rozumienia emocji u dzieci (ontogeneza), rozwój tych kompetencji ma charakter:
+a) Natychmiastowy – dziecko rodzi się z pełną, dojrzałą wiedzą na temat ukrytych intencji i mechanizmów obronnych innych ludzi.
+b) Losowy i chaotyczny, całkowicie niezależny od wieku dziecka i stymulacji środowiskowej.
+c) Ściśle regresywny, co oznacza, że im dziecko jest starsze, tym gorzej rozumie przyczyny stanów afektywnych.
+d) Hierarchiczny i fazowy, gdzie dzieci najpierw opanowują komponenty publiczne/zewnętrzne emocji, następnie komponenty mentalne, a na końcu komponenty refleksyjne.
+(1048) Mary Rothbart (2011) w swoich pracach nad ontogenezą definiuje temperament poprzez dwa główne, biologicznie uwarunkowane wymiary. Są to:
+a) Ekstrawersja i neurotyzm w ujęciu czysto socjometrycznym.
+b) Inteligencja ogólna oraz tempo przyswajania języka ojczystego.
+c) Styl operacyjny i skłonność do manipulacji poznawczych.
+d) Reaktywność (pobudliwość systemów fizjologicznych) oraz samoregulacja (zdolność do modyfikowania tej reaktywności poprzez kontrolę uwagi i zachowania).
+(1049) Czym w klasycznym, biologicznym ujęciu Hansa Selyego (twórcy teorii stresu) różni się pojęcie eustresu od dystresu?
+a) Eustres to stres pozytywny, konstruktywny i mobilizujący siły życiowe do adaptacji, natomiast dystres to stres negatywny, destrukcyjny, który przekracza możliwości adaptacyjne organizmu i prowadzi do wyczerpania.
+b) Pojęcia te są synonimami i nie ma między nimi żadnej różnicy w literaturze medycznej.
+c) Eustres występuje wyłącznie u zwierząt, a dystres jest domeną gatunku ludzkiego.
+d) Dystres to stan całkowitego braku pobudzenia fizjologicznego, a eustres to chroniczna faza wyczerpania.
+(1050) Który neurotransmiter oraz jaka struktura podkorowa odgrywają kluczową rolę w funkcjonowaniu tzw. układu nagrody (mesolimbic pathway), odpowiedzialnego za motywację, dążenie do celu oraz odczuwanie przyjemności?
+a) Acetylocholina i kora potyliczna.
+b) Dopamina oraz jądro półleżące (nucleus accumbens).
+c) Serotonina oraz opuszka węchowa.
+d) Melatonina oraz rdzeń przedłużony.
+(1051) Zgodnie z taksonomią ludzkich emocji według prof. Marii Jarymowicz i prof. Kamila Imbira (2010), co stanowi nadrzędne kryterium uruchomienia emocji refleksyjnych w odróżnieniu od emocji automatycznych?
+a) Całkowity brak uświadomienia subiektywnego walencji danego stanu przez człowieka.
+b) Pojawienie się bodźca o charakterze wyłącznie fizycznym (np. nagły błysk lub huk).
+c) Gwałtowne uszkodzenie pętli somatycznych w rdzeniu kręgowym.
+d) Zaangażowanie operacji myślowych, standardów wartościowania, logiki oraz abstrakcyjnych struktur pojęciowych kory mózgowej.
+(1052) Co oznacza akronim CAN, stosowany we współczesnej neurobiologii emocji na określenie sieci neuronalnej integrującej procesy poznawcze, afektywne i wegetatywne (np. Quadt, Critchley & Nagai, 2022)?
+a) Kora Słuchowa Analityczna (Cognitive Auditory Network).
+b) Całościowa Anihilacja Neuroprzekaźników (Complete Anti-Neurotransmitter).
+c) Centralna Sieć Autonomiczna (Central Autonomic Network).
+d) Komórkowy Aparat Nadnerczowy (Cellular Adrenal Node).
+(1053) W psychologicznej mapie pojęć (Wykład 1), czym różnią się preferencje i oceny (preferences / evaluations) od pełnych, klasycznych emocji?
+a) Preferencje to stany patologiczne wywoływane wyłącznie przez chroniczne obciążenie allostatyczne.
+b) Preferencje trwają zawsze znacznie krócej niż emocje, bo tylko ułamek sekundy.
+c) Są to względnie stabilne, poznawczo-afektywne oceny typu „lubię / nie lubię”, które są pozbawione silnego pobudzenia fizjologicznego oraz nagłej, gwałtownej tendencji do działania.
+d) Preferencje nie mają żadnego obiektu i są całkowicie rozlane w strumieniu świadomości.
+(1054) Na czym polega strategia regulacji emocji o nazwie „wybór sytuacji” (situation selection) w teoretycznym modelu Jamesa Grossa?
+a) Na zmianie cech temperamentu w drodze treningu farmakologicznego.
+b) Na mechanicznym wypieraniu ze świadomości negatywnych sygnałów interoceptywnych.
+c) Na modyfikowaniu cech fizycznych pokoju, w którym aktualnie przebywamy, aby obniżyć stres.
+d) Na świadomym i intencjonalnym unikaniu lub wybieraniu określonych miejsc, ludzi, wydarzeń czy spotkań w celu zwiększenia prawdopodobieństwa pojawienia się (lub uniknięcia) konkretnych emocji.
+(1055) Opierając się na materiale dotyczącym rozwoju emocji w ontogenezie, od czego zaczyna się życie emocjonalne noworodka, zanim wykształcą się specyficzne, czyste emocje dyskretne (podstawowe)?
+a) Od wczesnej, globalnej, niespecyficznej reaktywności fizjologicznej oraz ogólnego kontinuum afektywnego: dystresu (na ból/dyskomfort) i zadowolenia (na sytość/bliskość).
+b) Od całkowitego braku jakichkolwiek reakcji wegetatywnych i somatycznych na środowisko.
+c) Od zaawansowanej reinterpretacji poznawczej intencji matki.
+d) Od pełnego, moralnego poczucia dumy i wstydu opartego na normach społecznych.
+(1056) Co jest najbardziej uderzającą cechą pacjentów z uszkodzeniami kory przedczołowej brzuszno-przyśrodkowej (vmPFC) w badaniach Antonio Damasio pod kątem ich tradycyjnych sprawności poznawczych?
+a) Ich ogólna inteligencja (IQ), pamięć, uwaga oraz zdolności czysto logicznego myślenia pozostają całkowicie w normie, mimo że ich decyzje życiowe stają się skrajnie nieracjonalne i destrukcyjne.
+b) Tracą całkowicie pamięć autobiograficzną i nie wiedzą, jak się nazywają.
+c) Wykazują genialne, nadludzkie zdolności matematyczne przewyższające zdrowe osoby.
+d) Tracą zdolność widzenia i słyszenia z powodu uszkodzenia dróg zmysłowych.
+(1057) Jak na podstawie klasycznych definicji zawartych w prezentacji o stresie definiuje się sam termin „stresor”?
+a) Jako specyficzną strategię radzenia sobie opartą na unikaniu kontaktów społecznych.
+b) Jako subiektywne uczucie zmęczenia i wypalenia zawodowego trwające wiele lat.
+c) Jako hormon wydzielany przez korę nadnerczy w fazie wyczerpania.
+d) Jako obiektywny bodziec, sytuację, wymaganie lub wydarzenie (fizyczne bądź psychiczne), które stawia przed organizmem wyzwanie, zakłóca jego homeostazę i zmusza do podjęcia działań adaptacyjnych.
+(1058) Co charakteryzuje tzw. zewnętrznie zorientowany (operacyjny) styl myślenia (externally-oriented thinking), będący jednym z kluczowych wymiarów aleksytymii?
+a) Skoncentrowanie uwagi wyłącznie na mechanicznych, technicznych i pragmatycznych faktach rzeczywistości zewnętrznej, przy jednoczesnym unikaniu analizowania wewnętrznych stanów psychicznych, motywacji czy uczuć (swoich i cudzych).
+b) Przekonanie, że za wszystkie stany emocjonalne człowieka odpowiadają wyłącznie planety i pogoda.
+c) Skłonność do ciągłego pisania poezji i malowania abstrakcyjnych obrazów na bazie snów.
+d) Nadmierna, patologiczna koncentracja na własnym świecie fantazji i marzeń na jawie.
+(1059) Jaką funkcję w neurofizjologicznej sieci przetwarzania emocjonalno- poznawczego przypisuje się przedniej korze zakrętu obręczy (ACC - Anterior Cingulate Cortex)?
+a) Uczestniczy w monitorowaniu konfliktów, wykrywaniu błędów w działaniu, integracji procesów poznawczych z emocjonalnymi oraz odgrywa kluczową rolę w centralnym przetwarzaniu bólu (zarówno fizycznego, jak i społecznego/odrzucenia).
+b) Odpowiada za symetryczne i całkowite wyłączenie procesów lateralizacji w obu półkulach mózgu.
+c) Jest jedynym miejscem w mózgu, w którym magazynowany jest glikogen i adrenalina.
+d) Odpowiada wyłącznie za pierwotne przetwarzanie bodźców słuchowych w pniu mózgu.
+(1060) Jaki argument na rzecz biologicznej autonomii emocji podstawowych wysuwa Robert Levenson (2011) w pracach cytowanych w programie wykładu?
+a) Dowodzi, że emocje podstawowe można wywołać wyłącznie poprzez podanie hormonów tarczycy.
+b) Wskazuje, że emocje podstawowe (takie jak strach, złość, wstręt) posiadają unikalne, stałe i powtarzalne konfiguracje pobudzenia w autonomicznym układzie nerwowym (ANS), wspólne dla gatunku ludzkiego niezależnie od kultury.
+c) Uważa, że emocje podstawowe pojawiają się w ontogenezie dopiero około 30. roku życia człowieka.
+d) Twierdzi, że emocje podstawowe nie wykazują żadnych stałych korelacji z układem nerwowym i są wyłącznie konstruktem językowym.
+(1061) Czym w modelu regulacji emocji Jamesa Grossa różni się strategia „modyfikacji sytuacji” (situation modification) od strategii „wyboru sytuacji” (situation selection)?
+a) Wybór sytuacji polega na zmianie swoich myśli, a modyfikacja na fizycznej ucieczce z pokoju.
+b) Modyfikacja sytuacji to końcowa strategia nakierowana na zmianę ekspresji mimicznej twarzy.
+c) Obie strategie są identyczne i polegają wyłącznie na farmakologicznym tłumieniu osi HPA.
+d) Wybór sytuacji to decyzja o wejściu lub niewejściu w daną sytuację, podczas gdy modyfikacja sytuacji polega na aktywnym przekształcaniu otoczenia zewnętrznego, w którym już się znajdujemy, aby zmienić jego wpływ emocjonalny.
+(1062) W definicjach psychologicznych (np. Scherer, Kleinginna) emocja opisywana jest jako pojęcie wieloskładnikowe. Jakie główne komponenty (sfery) składają się na pełną reakcję emocjonalną?
+a) Wyłącznie procesy językowe zachodzące w lewej półkuli mózgu.
+b) Subiektywne przeżycie (afektywne), komponent fizjologiczny (somatyczny/wegetatywny), komponent ekspresyjny (mimika, głos), komponent poznawczy (ocena) oraz komponent motywacyjny (tendencja do działania).
+c) Wyłącznie komponent finansowy oraz genetyczny.
+d) Odruchy bezwarunkowe kontrolowane tylko przez rdzeń przedłużony.
+(1063) W modelu Jamesa Grossa, ponowna ocena poznawcza (reinterpretacja / reappraisal) jest strategią zaliczaną do antecedencyjnych (wyprzedzających reakcję). Na czym dokładnie ona polega?
+a) Na zmianie sposobu myślenia o danej sytuacji lub bodźcu w taki sposób, aby zmienić jego pierwotne znaczenie emocjonalne i obniżyć negatywny afekt.
+b) Na celowym wywoływaniu halucynacji wzrokowych w celu odwrócenia uwagi od stresora.
+c) Na mechanicznym powtarzaniu słów otuchy, gdy organizm przeżywa już maksymalny dystres somatyczny.
+d) Na unikaniu jakichkolwiek kontaktów społecznych z osobami, które wywołują w nas złość.
+(1064) W badaniach nad stresem przy użyciu Skali Socjalnego Przystosowania (SRRS) Holmesa i Rahego, co w świetle prezentacji oznacza uzyskanie bardzo wysokiego skumulowanego wyniku Jednostek Zmiany Życiowej (LCU) w ciągu jednego roku?
+a) Gwarancję całkowitej odporności na wszelkie schorzenia psychofizyczne.
+b) Przejście organizmu w stan permanentnego eustresu (stresu pozytywnego).
+c) Istotne statystycznie podwyższenie ryzyka zapadalności na poważne choroby somatyczne oraz kryzysy zdrowia psychicznego w najbliższej przyszłości.
+d) Natychmiastowe i trwałe uszkodzenie kory potylicznej mózgu.
+(1065) Joseph LeDoux opisał w swoich badaniach neurofizjologicznych dwie drogi (ścieżki) przetwarzania bodźca lękowego przez mózg. Czym charakteryzuje się tzw. „droga dolna” (niska / dolna ścieżka)?
+a) Jest bardzo powolna, niezwykle precyzyjna i angażuje całą korę nową oraz płaty czołowe.
+b) Jest szybka, automatyczna, ewolucyjnie prymitywna i prowadzi bezpośrednio ze wzgórza (thalamus) do ciała migdałowatego (amygdala), omijając korę mózgową.
+c) Aktywuje się tylko podczas długotrwałych procesów reinterpretacji poznawczej.
+d) Odpowiada wyłącznie za werbalizację emocji i logiczne wyciąganie wniosków semantycznych.
+(1066) W konstrukcji temperamentu autorstwa Mary Rothbart, jak definiowany jest wymiar określany jako „kontrola z wysiłkiem” (effortful control) i za co odpowiada w ontogenezie?
+a) Za stopień uzależnienia reakcji dziecka od poziomu glukozy we krwi.
+b) Za całkowite zablokowanie rozwoju emocji samoświadomościowych u dzieci do 7. roku życia.
+c) Za automatyczny i gwałtowny wzrost ciśnienia tętniczego pod wpływem nagłego hałasu.
+d) Jest to mechanizm samoregulacji, obejmujący zdolność do intencjonalnego kierowania uwagą, hamowania dominujących, impulsywnych reakcji oraz aktywowania zachowań adaptacyjnych.
+(1067) Jak w świetle prezentacji o stresie ocenia się krótki, ostry stres (acute stress) z punktu widzenia ewolucji i przystosowania organizmu?
+a) Jako zjawisko zawsze patologiczne, które od pierwszej sekundy trwale niszczy neurony w hipokampie.
+b) Jako stan, w którym całkowicie wyłącza się działanie autonomicznego układu nerwowego.
+c) Jako reakcję o charakterze adaptacyjnym, która mobilizuje zasoby energetyczne organizmu (adrenalina, ukierunkowanie uwagi), przygotowując do walki lub ucieczki w sytuacji bezpośredniego zagrożenia.
+d) Jako proces, który rozwija się wyłącznie u osób wykazujących operacyjny styl myślenia.
+(1068) Hans Selye w swoim modelu Ogólnego Zespołu Adaptacyjnego (GAS) podzielił pierwszą fazę – reakcję alarmową – na dwie specyficzne podfazy. Jakie to podfazy i co się w nich dzieje?
+a) Faza allostazy i faza obciążenia allostatycznego.
+b) Faza werbalizacji lewopółkulowej i faza unikania prawopółkulowego.
+c) Faza oceny pierwotnej i faza oceny wtórnej.
+d) Faza szoku (pierwsze zderzenie ze stresorem, spadek odporności organizmu) oraz faza przeciwszoku (uruchomienie mechanizmów obronnych, wzrost ciśnienia, mobilizacja).
+(1069) Z perspektywy ewolucyjnej (np. tradycja Darwina i Ekmana), jaka jest pierwotna, adaptacyjna funkcja somatyczno-behawioralna emocji wstrętu (disgust)?
+a) Ochrona organizmu przed zatruciem i infekcją poprzez unikanie, odrzucenie lub wydalenie potencjalnie szkodliwych, skażonych substancji oraz zamknięcie dróg sensorycznych (oddechowych/ustnych).
+b) Budowanie moralnego poczucia dumy narodowej w interakcjach z obcymi kulturami.
+c) Zwiększenie dopływu krwi do dużych mięśni nóg w celu ułatwienia szybkiego biegu na długi dystans.
+d) Rozszerzenie dróg oddechowych w celu wchłonięcia jak największej ilości tlenu z otoczenia.
+(1070) Aleksytymia charakteryzuje się deficytami w przetwarzaniu poznawczo- emocjonalnym. Co oprócz trudności z identyfikacją i opisywaniem uczuć jest tradycyjną cechą osób wysoko aleksytymicznych według literatury (np. Luminet i in., 2021)?
+a) Nadmierna dążność do analizowania wewnętrznych motywów psychologicznych u innych ludzi.
+b) Wybitne zdolności aktorskie i łatwość w symulowaniu ekspresji mimicznej.
+c) Nadmiernie rozbudowane, bogate i chaotyczne życie wyobrażeniowe oraz skłonność do ciągłego fantazjowania.
+d) Ubóstwo życia wyobrażeniowego (ograniczona wyobraźnia, brak marzeń na jawie, rzadkie posługiwanie się metaforami).
+(1071) Zgodnie z hierarchiczną koncepcją rozwoju rozumienia emocji Ponsa i Harrisa, jakie aspekty emocjonalne zaczyna rozumieć dziecko, gdy wkracza w tzw. okres mentalny (mental period)?
+a) Skomplikowane, transdiagnostyczne uwarunkowania aleksytymii u swoich rodziców.
+b) Wpływ procesów wewnętrznych, takich jak przekonania (beliefs), wiedza oraz indywidualne pragnienia (desires) na to, co dana osoba odczuwa w konkretnej sytuacji.
+c) Tylko czyste, publiczne miny (np. że ktoś się uśmiecha, to jest wesoły).
+d) Wyłącznie mechanizmy działania osi współczulno-nadnerczowej podczas pisania testów.
+(1072) Obok kołowego modelu Jamesa Russella, w psychologii afektu popularne są inne modele wymiarowe, np. Watsona i Tellegena. Jakie dwa główne, niezależne wymiary wyróżnia ten model?
+a) Eustres oraz Dystres w ujęciu medycznym.
+b) Afekt Pozytywny (Positive Affect - PA) oraz Afekt Negatywny (Negative Affect - NA).
+c) Reaktywność wegetatywna oraz Kontrola z wysiłkiem.
+d) Ścieżka dolna oraz Ścieżka górna przetwarzania bodźca.
+(1073) Co w psychologii emocji oznacza termin „tendencja do działania” (action tendency) przypisywany stanom afektywnym?
+a) Całkowitą utratę kontroli motorycznej nad mięśniami twarzy.
+b) Strategię regulacji emocji polegającą na intencjonalnym przekierowaniu uwagi przez korę przedczołową.
+c) Wrodzony lub wyuczony, automatyczny stan gotowości organizmu do podjęcia specyficznego rodzaju zachowania (np. strach aktywuje tendencję do ucieczki/unikania, złość do ataku/usunięcia przeszkody).
+d) Przymus natychmiastowego zapisania się na zajęcia sportowe po odczuciu radości.
+(1074) Paul Ekman, badając uniwersalność ekspresji mimicznej, opisał zjawisko tzw. „mikroekspresji” (microexpressions). Czym one są?
+a) Komponentami poznawczymi, które odpowiadają za odróżnianie emocji automatycznych od refleksyjnych.
+b) Zmianami temperatury skóry dłoni wywołanymi przez aktywację prawej półkuli mózgu.
+c) Bardzo powolnymi ruchami mięśni twarzy, które trwają kilkanaście minut i występują tylko podczas snu.
+d) Bardzo krótkimi (trwającymi ułamek sekundy), mimowolnymi ekspresjami mimicznymi, które pojawiają się na twarzy człowieka, gdy próbuje on świadomie stłumić lub ukryć przeżywaną emocję.
+(1075) W neurofizjologii emocji, za co przede wszystkim odpowiadają wyższe struktury korowe, takie jak kora przedczołowa (prefrontal cortex - PFC), w relacji do struktur podkorowych (np. ciała migdałowatego)?
+a) Za generowanie najszybszych, pierwotnych i automatycznych impulsów paniki i agresji.
+b) Za regulację, hamowanie, nadzorowanie i elastyczne modyfikowanie pobudzenia emocjonalnego płynącego z ewolucyjnie starszych struktur układu limbicznego.
+c) Odpowiada wyłącznie za pierwotną percepcję barw i kształtów w polu widzenia.
+d) Kora przedczołowa nie ma żadnego połączenia ani wpływu na struktury podkorowe.
+(1076) Jak w świetle teorii Richarda Lazarusa i Allena Kannera chroniczne doświadczanie „codziennych uciążliwości” (daily hassles) wpływa na zdrowie psychofizyczne człowieka?
+a) Codzienne uciążliwości całkowicie uniemożliwiają aktywację wolniejszej reakcji stresowej (osi HPA).
+b) Działa jak eustres, stale wzmacniając odporność organizmu i poprawiając samopoczucie.
+c) Ich stała obecność, powtarzalność i wzajemne nakładanie się mogą wywierać silniejszy, bardziej destrukcyjny wpływ na zdrowie psychiczne i somatyczne niż pojedyncze, rzadkie, poważne wydarzenia życiowe.
+d) Wpływają negatywnie wyłącznie na osoby, u których zdiagnozowano uszkodzenie kory vmPFC.
+(1077) W psychologii afektu (Wykład 1) wyróżnia się stany emocjonalne oraz cechy afektywne (afekt dyspozycyjny). Jak na tym przykładzie opisuje się różnicę między lękiem jako stanem a lękiem jako cechą?
+a) Lęk jako cecha jest przetwarzany wyłącznie przez lewą półkulę mózgu, a lęk jako stan przez wyspę.
+b) Lęk jako stan to trwała właściwość osobowości na całe życie, a lęk jako cecha trwa tylko 3 sekundy.
+c) Pojęcia te oznaczają dokładnie to samo i są stosowane synonimicznie w diagnozie klinicznej.
+d) Lęk jako stan to przejściowy, uwarunkowany sytuacyjnie proces psychofizjologiczny (tu i teraz), podczas gdy lęk jako cecha to względnie stabilna różnica indywidualna (dyspozycja) do częstego reagowania lękiem w różnych sytuacjach.
+(1078) Co charakteryzuje stadium wyczerpania (exhaustion stage) w klasycznym modelu Ogólnego Zespołu Adaptacyjnego (GAS) Hansa Selyego?
+a) Wybitna elastyczność poznawcza i wzmocnienie relacji interpersonalnych pacjenta.
+b) Całkowity i nagły powrót organizmu do idealnej homeostazy wyjściowej.
+c) Aktywacja wyłącznie emocji refleksyjnych o walencji pozytywnej.
+d) Załamanie mechanizmów obronnych organizmu na skutek długotrwałego działania chronicznego stresora, co prowadzi do drastycznego spadku odporności, chorób somatycznych lub nieodwracalnych uszkodzeń układów wewnętrznych.
+(1079) Opierając się na metaanalizie Kraiss i współpracowników (2020) dotyczącej dobrostanu u osób z zaburzeniami psychicznymi, co jest kluczowym elementem adaptacyjnej regulacji emocji?
+a) Unikanie jakichkolwiek procesów reinterpretacji poznawczej.
+b) Całkowite wyłączenie interocepcji w celu odcięcia się od sygnałów wegetatywnych z ciała.
+c) Stosowanie zawsze i w każdej sytuacji wyłącznie jednej, sztywnej strategii, np. tłumienia ekspresji.
+d) Elastyczność regulacyjna (regulatory flexibility), czyli zdolność do dopasowywania różnych strategii regulacji emocji w zależności od zmieniającego się kontekstu sytuacyjnego i osobistych zasobów.
+(1080) Klaus Scherer (2009) w swojej psychologicznej charakterystyce definiuje emocję jako dynamiczny proces. Co stanowi istotę tej dynamiki?
+a) Zależność wszystkich stanów afektywnych wyłącznie od funkcjonowania hormonów tarczycy.
+b) Fakt, że emocje trwają niezmiennie w tym samym natężeniu przez całe dorosłe życie człowieka.
+c) To, że emocje automatyczne natychmiastowo wykluczają asymetrię funkcjonalną półkul mózgowych.
+d) To, że emocja nie jest statycznym stanem, lecz sekwencją powiązanych ze sobą, płynnych zmian w wielu systemach organizmu (poznawczym, fizjologicznym, motywacyjnym) w odpowiedzi na ocenę ważnego zdarzenia.
+(1081) W procesualnym modelu regulacji emocji Jamesa Grossa, jak definiuje się ogólną kategorię „modyfikacji poznawczej” (cognitive change)?
+a) Jako stan całkowitego wyłączenia uwagi wykonawczej w korze nowej.
+b) Jako zmianę sposobu, w jaki człowiek ocenia i interpretuje sytuację, aby zmodyfikować jej wpływ emocjonalny (czego najczęstszym przykładem jest reinterpretacja).
+c) Jako mechaniczne blokowanie skurczów mięśni mimicznych twarzy na samym końcu reakcji.
+d) Jako fizyczną zmianę lokalizacji w celu unikania bodźców awersyjnych.
+(1082) Hans Selye wprowadził do medycyny i psychologii pojęcie „chorób adaptacyjnych” (diseases of adaptation). Czym one są w kontekście jego teorii stresu?
+a) Krótkotrwałymi i nieszkodliwymi zmianami adaptacyjnymi w obrębie kory potylicznej.
+b) Zaburzeniami somatycznymi (np. nadciśnienie, wrzody żołądka, choroby serca), które rozwijają się wskutek długotrwałego, chronicznego działania stresora i wyczerpania mechanizmów obronnych organizmu.
+c) Schorzeniami uwarunkowanymi wyłącznie wadami genetycznymi, które ujawniają się przed narodzinami.
+d) Stanami idealnego zdrowia psychofizycznego, osiąganymi w fazie przeciwszoku.
+(1083) Joseph LeDoux w neurofizjologii lęku opisał tzw. „drogę górną” (high road). Czym różni się ona od ewolucyjnie starszej „drogi dolnej”?
+a) Jest powolniejsza, ale bardzo precyzyjna, ponieważ impuls biegnie ze wzgórza najpierw do kory zmysłowej i kory przedczołowej, gdzie zachodzi dokładna analiza poznawcza bodźca, a dopiero potem trafia do ciała migdałowatego.
+b) Odpowiada wyłącznie za generowanie nieświadomych odruchów bezwarunkowych w rdzeniu kręgowym.
+c) Aktywuje się tylko w stanach głębokiej supresji i operacyjnego stylu myślenia.
+d) Jest znacznie szybsza i całkowicie omija strukturę wzgórza zmysłowego.
+(1084) W ontogenezie emocji kluczowym zjawiskiem u dzieci pod koniec 1. roku życia jest tzw. odniesienie społeczne (social referencing). Na czym ono polega?
+a) Na wykształceniu operacyjnego stylu myślenia i ubóstwa wyobraźni.
+b) Na aktywnej obserwacji i interpretowaniu ekspresji emocjonalnej opiekuna (np. uśmiechu lub lęku na twarzy matki) w celu oceny, czy nowa, nieznana sytuacja lub obiekt są bezpieczne.
+c) Na całkowitym ignorowaniu obecności i komunikatów rodziców podczas zabawy w nowym miejscu.
+d) Na automatycznym i trwałym wyciszeniu osi HPA w odpowiedzi na kontakt z rówieśnikami.
+(1085) Antonio Damasio dokonuje w swoich pracach teoretycznych rozróżnienia na emocje pierwotne i wtórne. Czym charakteryzują się emocje wtórne (secondary emotions)?
+a) Są czysto biologicznymi, wrodzonymi odruchami, sterowanymi wyłącznie przez pień mózgu u noworodków.
+b) Polegają na całkowitym i trwałym zablokowaniu procesów interocepcji w organizmie.
+c) Pojawiają się w toku rozwoju i wymagają zaangażowania kory przedczołowej oraz struktur somatosensorycznych w celu zbudowania świadomych skojarzeń między kategoriami obiektów a stanami ciała (markerami).
+d) Są synonimem preferencji estetycznych i trwają maksymalnie kilka milisekund.
+(1086) Zgodnie z taksonomią ludzkich emocji autorstwa Jarymowicz i Imbira, jakie jest główne źródło (podłoże) powstawania emocji automatycznych?
+a) Biologiczne mechanizmy ewolucyjne, programy homeostatyczne oraz bezpośrednia, przedrefleksyjna ocena bodźców zmysłowych.
+b) Uszkodzenie sieci neuronalnej CAN (Central Autonomic Network).
+c) Standardy moralne, systemy prawne oraz logiczne, abstrakcyjne operacje matematyczne.
+d) Wyłącznie długotrwałe procesy socjalizacji uniwersyteckiej w wieku dorosłym.
+(1087) W koncepcji allostazy i obciążenia allostatycznego Bruce'a McEwena, co zaliczamy do tzw. głównych mediatorów allostazy (substancji chemicznych pośredniczących w adaptacji)?
+a) Białka budulcowe mięśni poprzecznie prążkowanych twarzy.
+b) Katecholaminy (adrenalina, noradrenalina), glikokortykoidy (kortyzol) oraz wybrane cząsteczki układu odpornościowego (np. cytokiny prozapalne).
+c) Wyłącznie hormony tarczycy oraz witaminy rozpuszczalne w tłuszczach.
+d) Czysto abstrakcyjne pojęcia językowe przetwarzane przez lewą półkulę.
+(1088) W literaturze klinicznej i psychosomatycznej aleksytymia bywa dzielona na pierwotną i wtórną. Czym charakteryzuje się aleksytymia wtórna?
+a) Występuje wyłącznie u osób, u których lewa półkula mózgu przestała w pełni werbalizować myśli.
+b) Jest cechą niezmienną i wrodzoną, uwarunkowaną wyłącznie defektami genetycznymi od momentu poczęcia.
+c) Jest stanem nabytym, rozwijającym się często jako psychologiczny mechanizm obronny lub konsekwencja przeżytej traumy, ciężkiego stresu chronicznego lub poważnej choroby somatycznej.
+d) Polega na patologicznym i nagłym wzroście zdolności do empatii i metaforycznego opisywania uczuć.
+(1089) Ostatnim, piątym etapem w procesualnym modelu regulacji emocji Jamesa Grossa jest „modulacja reakcji” (response modulation). Jakie działania – oprócz tłumienia ekspresji – mieszczą się w tej kategorii?
+a) Przekierowanie uwagi z twarzy rozmówcy na wiszący na ścianie obraz.
+b) Zmiana interpretacji poznawczej intencji partnera w trakcie kłótni.
+c) Bezpośrednie, fizyczne wpływanie na fizjologiczne lub somatyczne przejawy emocji, np. poprzez ćwiczenia oddechowe, relaksację, aktywność fizyczną lub zażycie substancji/leków wyciszających.
+d) Świadome i proaktywne unikanie spotkań z nielubianymi ludźmi na tydzień przed wydarzeniem.
+(1090) Zgodnie z badaniami nad rozwojem emocjonalnym dziecka (Denham, Pons), co oznacza komponent kompetencji określany jako „rozumienie emocji” (emotion comprehension)?
+a) Czysto techniczny i operacyjny styl myślenia pozbawiony refleksji psychologicznej.
+b) Zdolność do identyfikowania, nazywania i interpretowania przyczyn oraz konsekwencji emocji u siebie i innych, a także wiedza o tym, że stany wewnętrzne mogą różnić się od ekspresji zewnętrznej.
+c) Umiejętność natychmiastowego stłumienia płaczu w każdej sytuacji publicznej.
+d) Genetycznie zaprogramowany poziom reaktywności wegetatywnej na ból fizyczny.
+(1091) Co według Richarda Lazarusa stanowi istotę tzw. „ponownej oceny poznawczej” (reappraisal) jako stałego elementu procesu stresowego?
+a) Jest to synonim wyuczonej bezradności Seligmana.
+b) Jest to mechaniczne wyłączenie receptorów czuciowych w fazie szoku.
+c) Polega na uświadomieniu sobie, że stresor ma charakter wyłącznie eustresu.
+d) Jest to ciągły proces modyfikowania pierwotnych ocen sytuacji w miarę napływu nowych informacji z otoczenia oraz oceny skuteczności własnych działań obronnych (copingu).
+(1092) W neurobiologii afektu i lateralizacji, za co odpowiada tzw. system dążenia/zbliżenia (approach system), i z aktywnością której okolicy mózgu jest silnie powiązany?
+a) Za emocje pozytywne, motywację nakierowaną na nagrodę oraz aktywne dążenie do celu; powiązany z lewą korą przedczołową.
+b) Za wyłączną regulację hormonów tarczycy; powiązany z rdzeniem przedłużonym.
+c) Za zachowania unikania i lęku; powiązany z prawą korą przedczołową.
+d) Za somatyczne odczuwanie wstrętu; powiązany wyłącznie z wyspą tylną.
+(1093) Jak w psychologii emocji definiuje się pojęcie „reguł okazywania” (display rules) sformułowane klasycznie przez Paula Ekmana?
+a) Jako wrodzone programy neuronalne, które zmuszają każdego człowieka na świecie do identycznego krzyku w chwili złości.
+b) Jako kulturowe i społeczne normy oraz zasady, które określają, jakie emocje, komu, kiedy i w jakim stopniu wolno (lub należy) okazywać publicznie za pomocą ekspresji mimicznej.
+c) Jako techniczne procedury medyczne służące do pomiaru przewodnictwa skóry w stresie.
+d) Jako synonim transdiagnostycznego czynnika aleksytymii.
+(1094) Zgodnie z prezentacją dr Basińskiej poświęconą neurofizjologii, która struktura podkorowa jest opisywana jako główny koordynator i stacja przekaźnikowa sterująca autonomicznymi i hormonalnymi odpowiedziami organizmu na emocje (np. łącząca układ limbiczny z układem dokrewnym)?
+a) Zakręt przedśrodkowy.
+b) Jądro ogoniaste.
+c) Kora potyliczna.
+d) Podwzgórze (hypothalamus).
+(1095) W ontogenezie kompetencji emocjonalnych, na czym polega różnica między regulacją intrapersonalną a interpersonalną u małych dzieci?
+a) Regulacja interpersonalna (zewnętrzna) opiera się na pomocy opiekuna, który tuli i uspokaja dziecko, natomiast intrapersonalna (wewnętrzna) to autonomiczne, samodzielne strategie zarządzania afektem przez samo dziecko.
+b) Pojęcia te są sprzeczne z teorią temperamentu Mary Rothbart i zostały wycofane z psychologii.
+c) Regulacja intrapersonalna zachodzi wyłącznie w prawej półkuli, a interpersonalna w lewej.
+d) Regulacja intrapersonalna wymaga obecności farmakoterapii, a interpersonalna nie.
+(1096) Co w ujęciu dimensionalnym (modele wymiarowe afektu) oznacza termin „walencja” (valence)?
+a) Stopień uszkodzenia struktur podkorowych u pacjentów klinicznych.
+b) Czas trwania emocji mierzony w minutach lub godzinach.
+c) Poziom pobudzenia fizjologicznego, energii i gotowości somatycznej organizmu od apatii do paniki.
+d) Jakościowy wymiar przyjemności–nieprzyjemności (lub pozytywności–negatywności) danego stanu psychicznego, określający czy jest on odczuwany jako miły, czy przykry.
+(1097) W ujęciu Jarymowicz i Imbira, emocje refleksyjne różnią się od automatycznych m.in. tym, że te pierwsze mogą opierać się na tzw. standardach alocentrycznych. Co to oznacza?
+a) Są to automatyczne odruchy sensomotoryczne kontrolowane przez pętle twarzowe Izarda.
+b) Standardy te skupiają się wyłącznie na obronie własnego biologicznego organizmu przed bólem.
+c) Standardy te wymagają całkowitego zablokowania procesów pamięci roboczej w mózgu.
+d) Są to standardy wartościowania uwzględniające dobro innych ludzi, normy społeczne, moralne oraz perspektywę zewnętrzną wobec własnego „Ja”.
+(1098) Na czym polega i jakie obszary mózgu angażuje tzw. „droga górna” (high road) w kontekście teorii Josepha LeDoux?
+a) Angażuje wyłącznie rdzeń przedłużony i działa w czasie poniżej 1 milisekundy.
+b) Polega na mechanicznym przesyłaniu impulsów z narządów wewnętrznych bezpośrednio do mięśni nóg.
+c) Wyklucza jakikolwiek udział kory przedczołowej w procesach hamowania strachu.
+d) Przebiega ze wzgórza poprzez korę czuciową i obszary asocjacyjne kory nowej do ciała migdałowatego, umożliwiając świadomą, dokładną i poznawczą weryfikację bodźca lękowego.
+(1099) W badaniach nad aleksytymią i przetwarzaniem poznawczo-emocjonalnym (Luminet i in., 2021), jaki lęk deklarują osoby z wysokim poziomem tej cechy w odniesieniu do własnego ciała?
+a) Bardzo często wykazują tendencję do błędnego interpretowania naturalnych, wegetatywnych sygnałów pobudzenia z ciała jako objawów poważnych, śmiertelnych chorób somatycznych (hipochondria/somatyzacja).
+b) Twierdzą, że ich mięśnie mimiczne są w 100% sterowane przez prawą półkulę mózgu.
+c) Cechuje ich całkowity brak zainteresowania jakimkolwiek badaniem lekarskim.
+d) Deklarują, że ich ciało nie potrafi wydzielać adrenaliny ani noradrenaliny.
+(1100) Co w kontekście neurofizjologii emocji oznacza skrót HPA, odnoszący się do kluczowej osi hormonalnej zaangażowanej w długofalową reakcję stresową?
+a) Hipokamp-Parakoła-Amplituda (Hippocampus-Paracortex-Amplitude).
+b) Podwzgórze-Przysadka-Nadnercza (Hypothalamus-Pituitary-Adrenal axis).
+c) Hamowanie-Pobudzenie-Afekt (Hypo-Plastic-Affect).
+d) Hormon-Płyn-Adrenalina (Hormone-Plasma-Adrenaline).
+(1101) Jak w psychologii dobrostanu i emocji definiuje się pojęcie „rezyliencji” (resilience), o którym mowa w materiałach dr Basińskiej?
+a) Jako elastyczność psychiczną oraz zdolność organizmu i psychiki do skutecznego odbudowywania zasobów, regeneracji i powrotu do równowagi po przeżyciu silnego stresu, kryzysu lub traumy.
+b) Jako stan wyczerpania allostatycznego w końcowej fazie GAS Selyego.
+c) Jako skłonność do nadmiernego stosowania strategii tłumienia ekspresji mimicznej.
+d) Jako trwałą i niezmienną cechę genetyczną uniemożliwiającą odczuwanie jakichkolwiek emocji.
+(1102) Czym według prezentacji o stresie charakteryzują się „mikrostresory” (daily hassles) na tle poważnych wydarzeń życiowych?
+a) Dotyczą wyłącznie pacjentów z całkowitym uszkodzeniem kory vmPFC.
+b) Są to drobne, codzienne, powtarzające się i uciążliwe sytuacje (np. stąd nazwa „codzienne uciążliwości”, jak korki, drobne spięcia, brak czasu), które szkodzą zdrowiu poprzez stałą, chroniczną kumulację napięcia.
+c) Mają charakter wyłącznie pozytywnego eustresu, który podnosi odporność immunologiczną organizmu.
+d) Są rzadkimi i dramatycznymi katastrofami naturalnymi, które niszczą całe miasta w kilka sekund.
+(1103) W teorii Carrolla Izarda, który poziom (system) aktywacji emocjonalnej rozwija się najpóźniej w ontogenezie i dlaczego?
+a) Poziom afektywny, gdyż lęk sytuacyjny wykształca się dopiero w wieku emerytalnym.
+b) Poziom sensomotoryczny, ponieważ noworodki nie wykonują żadnych ruchów mięśniami twarzy.
+c) Poziom poznawczy, ponieważ wymaga on wcześniejszego biologicznego wykształcenia struktur korowych oraz zdolności dziecka do tworzenia zaawansowanych pojęć i reprezentacji myślowych.
+d) Poziom neuronalny, ponieważ neurony powstają dopiero wokół 20. roku życia.
+(1104) Jaki wpływ na percepcję i przetwarzanie bodźców ma stan lęku jako cechy afektywnej u człowieka (afekt dyspozycyjny)?
+a) Jest bezpośrednią przyczyną trwałego podniesienia dobrostanu psychologicznego.
+b) Całkowicie eliminuje asymetrię funkcjonalną półkul mózgowych w obszarach potylicznych.
+c) Obniża próg wrażliwości na zagrożenie – osoba o wysokim lęku jako cesze przejawia tzw. błąd uwagi (attentional bias), czyli szybciej skanuje otoczenie i interpretuje neutralne lub dwuznaczne bodźce jako zagrażające.
+d) Sprawia, że człowiek przestaje całkowicie zauważać jakiekolwiek bodźce negatywne w środowisku.
+(1105) Klaus Scherer (2009) wskazuje, że emocje są subiektywnie znaczące. Co to oznacza w praktyce psychologicznej?
+a) Że emocje zależą wyłącznie od obiektywnych parametrów fizycznych bodźca (np. decybeli hałasu).
+b) Że emocja pojawia się tylko wtedy, gdy dane zdarzenie lub bodziec bezpośrednio dotyka osobistych celów, wartości, potrzeb lub dobrostanu konkretnej jednostki.
+c) Że każda sytuacja na świecie wywołuje dokładnie taką samą emocję u wszystkich ludzi bez wyjątku.
+d) Że stany afektywne są pozbawione jakiegokolwiek komponentu poznawczego.
+(1106) Która z poniższych struktur neurofizjologicznych wchodzi w skład układu limbicznego i odpowiada za tworzenie pamięci kontekstowej oraz wygaszanie reakcji lękowych we współpracy z korą przedczołową?
+a) Hipokamp (hippocampus).
+b) Rdzeń kręgowy.
+c) Kora ruchowa.
+d) Siatkówka oka.
+(1107) W metaanalizie Hu i współpracowników (2014) porównywano koszty poznawcze strategii regulacji. Dlaczego tłumienie ekspresji generuje wysoki koszt poznawczy?
+a) Ponieważ wyklucza aktywację Centralnej Sieci Autonomicznej (CAN).
+b) Ponieważ strategia ta polega na zbyt wczesnym i automatycznym przeformułowaniu myśli.
+c) Ponieważ całkowicie niszczy neurony odpowiedzialne za mowę w lewej półkuli.
+d) Ponieważ wymaga stałego, intencjonalnego i świadomego monitorowania oraz kontrolowania swoich zachowań i mięśni w trakcie trwania interakcji, co obciąża pamięć roboczą.
+(1108) Co stanowiło główny wniosek z przytaczanej na wykładzie metaanalizy Kraiss i in. (2020) dotyczącej relacji między regulacją emocji a dobrostanem (well-being) u pacjentów klinicznych?
+a) Trening i rozwijanie adaptacyjnych, elastycznych strategii regulacji emocji jest silnie powiązane z podnoszeniem dobrostanu psychicznego, autonomii i lepszego funkcjonowania pacjentów z zaburzeniami psychicznymi.
+b) Pacjenci kliniczni powinni stosować wyłącznie tłumienie ekspresji jako jedyną strategię obronną.
+c) Dobrostan zależy wyłącznie od biologicznego dojrzewania osi HPA bez wpływu procesów psychologicznych.
+d) Regulacja emocji nie wykazuje żadnego związku ze zdrowiem psychicznym osób chorych.
+(1109) W ontogenezie emocji rozwój kompetencji dziecka zależy od tzw. socjalizacji emocji. Jakie postawy rodziców wobec emocji dziecka są w literaturze (Eisenberg) określane jako wspierające (adaptacyjne)?
+a) Całkowite izolowanie dziecka od jakichkolwiek bodźców społecznych i rówieśników.
+b) Ignorowanie, karanie za płacz, wyśmiewanie lęku i zaprzeczanie emocjom dziecka.
+c) Stosowanie wyłącznie technicznego, operacyjnego stylu myślenia w rozmowach z niemowlęciem.
+d) Akceptacja stanów emocjonalnych dziecka, nazywanie ich (walidacja), uczenie konstruktywnych strategii radzenia sobie oraz modelowanie spokojnych reakcji.
+(1110) Jak we współczesnej psychologii i neurofizjologii podsumowuje się relację pomiędzy procesami poznawczymi (myśleniem) a procesami afektywnymi (emocjami) na bazie zaprezentowanych wykładów?
+a) Emocje i poznanie to dwa całkowicie odizolowane, wrogie systemy, które nigdy ze sobą nie współpracują w ludzkim mózgu.
+b) Procesy poznawcze rozwijają się wyłącznie w lewej półkuli, a procesy afektywne w rdzeniu kręgowym.
+c) Afekt zależy wyłącznie od mechanicznego tłumienia ekspresji i nie ma żadnego znaczenia dla przetrwania gatunku.
+d) Emocje i procesy poznawcze są nierozerwalnie zintegrowane; emocje nie są „zakłóceniem” intelektu, lecz kluczowym mechanizmem porządkowania uwagi, pamięci, decyzji i adaptacji człowieka do świata.
+(1111) W ramach strategii „przekierowania uwagi” (deployment of attention) w modelu Jamesa Grossa wyróżnia się dwa przeciwstawne mechanizmy. Czym różni się dystrakcja (distraction) od ruminacji (rumination)?
+a) Obie strategie są automatycznymi odruchami sterowanymi wyłącznie przez prawą półkulę mózgu.
+b) Dystrakcja to całkowita rezygnacja z dążenia do celu, a ruminacje to zażywanie leków uspokajających.
+c) Ruminacje są strategią wyprzedzającą (antecedencyjną), a dystrakcja działa wyłącznie jako modulacja reakcji mimicznej.
+d) Dystrakcja polega na odwróceniu uwagi od bodźca emocjonalnego (np. poprzez myślenie o czymś innym lub zaangażowanie w zadanie), podczas gdy ruminacje to uporczywe, powtarzające się i bierne ogniskowanie uwagi na przeżywanym stanie, jego przyczynach i konsekwencjach.
+(1112) Richard Lazarus w swoim transakcyjnym modelu stresu podzielił ocenę pierwotną (primary appraisal) na trzy główne podtypy w sytuacji, gdy zdarzenie uznawane jest za stresujące. Jakie to podtypy?
+a) Reaktywność, samoregulacja, effortful control.
+b) Krzywda/strata (harm/loss), zagrożenie (threat) oraz wyzwanie (challenge).
+c) Szok, przeciwszok, opór.
+d) Pobudzenie, apatia, wyczerpanie.
+(1113) W literaturze dotyczącej rozwoju rozumienia emocji u dzieci (Pons & Harris), trzecim i najbardziej zaawansowanym etapem jest okres refleksyjny (reflective period), osiągany zazwyczaj między 9. a 11. rokiem życia. Co dziecko zaczyna wtedy rozumieć?
+a) Złożone mechanizmy, takie jak możliwość jednoczesnego odczuwania emocji sprzecznych (mieszanych), wpływ ukrytych intencji, reguły okazywania (maskowanie emocji) oraz to, jak strategie poznawcze (np. myśli) mogą regulować afekt.
+b) Wyłącznie to, że ludzie potrafią płakać i krzyczeć jednocześnie.
+c) Czysto biologiczne parametry działania osi HPA i wydzielania kortyzolu.
+d) Że emocje automatyczne są ważniejsze niż asymetria funkcjonalna kory mózgowej.
+(1114) Zgodnie z badaniami Antonio Damasio i jego współpracowników nad hipotezą markerów somatycznych, w jakim klasycznym teście psychologicznym pacjenci z uszkodzeniem kory przedczołowej brzuszno-przyśrodkowej (vmPFC) ponoszą rażące porażki?
+a) W testach sprawdzających poprawność gramatyczną wypowiedzi językowych.
+b) W prostych testach okulistycznych badających ostrość widzenia barw.
+c) W teście Iowa Gambling Task (IGT) – hazardowym zadaniu decyzyjnym, w którym stale wybierają ryzykowne talie przynoszące duże, chwilowe zyski, ale też gigantyczne straty, ponieważ ich mózg nie generuje anticipatory somatosensory signals (ostrzegawczych sygnałów z ciała).
+d) W teście inteligencji ogólnej WAIS-R, zdobywając zero punktów.
+(1115) W psychologii klinicznej Toronto Alexithymia Scale (TAS-20) jest uznanym, 20-pytaniowym narzędziem kwestionariuszowym self-report. Jakie trzy podskale (czynniki) są w nim bezpośrednio mierzone zgodnie z materiałami?
+a) Trudność w identyfikowaniu uczuć (DIF), trudność w opisywaniu uczuć (DDF) oraz myślenie zorientowane zewnętrznie/operacyjne (EOT).
+b) Poziom dopaminy, aktywność wyspy, lateralizacja półkulowa.
+c) Lęk sytuacyjny, dystres przewlekły, obciążenie allostatyczne.
+d) Tłumienie ekspresji, elastyczność poznawcza, rezyliencja wegetatywna.
+(1116) Profesorowie Maria Jarymowicz i Kamil Imbir w swojej taksonomii ludzkich emocji wskazują, że emocje automatyczne są powiązane z tzw. standardami egocentrycznymi. Czym charakteryzują się te standardy?
+a) Odnoszeniem się bezpośrednio do własnego organizmu, obrony „Ja”, własnych natychmiastowych korzyści, wygody, przetrwania i unikania fizycznego bólu.
+b) Skupieniem uwagi na dobru całego społeczeństwa i bezinteresownej pomocy rówieśnikom.
+c) Wymogiem przeprowadzenia zaawansowanej, logicznej i wielogodzinnej analizy pojęciowej.
+d) Powstaniem wyłącznie w toku edukacji akademickiej.
+(1117) Badania nad fizjologicznymi kosztami regulacji emocji (Hu i Gross, 2014) wykazały, że długofalowe tłumienie ekspresji (suppression) paradoksalnie wpływa na pobudzenie autonomiczne organizmu. Jaki to wpływ?
+a) Zamiast wyciszyć emocje, tłumienie ekspresji zwiększa pobudzenie wegetatywne (np. wzrost ciśnienia krwi, nasilenie przewodnictwa skóry) u osoby tłumiącej afekt oraz u jej partnera w interakcji.
+b) Powoduje natychmiastowe i całkowite obniżenie tętna do poziomu głębokiego snu.
+c) Całkowicie wyłącza wydzielanie kortyzolu przez korę nadnerczy.
+d) Przenosi całe przetwarzanie emocjonalne z prawej półkuli do lewej.
+(1118) W modelach psychologicznych stresu (Seligman, 1975) zjawisko wyuczonej bezradności generuje potężny deficyt poznawczy. Czym manifestuje się ten specyficzny deficyt?
+a) Trudnością w dostrzeganiu i uczeniu się, że w nowej sytuacji własne działanie MOŻE przynieść pozytywny skutek i pozwolić na przejęcie kontroli (jednostka ignoruje dowody na to, że ma wpływ na sytuację).
+b) Całkowitym uszkodzeniem kory przedniej zakrętu obręczy (ACC).
+c) Wybitną elastycznością i zdolnością do natychmiastowej reinterpretacji poznawczej stresora.
+d) Nagłym i bezwysiłkowym opanowaniem kilku języków obcych.
+(1119) W neurofizjologii emocji sieć o nazwie CAN (Central Autonomic Network) odgrywa rolę integracyjną. Jakie konkretnie systemy ludzkiego organizmu są przez nią spajane?
+a) Układ kostny, układ mięśniowy oraz percepcja barw.
+b) Procesy poznawcze kory nowej, stany afektywne układu limbicznego oraz wegetatywne odpowiedzi autonomicznego układu nerwowego (ANS).
+c) Pętle ruchowe Izarda z procesami lateralizacji potylicznej.
+d) Wyłącznie hormony tarczycy i praca nerek.
+(1120) Jak w teorii temperamentu Mary Rothbart (2011) definiuje się pojęcie „reaktywności” (reactivity), będące biologicznym filarem różnic indywidualnych u dzieci?
+a) Jako zdolność do intencjonalnego wyhamowania płaczu poprzez skupienie uwagi na książce.
+b) Jako stan permanentnego obciążenia allostatycznego w stadium wyczerpania.
+c) Jako stopień internalizacji moralnych norm i reguł okazywania emocji Paula Ekmana.
+d) Jako mierzalną pobudliwość fizjologiczną i somatyczną systemów organizmu (np. szybkość, próg, czas trwania i intensywność reakcji neurochemicznych, wegetatywnych i motorycznych na bodziec).
+(1121) Zgodnie z psychologiczną charakterystyką Klausa Scherera (2009), co stanowi główną funkcję komponentu motywacyjnego (tendencji do działania) w strukturze emocji?
+a) Wyłączenie asymetrii funkcjonalnej i lateralizacji obu półkul mózgowych.
+b) Zapewnienie, że organizm natychmiastowo zapomni o zaistniałym zdarzeniu.
+c) Przeformułowanie standardów alocentrycznych na standardy egocentryczne.
+d) Przygotowanie i ukierunkowanie organizmu na specyficzną odpowiedź behawioralną (np. ucieczkę, atak, ochronę, zbliżenie), która ewolucyjnie optymalizowała szansę na adaptację.
+(1122) Klaus Scherer definiuje emocje jako intencjonalne, co oznacza, że są one skierowane na konkretny obiekt. Który z wymienionych stanów afektywnych NIE jest intencjonalny w tym ujęciu (jest rozlany i pozbawiony jasnego przedmiotu)?
+a) Emocja złości na partnera.
+b) Rozlany nastrój (mood), np. poranna chandra lub ogólny niepokój.
+c) Emocja dumy z obronionego egzaminu.
+d) Emocja strachu przed psem.
+(1123) W neurofizjologii emocji przednia kora zakrętu obręczy (ACC - Anterior Cingulate Cortex) jest znana z unikalnego przetwarzania stanów bolesnych. O jaki rodzaj bólu chodzi w badaniach cytowanych na wykładzie?
+a) Wyłącznie o ból mechaniczny wywołany uderzeniem w kość potyliczną.
+b) O ból wywołany wyłącznie dysfunkcją hormonów tarczycy.
+c) Zarówno o ból czysto fizyczny (somatyczny), jak i o tzw. ból społeczny (social pain), czyli bolesne doświadczenie odrzucenia, wykluczenia z grupy lub straty relacji.
+d) ACC nie uczestniczy w przetwarzaniu jakichkolwiek sygnałów bólowych.
+(1124) Jak w koncepcji poziomów aktywacji emocji Carrolla Izarda opisuje się rolę najniższego poziomu – procesu neuronalnego (neural system)?
+a) Aktywuje się on wyłącznie u osób dorosłych, które przeszły pełny trening poznawczy.
+b) Działa tylko wtedy, gdy pętle sprzężenia zwrotnego z mięśni twarzy zostaną chirurgicznie zablokowane.
+c) Jest on fundamentalną bazą i jest zawsze aktywny niezależnie od tego, która droga lub który system (sensomotoryczny, afektywny czy poznawczy) wywołał daną emocję.
+d) Poziom ten wyklucza jakikolwiek udział struktur podkorowych i pnia mózgu.
+(1125) W modelach dobrostanu i zdrowia psychicznego (Kraiss i in., 2020), czym charakteryzuje się kluczowy zasób odpornościowy określany jako elastyczność regulacyjna (regulatory flexibility)?
+a) Umiejętnością całkowitego ignorowania interocepcji przez całe życie.
+b) Sztywnym stosowaniem wyłącznie reinterpretacji poznawczej, niezależnie od stopnia kontroli nad sytuacją.
+c) Zdolnością jednostki do dynamicznej oceny kontekstu sytuacyjnego, doboru adekwatnej strategii regulacji emocji z posiadanego repertuaru oraz monitorowania jej skuteczności i ewentualnej zmiany, gdy sytuacja tego wymaga.
+d) Permanentnym blokowaniem aktywności osi HPA za pomocą technik farmakologicznych.
+(1126) Pierwszym i najbardziej podstawowym etapem rozwoju rozumienia emocji u dzieci w modelu Ponsa i Harrisa jest okres publiczny (public period), rozwijający się między 3. a 5. rokiem życia. Jakie kompetencje dziecko opanowuje w tym czasie?
+a) Dokładną logiczną analizę stylów operacyjnych i deficytów transdiagnostycznych u dorosłych.
+b) Zdolność do pełnej korowej samoregulacji osi podwzgórze-przysadka-nadnercza.
+c) Rozpoznawanie emocji na podstawie zewnętrznych, publicznie dostępnych wskazówek, takich jak podstawowa ekspresja mimiczna twarzy oraz typowe, zewnętrzne przyczyny sytuacyjne (np. że ktoś płacze, bo upuścił loda).
+d) Rozumienie emocji mieszanych oraz zaawansowanych strategii ukrywania afektu.
+(1127) W dwuwymiarowym modelu afektu Watsona i Tellegena, wysoki poziom wymiaru o nazwie Afekt Negatywny (High Negative Affect - NA) manifestuje się subiektywnie jako stan:
+a) Głębokiego spokoju, relaksu, satysfakcji i wyciszenia somatycznego.
+b) Dystresu, zdenerwowania, lęku, poczucia winy, wrogości oraz silnego, nieprzyjemnego zaangażowania emocjonalnego.
+c) Wysokiej elastyczności poznawczej połączonej z moralną dumą alocentryczną.
+d) Całkowitej apatii, braku energii i braku jakichkolwiek reakcji wegetatywnych.
+(1128) Hans Selye w opisie fazy reakcji alarmowej (w modelu GAS) wyróżnił podfazę szoku. Co dzieje się z parametrami fizjologicznymi organizmu w tej podfazie, bezpośrednio po uderzeniu potężnego stresora?
+a) Następuje chwilowe załamanie i spadek sił obronnych organizmu (np. spadek ciśnienia krwi, obniżenie temperatury ciała, spadek napięcia mięśniowego).
+b) Kora przedczołowa całkowicie wyłącza działanie ciała migdałowatego drogą top- down.
+c) Następuje gwałtowny wzrost odporności immunologicznej i skok ciśnienia krwi powyżej normy.
+d) Organizm przechodzi natychmiast w stan permanentnej, stabilnej allostazy McEwena.
+(1129) Zgodnie z prezentacją dr Basińskiej poświęconą stresowi, jak chronicznie wysoki poziom mediatorów stresu (takich jak kortyzol czy cytokiny prozapalne) wpływa strukturalnie na mózg człowieka w obszarze hipokampa?
+a) Może prowadzić do atrofi (zaniku) dendrytów, zmniejszenia neurogenezy oraz upośledzenia funkcji pamięciowych i trudności w wygaszaniu lęku.
+b) Trwale przekształca strukturę hipokampa w jądro półleżące układu nagrody.
+c) Powoduje gwałtowny rozrost sieci neuronów i gigantyczne powiększenie objętości hipokampa.
+d) Przewlekły stres nie wykazuje żadnego mierzalnego wpływu na struktury mózgowe.
+(1130) Wybór strategii regulacji emocji w modelu Jamesa Grossa niesie za sobą odmienne konsekwencje dla pamięci. Jaki wpływ na zapamiętywanie informacji z otoczenia ma stosowanie tłumienia ekspresji (suppression) w porównaniu do reinterpretacji (reappraisal)?
+a) Wpływ na pamięć zależy wyłącznie od funkcjonowania hormonów tarczycy.
+b) Tłumienie ekspresji wybitnie poprawia pamięć, a reinterpretacja wywołuje amnezję.
+c) Tłumienie ekspresji upośledza pamięć i utrudnia kodowanie informacji (wysoki koszt poznawczy obciąża uwagę), podczas gdy reinterpretacja poznawcza nie generuje takich deficytów pamięciowych.
+d) Obie strategie działają identycznie i całkowicie wymazują pamięć krótkotrwałą.
+(1131) W ontogenezie rozwoju kompetencji emocjonalnych dziecka zjawisko przywiązania (attachment) ma charakter organizujący. Co według Judy Cassidy (1994) charakteryzuje dzieci o pozabezpiecznym-unikającym stylu przywiązania w obszarze ekspresji i regulacji emocji?
+a) Wysoka elastyczność poznawcza i mistrzowskie operowanie standardami alocentrycznymi.
+b) Tendencja do minimalizowania ekspresji negatywnych emocji (zwłaszcza lęku i smutku) oraz przedwczesne, obronne tłumienie afektu, ponieważ dziecko nauczyło się, że opiekun odrzuca lub karze jego sygnały bezradności.
+c) Otwarty, głośny i nieskrępowany komunikat o lęku i złości w każdej sytuacji.
+d) Całkowity brak jakiejkolwiek reaktywności wegetatywnej w autonomicznym układzie nerwowym.
+(1132) W neurofizjologii emocji struktura przedniej kory zakrętu obręczy (ACC) współpracuje z korą przedczołową (PFC). Jaka jest jej główna funkcja poznawczo- afektywna podczas wykonywania trudnych zadań?
+a) Pierwotne przetwarzanie barw i kształtów bodźców zmysłowych.
+b) Monitorowanie konfliktów, wykrywanie rozbieżności i błędów między zamierzonym celem a realnym działaniem oraz sygnalizowanie konieczności uruchomienia korowej kontroli regulacyjnej.
+c) Wyłączenie procesów lateralizacji i asymetrii funkcjonalnej w obu półkulach.
+d) Generowanie impulsów do natychmiastowego ataku fizycznego w złości.
+(1133) W teorii Antonio Damasio ludzkie uczucia (feelings) rodzą się na bazie interocepcji. Jaka jest precyzyjna różnica między emocją a uczuciem w tej koncepcji?
+a) Emocje trwają latami, a uczucia znikają po ułamku sekundy.
+b) Uczucie powstaje wyłącznie w rdzeniu kręgowym, a emocja jest procesem czysto korowym.
+c) Emocja to obiektywna, cielesna reakcja i gotowość do działania sterowana podkorowo, a uczucie to świadoma, psychiczna reprezentacja tego stanu, gdy mózg „odczytuje” mapy ciała i nadaje im nazwę w umyśle.
+d) Nie ma żadnej różnicy, Damasio uważa te pojęcia za całkowicie synonimiczne.
+(1134) W ujęciu stresu jako procesu (Lazarus, Folkman), po etapie oceny pierwotnej i wtórnej następuje tzw. coping. Jak definiuje się radzenie sobie ze stresem (coping) w tych klasycznych materiałach?
+a) Jako mechaniczne i stałe unikanie jakichkolwiek kontaktów społecznych z otoczeniem.
+b) Jako automatyczny, niezależny od woli odruch bezwarunkowy pnia mózgu.
+c) Jako stale zmieniające się poznawcze i behawioralne wysiłki jednostki nakierowane na opanowanie, zredukowanie lub tolerowanie specyficznych zewnętrznych i/lub wewnętrznych wymagań, które są oceniane jako obciążające lub przekraczające jej zasoby.
+d) Jako synonim stadium wyczerpania w Ogólnym Zespole Adaptacyjnym Hansa Selyego.
+(1135) W metaanalizie Kraiss i współpracowników (2020) poświęconej dobrostanowi (well-being) pacjentów z zaburzeniami psychicznymi, jak definiowano dobrostan psychologiczny i eudajmonistyczny?
+a) Jako stan całkowitego wyłączenia procesów uwagi wykonawczej w korze nowej.
+b) Jako chwilowe odczucie przyjemności sensorycznej wywołane zjedzeniem smacznego pokarmu.
+c) Jako wyłączny brak objawów somatycznych uszkodzenia kory vmPFC.
+d) Jako wielowymiarowy konstrukt obejmujący m.in. poczucie autonomii, osobisty rozwój, samoakceptację, cel w życiu, dobre relacje z innymi oraz ogólne pozytywne funkcjonowanie psychiczne.
+(1136) Kleinginna i Kleinginna (1981) dokonali słynnego przeglądu literaturowego definicji emocji. Jaki był główny wniosek z ich pracy wspomniany na Wykładzie 1?
+a) Wykazali, że w psychologii nie da się naukowo badać emocji, przez co pojęcie to powinno zostać wycofane.
+b) Zebrali ponad 100 odmiennych definicji emocji i usystematyzowali je w kilkunastu kategoriach, co pokazuje, jak złożonym i wieloaspektowym pojęciem jest emocja.
+c) Udowodnili, że jedyną poprawną definicją emocji jest ta oparta na hormonach tarczycy.
+d) Stwierdzili, że emocje i nastroje to dokładnie to samo i nie należy ich różnicować.
+(1137) W koncepcji Antonio Damasio, oprócz standardowej pętli somatycznej, istnieje tzw. „pętla jak-gdyby” (as-if body loop). Na czym ona polega?
+a) Mózg (kora przedczołowa i somatosensoryczna) omija realne ciało i bezpośrednio symuluje wewnętrzną mapę zmian somatycznych, „wyobrażając sobie” stan ciała, co pozwala na jeszcze szybszą ocenę sytuacji bez czekania na reakcję narządów obwodowych.
+b) Na mechanicznym udawaniu przed innymi ludźmi, że nie odczuwa się żadnego stresu.
+c) Na wywołaniu sztucznego eustresu za pomocą technik głębokiej reinterpretacji poznawczej.
+d) Na trwałym uszkodzeniu połączeń między hipokampem a ciałem migdałowatym.
+(1138) W ramach metodologii badania stresu Holmes i Rahe (1967) stworzyli Skalę Socjalnego Przystosowania (SRRS). Jakie konkretne wydarzenie życiowe znajduje się na samym szczycie tej listy, uzyskując maksymalną wartość 100 Jednostek Zmiany Życiowej (LCU)?
+a) Zwolnienie z pracy.
+b) Przeprowadzka do innego miasta.
+c) Śmierć współmałżonka (death of a spouse).
+d) Ślub i wesele.
+(1139) W publikacji Kannera i współpracowników (1981) badającej stres, oprócz codziennych uciążliwości (daily hassles) wprowadzono pojęcie „uplifts”. Czym są te „uplifts”?
+a) Drobnymi, codziennymi, pozytywnymi mikrowydarzeniami i doświadczeniami (np. miła rozmowa, relaks, pochwała), które działają jak bufor chroniący przed negatywnymi skutkami stresu.
+b) Strukturami korowymi odpowiedzialnymi za werbalizację afektu pozytywnego.
+c) Lekami podnoszącymi poziom dopaminy w jądrze półleżącym.
+d) Zaawansowanymi strategiami tłumienia ekspresji mimicznej u pacjentów klinicznych.
+(1140) Lisa Feldman Barrett (2017) wprowadza pojęcie „afektu rdzennego” (core afect). Jak jest on opisywany w jej nowoczesnym ujęciu neurobiologicznym?
+a) Jako stale obecny, podstawowy stan neurofizjologiczny, stanowiący ciągły barometr funkcjonowania organizmu, który charakteryzuje się wyłącznie dwoma wymiarami: walencją i pobudzeniem.
+b) Jako przejściowy stan chorobowy, który rozwija się wyłącznie u osób z głęboką aleksytymią.
+c) Jako moralne poczucie dumy alocentrycznej, sterowane przez przednią korę zakrętu obręczy.
+d) Jako odruch bezwarunkowy, który całkowicie wyklucza procesy interocepcji.
+(1141) W kontekście ontogenezy (Denham, 1998), w jakim okresie życia dziecko zaczyna zazwyczaj aktywnie używać słownych etykiet (nazw) dla podstawowych emocji, takich jak „wesoły”, „smutny”, „zły”?
+a) W okresie wczesnego dzieciństwa, zazwyczaj między 2. a 3. rokiem życia, co stanowi kamień milowy w rozwoju komponentu rozumienia emocji.
+b) Dopiero około 15. roku życia pod wpływem edukacji szkolnej.
+c) Wyłącznie po wykształceniu pełnego, operacyjnego stylu myślenia.
+d) Od pierwszego dnia życia jako wrodzony i automatyczny program neuronalny.
+(1142) James Gross wskazuje, że skuteczna strategia „wyboru sytuacji” (situation selection) opiera się na procesie psychologicznym nazywanym przewidywaniem afektywnym (affective forecasting). Co to za proces?
+a) Zdolność do mechanicznego hamowania aktywacji osi HPA na komendę kory PFC.
+b) Czysto techniczna procedura medyczna służąca do diagnozowania uszkodzeń vmPFC.
+c) Zdolność człowieka do wyobrażenia sobie i przewidzenia, jak będzie się czuł w danej sytuacji w przyszłości, co pozwala mu podjąć decyzję o jej uniknięciu lub wybraniu.
+d) Proces, w którym prawa półkula mózgu przejmuje całą kontrolę nad werbalizacją emocji.
+(1143) W ontogenezie rozumienia emocji Ponsa i Harrisa, w ramach „okresu mentalnego” dziecko opanowuje m.in. rozumienie wpływu przekonań (beliefs) na emocje. Co to oznacza w praktyce badawczej?
+a) Jest to zdolność, która zanika automatycznie w momencie wejścia w stadium wyczerpania.
+b) Dziecko rozumie, że reakcja emocjonalna danej osoby zależy od tego, co ona MYŚLI lub WIERZY, że jest prawdą, nawet jeśli jest to błędne przekonanie (false belief).
+c) Rozumienie to polega na całkowitym wyłączeniu standardów alocentrycznych na rzecz egocentrycznych.
+d) Dziecko uważa, że przekonania dorosłych są zawsze idealnie zgodne z obiektywną rzeczywistością fizyczną.
+(1144) Zgodnie z badaniami nad neurofizjologią dobrostanu i elastyczności regulacyjnej, dlaczego sztywne i ciągłe stosowanie jednej strategii (np. ruminacji) jest uważane za kluczowy mechanizm w depresji?
+a) Ponieważ ruminacje całkowicie usuwają z organizmu chroniczne obciążenie allostatyczne.
+b) Ponieważ ruminacje wybitnie przyspieszają neurogenezę w obszarze hipokampa.
+c) Ponieważ blokuje to elastyczność regulacyjną – pacjent nie potrafi zmienić niefunkcjonalnej strategii mimo zmian w kontekście sytuacyjnym, co utrwala i pogłębia negatywny afekt.
+d) Jest to cecha, która występuje wyłącznie u pacjentów z genialną sprawnością kory vmPFC.
+(1145) Neurofizjologia emocji opisuje Centralną Sieć Autonomiczną (CAN). Jaka strukturaw obrębie tej sieci odpowiada za bezpośrednie, szybkie uruchomienie układu współczulnego (sympathetic nervous system) w sytuacji strachu?
+a) Rogi tylne rdzenia kręgowego.
+b) Lewy płat skroniowy odpowiedzialny za gramatykę.
+c) Ciało migdałowate (amygdala) we współpracy z podwzgórzem.
+d) Kora potyliczna asocjacyjna.
+(1146) Przednia kora zakrętu obręczy (ACC) dzieli się funkcjonalnie na dwie główne części. Jakie zadania przypisuje się jej części brzusznej (ventral/affective ACC)?
+a) Czysto matematyczne operacje logiczne, całkowicie odizolowane od układu limbicznego.
+b) Wyłączną analizę bodźców czysto słuchowych i koordynację ruchów gałek ocznych.
+c) Przetwarzanie informacji o charakterze emocjonalnym, ocenę znaczenia bodźców afektywnych oraz regulację i tłumienie reakcji lękowych ze struktury ciała migdałowatego.
+d) Kontrolę nad produkcją hormonów tarczycy w fazie alarmowej Selyego.
+(1147) Układ nagrody w mózgu opiera się na szlaku mezolimbicznym. Jaka specyficzna struktura śródmózgowia stanowi punkt wyjścia (źródło) dla neuronów dopaminergicznych tego układu?
+a) Rogi przednie rdzenia kręgowego.
+b) Brzuszna część nakrywki (VTA - Ventral Tegmental Area).
+c) Kora ruchowa pierwszorzędowa.
+d) Ciało modzelowate.
+(1148) Co według współczesnych badaczy (Feldman Barrett) dzieje się z człowiekiem, który wykazuje skrajnie niską uważność interoceptywną (poor interoceptive awareness)?
+a) Ma ogromne trudności z precyzyjnym różnicowaniem i rozumieniem własnych emocji, interpretując wszelkie sygnały z ciała jako jednolity, uogólniony dystres lub objaw choroby somatycznej.
+b) Wykazuje wybitną elastyczność poznawczą i dojrzałość emocjonalną.
+c) Staje się całkowicie odporny na przewlekłe obciążenie allostatyczne.
+d) Przechodzi w stan permanentnej lateralizacji lewopółkulowej.
+(1149) Profesorowie Jarymowicz i Imbir w swojej taksonomii opisują emocje refleksyjne. Jaka cecha odróżnia je od emocji automatycznych w kontekście odporności na czas?
+a) Są całkowicie pozbawione jakiejkolwiek reprezentacji w pamięci długotrwałej pacjenta.
+b) Mogą być podtrzymywane przez procesy myślowe przez bardzo długi czas, trwać niezależnie od obecności pierwotnego bodźca fizycznego i powracać pod wpływem samej refleksji pojęciowej.
+c) Emocje refleksyjne wygaszają się zawsze natychmiastowo, w ułamku sekundy po zniknięciu bodźca zmysłowego.
+d) Ich czas trwania zależy wyłącznie od poziomu glukozy we krwi noworodka.
+(1150) W modelu stresu Richarda Lazarusa, co zaliczamy do tzw. „czynników osobowych” (person factors), które współdecydują o tym, jak ocenimy dany bodziec?
+a) Wyłącznie stopień uszkodzenia struktur podkorowych w wyniku traumy fizycznej.
+b) Systemy przekonań jednostki (beliefs), jej cele, hierarchię wartości oraz zaangażowanie (commitments) w dany obszar życia.
+c) Prędkość przewodzenia impulsów w pętlach mimicznych Carrolla Izarda.
+d) Obiektywną liczbę decybeli hałasu w pokoju egzaminacyjnym.
+(1151) Joseph LeDoux w neurofizjologii lęku udowodnił, że ciało migdałowate otrzymuje informacje dwiema drogami. Jaka jest najważniejsza konsekwencja ewolucyjna istnienia „drogi dolnej”?
+a) Całkowicie uniemożliwia aktywację autonomicznego układu nerwowego w fazie szoku.
+b) Odpowiada za rozwijanie zaawansowanych standardów alocentrycznych u dzieci.
+c) Umożliwia natychmiastowe uruchomienie reakcji obronnych (ułamki sekund), co chroni życie organizmu, zanim kora mózgowa w ogóle uświadomi sobie, jaki bodziec wywołał zagrożenie.
+d) Pozwala na przeprowadzenie pełnej, logicznej i filozoficznej analizy intencji przeciwnika przed podjęciem ucieczki.
+(1152) W opisie cech aleksytymii pojawia się pojęcie „ubóstwa życia wyobrażeniowego”. Jak manifestuje się ten deficyt w codziennym funkcjonowaniu pacjenta?
+a) Przełamywaniem sztywnych reguł okazywania emocji Paula Ekmana za pomocą sztuki.
+b) Ciągłym opowiadaniem zmyślonych, fantastycznych historii i mitomanią.
+c) Wybitnym talentem do pisania poezji i malarstwa abstrakcyjnego.
+d) Bardzo rzadkim śnieniem, brakiem marzeń na jawie, nieumiejętnością posługiwania się metaforami w mowie oraz trudnością w wyobrażeniu sobie alternatywnych stanów emocjonalnych.
+(1153) James Gross w opisie strategii „modyfikacji sytuacji” podaje przykłady działań regulacyjnych. Które z poniższych zachowań stanowi klasyczny przykład modyfikacji sytuacji?
+a) Mechaniczne tłumienie skurczów mięśni mimicznych w złości.
+b) Poproszenie rozmówcy o zamknięcie okna, ponieważ głośny hałas z ulicy nas irytuje i uniemożliwia spokojną rozmowę.
+c) Całkowita rezygnacja z pójścia na trudne spotkanie biznesowe.
+d) Myślenie o wakacjach w trakcie trwania nudnego wykładu uniwersyteckiego.
+(1154) W ontogenezie kompetencji emocjonalnych (Denham, 1998) pojawia się pojęcie „ekspresji emocji adekwatnej do kontekstu”. Kto odgrywa najwcześniejszą, kluczową rolę w uczeniu dziecka tych reguł?
+a) Systemy automatycznego wygaszania hormonów osi HPA.
+b) Biologiczne dojrzewanie komórek kory potylicznej bez wpływu środowiska.
+c) Rówieśnicy na studiach akademickich.
+d) Rodzice i najbliżsi opiekunowie poprzez procesy modelowania, nagradzania i karania określonych wyrazów afektu (socjalizacja emocji).
+(1155) Bruce McEwen opisuje trzy sytuacje, w których naturalne, adaptacyjne mechanizmy allostazy zawodzą i przekształcają się w niszczące zdrowie „obciążenie allostatyczne”. Co jest jedną z tych sytuacji?
+a) Brak wygaszania (brak hamowania) odpowiedzi allostatycznej – sytuacja, w której po ustąpieniu stresora poziom hormonów stresu (np. kortyzolu) nie spada i organizm nie wraca do bazy.
+b) Nagły, krótkotrwały i ewolucyjnie sprawny wyrzut adrenaliny w fazie przeciwszoku.
+c) Całkowity brak jakichkolwiek zmian życiowych w ciągu całego roku.
+d) Wykształcenie wysokiej rezyliencji i elastyczności regulacyjnej przez pacjenta.
+(1156) W psychologii afektu (Wykład 1) pojęcie nastroju (mood) różnicuje się z emocją pod kątem dynamiki. Co to oznacza?
+a) Nastrój charakteryzuje się znacznie mniejszą dynamiką (jest stabilniejszy, rozwija się wolniej i wygasza łagodniej) w porównaniu do wysoce dynamicznych i burzliwych emocji.
+b) Dynamika nastroju zależy wyłącznie od asymetrii funkcjonalnej kory potylicznej.
+c) Nastrój występuje wyłącznie u niemowląt, a emocje wykształcają się dopiero u dorosłych.
+d) Nastrój zmienia się drastycznie i gwałtownie co kilka sekund pod wpływem każdego małego bodźca.
+(1157) Klaus Scherer w swoim modelu Component Process Model (2009) opisuje sekwencję tzw. Sprawdzeń Ewaluacji Bodźca (SECs - Stimulus Evaluation Checks). Do jakiego komponentu emocji zaliczamy te sprawdzenia?
+a) Do reguł okazywania ekspresji mimicznej.
+b) Do komponentu czysto wykonawczego (motorycznego).
+c) Do komponentu somatycznego (wegetatywnego).
+d) Do komponentu poznawczego (oceny poznawczej).
+(1158) W neurobiologii asymetrii funkcjonalnej mózgu (lateralizacja), z jakim systemem motywacyjnym oraz jakim znakiem emocji wiąze się wzmożona aktywność prawej kory przedczołowej?
+a) Prawa kora przedczołowa nie uczestniczy w przetwarzaniu jakichkolwiek stanów afektywnych.
+b) Z systemem wycofania/unikania (avoidance), lękiem, ostrożnością oraz emocjami o walencji negatywnej.
+c) Z procesami sprawnego werbalizowania i nazywania stanów wewnętrznych.
+d) Z systemem dążenia (approach) oraz afęktem wybitnie pozytywnym.
+(1159) W ramach metodologii badań nad ontogenezą emocji, Pons, Harris i de Rosnay stworzyli uznany test badawczy o nazwie TEC. Co oznacza ten skrót w literaturze rozwojowej?
+a) Całościowa Centralna Anihilacja (Total Executive Control).
+b) Test Rozumienia Emocji (Test of Emotion Comprehension).
+c) Transdiagnostyczna Ewaluacja Ciała (Transdiagnostic Evaluation of Core-affect).
+d) Test Efektywności Kortyzolu (Test of Effictive Cortisol).
+(1160) Jak w podsumowaniu całego cyklu zajęć dr Basińskiej definiuje się ostateczną, ewolucyjną i psychologiczną rolę emocji w życiu człowieka?
+a) Jako zbędny, archaiczny i patologiczny mechanizm, który należy całkowicie wytępić za pomocą logicznego myślenia.
+b) Jako stan, który rozwija się dopiero po pełnym uszkodzeniu kory przedczołowej brzuszno-przyśrodkowej.
+c) Jako uniwersalny mechanizm regulacji i adaptacji, który organizuje poznanie i działanie, chroni homeostazę, buduje relacje społeczne i decyduje o poziomie dobrostanu psychofizycznego.
+d) Jako proces sterowany wyłącznie przez hormony tarczycy, pozbawiony znaczenia behawioralnego.
+(1161) W odróżnianiu emocji od nastrojów Andrew Lane (2026) wskazuje na kryterium świadomości przyczyny. Jak wygląda ta zależność w mapie pojęć?
+a) W przypadku emocji człowiek zazwyczaj doskonale wie, co ją wywołało (konkretny obiekt lub zdarzenie), natomiast przyczyna nastroju jest często niejasna, rozlana lub wieloczynnikowa.
+b) Świadomość przyczyny zależy wyłącznie od asymetrii funkcjonalnej kory potylicznej mózgu.
+c) Oba stany afektywne powstają bez jakiejkolwiek obiektywnej przyczyny zewnętrznej czy wewnętrznej.
+d) Przyczyna nastroju jest zawsze jasna i w pełni uświadomiona, a emocji – całkowicie ukryta przed pacjentem.
+(1162) W ramach psychologicznych badań nad stresem i radzeniem sobie (coping), czym różni się „styl radzenia sobie” od „strategii radzenia sobie”?
+a) Strategia występuje wyłącznie u niemowląt, a styl wykształca się dopiero w wieku emerytalnym.
+b) Styl radzenia sobie to względnie stała dyspozycja osobowościowa (tendencja do wybierania określonych zachowań w różnych sytuacjach), natomiast strategia to konkretne działanie poznawcze lub behawioralne podjęte w odpowiedzi na dany, specyficzny stresor.
+c) Styl to automatyczny odruch pnia mózgu, a strategia to zaawansowana farmakoterapia.
+d) Pojęcia te są dokładnymi synonimami i nie wolno ich różnicować w metodologii kwestionariuszowej.
+(1163) Oś HPA (podwzgórze-przysadka-nadnercza) w reakcji stresowej działa na zasadzie ujemnego sprzężenia zwrotnego (negative feedback loop). Co to oznacza w praktyce neurofizjologicznej?
+a) Że kortyzol nieustannie nasila produkcję hormonów CRH i ACTH aż do całkowitego zniszczenia organizmu.
+b) Mechanizm ten całkowicie wyłącza działanie lewej półkuli mózgu u osób z aleksytymią.
+c) Że podwyższony poziom kortyzolu we krwi wysyła sygnał hamujący do podwzgórza i przysadki mózgowej, co wycisza dalsze wydzielanie hormonów stresu i pozwala organizmowi wrócić do równowagi po ustąpieniu zagrożenia.
+d) Oznacza to, że układ współczulny działa wyłącznie w fazie wyczerpania GAS Selyego.
+(1164) W modelu rozwoju rozumienia emocji Ponsa i Harrisa (TEC), jednym z ważnych komponentów okresu mentalnego (mental period) jest „rozumienie pragnień” (desires). Co to oznacza?
+a) Że dziecko uważa, iż wszyscy ludzie na świecie pragną dokładnie tych samych zabawek i jedzenia.
+b) Zdolność do pełnego, korowego wyhamowania aktywności wyspy w złości.
+c) Zdolność dziecka do zrozumienia, że emocjonalna odpowiedź dwóch różnych osób na to samo zdarzenie zależy od ich indywidualnych, odmiennych pragnień (np. jeśli jedno dziecko chce dostać piłkę, a drugie lalkę, to widok lalki wywoła u nich skrajnie odmienne emocje).
+d) Całkowitą internalizację reguł okazywania emocji Paula Ekmana w wieku 2 lat.
+(1165) W literaturze rozwoju emocji w ontogenezie Judy Cassidy (1994) opisuje wpływ przywiązania. Czym charakteryzują się dzieci o pozabezpiecznym- ambiwalentnym (lękowo-oporowym) stylu przywiązania w sferze regulacji afektu?
+a) Całkowitym maskowaniem i tłumieniem jakichkolwiek oznak smutku oraz złości przed matką.
+b) Przejściem w stan permanentnego, operacyjnego stylu myślenia i ubóstwa wyobraźni.
+c) Tendencją do maksymalizowania i wyolbrzymiania ekspresji swojego dystresu, głośnego płaczu i złości w celu permanentnego zmuszenia niespójnego, mało responsywnego opiekuna do uwagi, przy jednoczesnej trudności w samouspokojeniu.
+d) Wybitną elastycznością regulacyjną i natychmiastowym stosowaniem reinterpretacji poznawczej.
+(1166) Neurofizjologia emocji opisuje układ nagrody w mózgu. Jaka jest precyzyjna rola struktury o nazwie jądro półleżące (nucleus accumbens) w tym układzie?
+a) Odpowiada za bezpośrednie wyłączanie procesów lateralizacji w obu półkulach mózgu.
+b) Działa jako centralny ośrodek integracji sygnałów motywacyjnych, kodowania satysfakcji, odczuwania przyjemności (komponent hedonistyczny) oraz wzmacniania zachowań dążeniowych w odpowiedzi na dopaminę.
+c) Jest jedyną strukturą generującą somatyczny wstręt moralny we współpracy z wyspą.
+d) Służy do pierwotnego przetwarzania bodźców słuchowych w korze skroniowej.
+(1167) Metaanaliza Hu i współpracowników (2014) wskazuje na koszty społeczne tłumienia ekspresji. Dlaczego partnerzy osób stale stosujących tę strategię zgłaszają mniejszą satysfakcję z relacji?
+a) Wynika to wyłącznie z braku aktywności osi podwzgórze-przysadka-nadnercza u partnera.
+b) Ponieważ tłumienie ekspresji trwale niszczy korowe ośrodki mowy w lewej półkuli.
+c) Ponieważ osoby tłumiące ekspresję wykazują nadmierną, patologiczną empatię alocentryczną.
+d) Ponieważ partnerzy podświadomie wyczuwają niespójność między stanem wewnętrznym a maskowanym wyrazem twarzy, co rodzi dystans, utrudnia emocjonalne dostrojenie (responsywność) i osłabia poczucie autentyczności.
+(1168) Bruce McEwen w opisie mechanizmów obciążenia allostatycznego wyróżnia sytuację określaną jako „powtarzające się uderzenia” (repeated hits). Na czym ona polega?
+a) Na wywołaniu sztucznego eustresu poprzez intensywny trening elastyczności poznawczej.
+b) Na fizycznym, mechanicznym uszkadzaniu kości potylicznej pacjenta przez bodźce zewnętrzne.
+c) Na permanentnym, seryjnym i częstym występowaniu kolejnych, niezależnych stresorów w krótkim czasie, przez co organizm musi bez przerwy uruchamiać allostazę i nie ma czasu na regenerację zasobów.
+d) Na całkowitym i trwałym zablokowaniu wydzielania cytokin prozapalnych.
+(1169) W taksonomii ludzkich emocji Jarymowicz i Imbira (2010), emocje refleksyjne mogą być uruchamiane przez tzw. standardy idealne. Czym są te standardy?
+a) Wewnętrznymi, abstrakcyjnymi reprezentacjami tego, jaki człowiek chciałby być (ideał siebie) lub jak powinien wyglądać idealny świat i relacje, co pozwala odczuwać np. dumę z samorozwoju lub rozczarowanie sobą.
+b) Czysto technicznymi procedurami stosowanymi do pomiaru mikroekspresji Paula Ekmana.
+c) Genetycznie uwarunkowanymi profilami tętna i przewodnictwa skóry u noworodków.
+d) Standardami, które wykluczają jakikolwiek udział kory nowej w generowaniu afektu.
+(1170) Teoria Carrolla Izarda wyróżnia cztery systemy aktywacji emocjonalnej. Co zaliczamy bezpośrednio do poziomu (procesów) afektywnego (affective system)?
+a) Stan wyczerpania allostatycznego w końcowej fazie Ogólnego Zespołu Adaptacyjnego.
+b) Automatyczne, przedświadome i bezpośrednie uruchamianie jednej emocji przez inną emocję, która była aktywna wcześniej (np. złość wywołana nagłym, uprzednim silnym lękiem lub współczucie wywołane widokiem cudzego smutku).
+c) Logiczne operacje pojęciowe i analizę semantyczną definicji słownikowych.
+d) Sygnały płynące wyłącznie z mechanicznym skurczów mięśni nóg i rąk podczas ucieczki.
+(1171) Richard Lazarus opisuje proces „oceny pierwotnej” (primary appraisal) bodźca. Jaki jest zasadniczy cel i podstawowe pytanie, na które podświadomie odpowiada nasz aparat poznawczy w trakcie tej oceny?
+a) „Ile punktów LCU w skali Holmesa i Rahego przypisuje się temu konkretnemu wydarzeniu?”
+b) „Czy to zdarzenie w jakikolwiek sposób mnie dotyczy, czy jest istotne dla moich celów, wartości, dążeń i dobrostanu?”
+c) „Jakie strategie modulacji reakcji mimicznej powinienem w tym momencie wdrożyć za pomocą kory przedczołowej?”
+d) „Czy lewa półkula mojego mózgu potrafi w tym momencie w pełni zwerbalizować sygnały z wyspy?”
+(1172) W kontekście neurobiologicznych uwarunkowań aleksytymii (Luminet i in., 2021), jakie trudności w komunikacji struktur mózgowych bywają wskazywane w literaturze jako jej potencjalne podłoże?
+a) Całkowity brak neuronów dopaminergicznych w brzusznej części nakrywki (VTA).
+b) Nadmierny rozrost tkanki w obrębie pierwszorzędowej kory potylicznej odpowiedzialnej za wzrok.
+c) Uszkodzenie dróg ruchowych rdzenia kręgowego sterujących pracą mięśni rąk.
+d) Deficyty w strukturalnej sprawności lub przesyłaniu sygnałów przez ciało modzelowate (corpus callosum), co utrudnia efektywny transfer danych emocjonalnych z prawej półkuli do językowych ośrodków lewej półkuli.
+(1173) James Gross w ramach strategii „przekierowania uwagi” opisuje różne formy manipulacji ogniskiem świadomości. Która z nich polega na fizycznym zamknięciu oczu lub odwróceniu głowy od przerażającego lub bolesnego widoku?
+a) Unikanie wzrokowe / fizyczne (jako podtyp dystrakcji na poziomie behawioralnym).
+b) Reinterpretacja poznawcza o charakterze alocentrycznym.
+c) Ruminacja nad fizjologicznym kosztem wegetatywnym sytuacji.
+d) Tłumienie ekspresji za pomocą mięśni mimicznych.
+(1174) Hans Selye sformułował słynną definicję stresu jako „niespecyficznej reakcji organizmu na wszelkie stawiane mu wymagania”. Co dokładnie oznacza słowo „niespecyficzna” w kontekście jego biologicznej teorii?
+a) Oznacza to, że reakcji stresowej nie da się zmierzyć za pomocą żadnych wskaźników medycznych.
+b) Oznacza, że niezależnie od rodzaju bodźca wyzwalającego (fizyczne zimno, toksyna, infekcja czy psychiczny lęk przed egzaminem), organizm zawsze odpowiada tym samym, uniwersalnym, stereotypowym wzorcem zmian fizjologicznych (tzw. syndrom GAS).
+c) Oznacza, że reakcja ta pojawia się całkowicie losowo i za każdym razem wygląda zupełnie inaczej u tego samego pacjenta.
+d) Oznacza, że stres dotyczy wyłącznie niespecyficznych neuronów w kory potylicznej mózgu.
+(1175) W modelu Ponsa i Harrisa (TEC), w najbardziej zaawansowanym okresie refleksyjnym (reflective period) dzieci zaczynają rozumieć wpływ wspomnień/przypomnień (reminders) na aktualny afekt. Co to oznacza w praktyce?
+a) Jest to przekonanie, że wspomnienia zależą wyłącznie od poziomu glukozy we krwi u niemowląt.
+b) Dziecko rozumie, że pamięć krótkotrwała człowieka ulega całkowitemu wymazaniu w stresie.
+c) Rozumienie to polega na wykazaniu, że emocje automatyczne trwają znacznie dłużej niż cechy afektywne.
+d) Dziecko rozumie, że neutralny lub obiektywnie bezpieczny bodziec zewnętrzny, który jest powiązany z dawną stratą lub sukcesem (naprowadza na wspomnienie, np. stare zdjęcie, melodia), może nagle wzbudzić silną emocję z przeszłości.
+(1176) W badaniach nad biologicznymi mechanizmami stresu, co oznacza termin „eustres” ukuty historycznie przez Hansa Selyego?
+a) Stan całkowitego, patologicznego załamania immunologicznego w stadium wyczerpania.
+b) Stres konstruktywny, o umiarkowanym, optymalnym natężeniu, który nie przekracza zasobów jednostki, lecz mobilizuje energię, zwiększa koncentrację i sprzyja rozwojowi, twórczości oraz skutecznej adaptacji do wyzwań.
+c) Strategię regulacji emocji opartą na mechanicznym tłumieniu ekspresji mimicznej.
+d) Przewlekły i niszczący proces, który wywołuje atrofię dendrytów w hipokampie.
+(1177) Neurofizjologia emocji wskazuje na wyraźną asymetrię półkulową w afekcie. Jaki wpływ na zachowanie i samopoczucie człowieka ma – według ustaleń zawartych w slajdach – chroniczne niedoczynnie lub uszkodzenie LEWEJ kory przedczołowej?
+a) Prowadzi do funkcjonalnej dominacji prawej półkuli, co skutkuje wyraźną przewagą afektu negatywnego, tendencjami depresyjnymi, nasilonym lękiem oraz patologicznym wycofaniem i zachowaniami unikania (avoidance).
+b) Powoduje gwałtowny i trwały skok afektu pozytywnego oraz niekontrolowane wybuchy euforii i radości.
+c) Całkowicie wyłącza zdolność wyspy do odczuwania somatycznego wstrętu przed zepsutym jedzeniem.
+d) Sprawia, że człowiek zaczyna porozumiewać się wyłącznie za pomocą poezji i metafor wyobrażeniowych.
+(1178) Klaus Scherer (2009) w swojej psychologicznej charakterystyce podkreśla, że emocje wyraźnie różnią się od odruchów (reflexes, np. odruchu rzepkowego czy mrugania). Jaka jest główna różnica w ich funkcjonalności?
+a) Emocje są sterowane wyłącznie przez układ hormonalny tarczycy, w przeciwieństwie do odruchów nerwowych.
+b) Odruchy trwają zazwyczaj kilka lat, a emocje znikają po jednej milisekundzie.
+c) Odruchy wymagają pełnego zaangażowania standardów alocentrycznych kory nowej, a emocje nie.
+d) Odruchy są sztywne, automatyczne i niezmienne, natomiast emocje wykazują ogromną elastyczność poznawczą i behawioralną, pozwalając na wybór różnych, złożonych reakcji adaptacyjnych w zależności od kontekstu kulturowego i sytuacyjnego.
+(1179) W koncepcji allostazy Bruce'a McEwena, przewlekły, stale utrzymujący się wysoki poziom glikokortykoidów (kortyzolu) wywołany brakiem wygaszania reakcji stresowej prowadzi m.in. do insulinooporności, spadku odporności oraz otyłości brzusznej. Do jakiego poziomu skutków obciążenia allostatycznego to zaliczamy?
+a) Do adaptacyjnych procesów podnoszących subiektywny dobrostan eudajmonistyczny pacjenta.
+b) Do skutków czysto lingwistycznych i semantycznych.
+c) Do bezpośrednich skutków fizjologicznych, metabolicznych i tkankowych (somatycznych) chronicznego stresu.
+d) Do poziomu emocji refleksyjnych opartych na standardach egocentrycznych.
+(1180) W ontogenezie kompetencji emocjonalnych dziecka według tradycji Denham (1998), co określa się terminem „rodzicielska walidacja emocji”?
+a) Postawę rodzica polegającą na karaniu, wyśmiewaniu i ignorowaniu płaczu lub złości u dziecka w celu ich szybkiej eliminacji.
+b) Całkowite zakazanie okazywania jakichkolwiek stanów afektywnych w miejscach publicznych.
+c) Czysto techniczny i operacyjny styl prowadzenia rozmów z niemowlęciem bez odwołań do psychiki.
+d) Postawę rodzica cechującą się dostrzeżeniem, nazwaniem, pełną akceptacją i nieoceniającym zrozumieniem stanu emocjonalnego dziecka, co uczy je, że jego emocje są naturalne i ułatwia bezpieczną naukę autoregulacji.
+(1181) W zintegrowanej strukturze Centralnej Sieci Autonomicznej (CAN), jaka jest fundamentalna funkcja kory przedczołowej brzuszno-przyśrodkowej (vmPFC) we współpracy z układem przywspółczulnym (parasympathetic nervous system)?
+a) Jest strukturą, która blokuje syntezę dopaminy w brzusznej części nakrywki (VTA).
+b) Odpowiada za gwałtowne przyspieszanie akcji serca i podnoszenie ciśnienia do wartości maksymalnych w panice.
+c) Służy do wyłączania percepcji barw w prvzorzędowej korze potylicznej.
+d) Odpowiada za tonowanie i hamowanie nadmiernego pobudzenia emocjonalnego oraz aktywację nerwu błędnego (vagal tone), co obniża tętno, wycisza somatycznie organizm i przywraca homeostazę po ustąpieniu stresora.
+(1182) Co w kontekście neurobiologii afektu oznacza termin „anhedonia”, będący bezpośrednim przejawem głębokich dysfunkcji w obrębie układu nagrody w mózgu?
+a) Całkowitą lub znaczną utratę zdolności do odczuwania przyjemności, radości, satysfakcji i pozytywnego zaangażowania z bodźców i działań, które wcześniej przynosiły jednostce zadowolenie.
+b) Umiejętność bezwysiłkowego i natychmiastowego stosowania reinterpretacji poznawczej w stresie.
+c) Stan, w którym prawa półkula mózgu przejmuje całą kontrolę nad werbalizacją emocji.
+d) Nadmierną, patologiczną skłonność do odczuwania moralnej dumy alocentrycznej.
+(1183) W uznanym kwestionariuszu Toronto Alexithymia Scale (TAS-20), podskala o nazwie DIF oznacza „Difficulty Identifying Feelings”. Jakie konkretnie trudności pacjenta są przez nią mierzone?
+a) Trudność w precyzyjnym rysowaniu ludzkich ekspresji mimicznych na kartce.
+b) Trudność z mechanicznym wypowiadaniem słów w językach obcych pod wpływem hałasu.
+c) Trudność w trafnym rozpoznawaniu i odróżnianiu własnych stanów emocjonalnych od czystych, wegetatywnych sygnałów pobudzenia somatosensorycznego (np. pacjent czuje kołatanie serca i nie wie, czy boi się, czy ma zawał).
+d) Skłonność do nadmiernego i chaotycznego fantazjowania oraz bogate życie wyobrażeniowe.
+(1184) Profesorowie Maria Jarymowicz i Kamil Imbir w swojej taksonomii wskazują, że emocje automatyczne charakteryzują się ewolucyjną „asymetrią walencji”. Na czym polega to zjawisko?
+a) Zjawisko to polega na wyłącznej dominacji lewej półkuli mózgu we wszystkich stanach afektywnych u noworodków.
+b) Na tym, że automatyczne emocje pozytywne trwają zawsze 10 razy dłużej niż negatywne.
+c) Na całkowitym wyeliminowaniu standardów egocentrycznych na rzecz alocentrycznych w ułamku sekundy.
+d) Na tym, że automatyczne emocje o walencji negatywnej (np. strach, wstręt) powstają znacznie szybciej, są silniejsze i łatwiej dominują zachowanie niż emocje pozytywne, ponieważ bezpośrednio i natychmiastowo chronią życie przed zagrożeniem.
+(1185) W modelach teoretycznych i wymiarowych afektu (Wykład 1), czym różni się pojęcie „pobudzenia” (arousal) od pojęcia „walencji” (valence)?
+a) Pojęcia te oznaczają dokładnie to samo i są stosowane synonimicznie w kołowym modelu Jamesa Russella.
+b) Pobudzenie to domena wyłącznie lewej półkuli mózgu, a walencja dotyczy tylko rdzenia kręgowego.
+c) Walencja określa jakościowy znak stanu afektywnego (czy jest on przyjemny/pozytywny, czy nieprzyjemny/negatywny), natomiast pobudzenie określa poziom intensywności energetycznej, aktywacji fizjologicznej i somatycznej organizmu (od apatii do skrajnej ekscytacji/paniki).
+d) Pobudzenie określa znak emocji (przyjemna/nieprzyjemna), a walencja mierzy czas jej trwania w minutach.
+`;
+const extraAnswersText = `
+(1001)-d (1002)-a (1003)-d (1004)-c (1005)-a (1006)-b (1007)-d (1008)-b (1009)-b (1010)-d (1011)-c (1012)-c (1013)-a (1014)-c (1015)-c (1016)-b (1017)-d (1018)-a (1019)-d (1020)-a (1021)-b (1022)-c (1023)-a (1024)-c (1025)-c (1026)-d (1027)-c (1028)-d (1029)-c (1030)-b (1031)-d (1032)-c (1033)-c (1034)-c (1035)-a (1036)-d (1037)-a (1038)-b (1039)-b (1040)-b (1041)-a (1042)-a (1043)-a (1044)-a (1045)-b (1046)-a (1047)-d (1048)-d (1049)-a (1050)-b (1051)-d (1052)-c (1053)-c (1054)-d (1055)-a (1056)-a (1057)-d (1058)-a (1059)-a (1060)-b (1061)-d (1062)-b (1063)-a (1064)-c (1065)-b (1066)-d (1067)-c (1068)-d (1069)-a (1070)-d (1071)-b (1072)-b (1073)-c (1074)-d (1075)-b (1076)-c (1077)-d (1078)-d (1079)-d (1080)-d (1081)-b (1082)-b (1083)-a (1084)-b (1085)-c (1086)-a (1087)-b (1088)-c (1089)-c (1090)-b (1091)-d (1092)-a (1093)-b (1094)-d (1095)-a (1096)-d (1097)-d (1098)-d (1099)-a (1100)-b (1101)-a (1102)-b (1103)-c (1104)-c (1105)-b (1106)-a (1107)-d (1108)-a (1109)-d (1110)-d (1111)-d (1112)-b (1113)-a (1114)-c (1115)-a (1116)-a (1117)-a (1118)-a (1119)-b (1120)-d (1121)-d (1122)-b (1123)-c (1124)-c (1125)-c (1126)-c (1127)-b (1128)-a (1129)-a (1130)-c (1131)-b (1132)-b (1133)-c (1134)-c (1135)-d (1136)-b (1137)-a (1138)-c (1139)-a (1140)-a (1141)-a (1142)-c (1143)-b (1144)-c (1145)-c (1146)-c (1147)-b (1148)-a (1149)-b (1150)-b (1151)-c (1152)-d (1153)-b (1154)-d (1155)-a (1156)-a (1157)-d (1158)-b (1159)-b (1160)-c (1161)-a (1162)-b (1163)-c (1164)-c (1165)-c (1166)-b (1167)-d (1168)-c (1169)-a (1170)-b (1171)-b (1172)-d (1173)-a (1174)-b (1175)-d (1176)-b (1177)-a (1178)-d (1179)-c (1180)-d (1181)-d (1182)-a (1183)-c (1184)-d (1185)-c
+`;
+const extraExplanationsText = `
+(1001) Zgodnie z materiałami, emocja to zmiana w organizmie i gotowość do działania, podczas gdy uczucie to świadome przeżycie emocji (to, co czujemy i możemy nazwać).
+(1002) Hipoteza markerów somatycznych mówi, że sygnały z ciała (markery) działają jak „skrót” oparty na doświadczeniu, który szybko i automatycznie podpowiada, co jest bezpieczne lub ryzykowne. Kluczowa struktura to kora przedczołowa brzuszno- przyśrodkowa.
+(1003) Scherer wskazuje, że intencjonalność oznacza bycie „o czymś” – czyli emocje zawsze wywoływane są przez konkretny obiekt, stratę, zagrożenie, sukces, relację, naruszenie normy lub ocenę siebie.
+(1004) Według slajdów aleksytymia jest definiowana jako czynnik transdiagnostyczny, czyli taki, który może współwystępować z różnymi problemami psychicznymi i nasilać trudności regulacyjne.
+(1005) Zgodnie z metaanalizą Hu i in. (2014) zawartą w slajdach, reinterpretacja zmienia znaczenie sytuacji, sprzyja elastyczności poznawczej i wiąże się z pozytywnym afektem. Tłumienie ekspresji zmienia tylko to, co widać, częściej wiąże się z dystresem, zwiększa koszt fizjologiczny/poznawczy oraz osłabia autentyczność.
+(1006) Slajdy podają dokładną definicję rozwoju emocji jako procesu zmian w ekspresji, przeżywaniu itp., opartego na współdziałaniu biologii i doświadczeń społecznych. Dodatkowo wprost wskazano, że „dojrzałość emocjonalna = proces, nie stan”.
+(1007) Na slajdzie definiującym „STRESS jako proces” wymieniono trzy główne cechy: wiąże się z oceną poznawczą sytuacji, obejmuje reakcje emocjonalne oraz zmienia cele i priorytety.
+(1008) Teoria Izarda wyróżnia cztery systemy aktywacji (neuronalny, sensomotoryczny, afektywny, poznawczy). Systemy te mają budowę hierarchiczną i niezależnie od poziomu aktywacji, najniższy poziom neuronalny jest zawsze aktywny.
+(1009) Slajd „Lateralizacja mózgu a emocje” wprost przypisuje lewej półkuli: emocje pozytywne, zachowania zbliżenia oraz werbalizację emocji. Prawej półkuli przypisuje: emocje negatywne, zachowania unikania oraz rozpoznawanie emocji.
+(1010) Zgodnie z prezentacją, afekt to ogólny termin obejmujący wszystkie stany emocjonalne. W modelach wymiarowych (Russell, Watson) jest ujmowany poprzez dwa wymiary: walencję (przyjemne-nieprzyjemne) oraz pobudzenie (niskie-wysokie).
+(1011) W modelu Lazarusa ocena pierwotna dotyczy tego, czy sytuacja nas dotyczy i jakie ma znaczenie (strata/zagrożenie/wyzwanie), natomiast ocena wtórna to analiza własnych zasobów i opcji poradzenia sobie z tym wyzwaniem.
+(1012) Zgodnie z materiałami dotyczącymi biologii stresu, szybka reakcja stresowa wiąże się z układem współczulnym i wydzielaniem adrenaliny oraz noradrenaliny, natomiast wolniejsza, długofalowa reakcja opiera się na osi HPA i wydzielaniu kortyzolu.
+(1013) Prezentacja o stresie wskazuje na koncepcję McEwena: allostaza to aktywny proces adaptacji organizmu dążący do równowagi, natomiast przewlekła aktywacja tych mechanizmów prowadzi do kosztów fizjologicznych, czyli obciążenia allostatycznego („wear and tear” organizmu).
+(1014) Zgodnie ze slajdami o teorii Izarda, hierarchia czterech systemów (neuronalny, sensomotoryczny, afektywny, poznawczy) odzwierciedla ich następstwo czasowe oraz rozwój w ontogenezie. Poziom poznawczy wymaga wcześniejszego wykształcenia struktur i zdolności poznawczych.
+(1015) Materiały wskazują, że według Damasio mózg nieustannie tworzy „mapy” stanu organizmu na podstawie sygnałów z ciała (interocepcja). Uczucia pojawiają się wtedy, gdy mózg interpretuje te mapy i reprezentuje stan ciała jako konkretne przeżycie psychiczne.
+(1016) Slajdy podają, że emocje porządkują przetwarzanie informacji: bodźce istotne emocjonalnie są selekcjonowane, szybciej przyciągają uwagę i są głębiej analizowane, co pozwala organizmowi reagować na to, co ważne dla bezpieczeństwa lub celów.
+(1017) W materiale poświęconym rozwojowi w ontogenezie wprost wskazano cztery obszary, które emocje organizują: zachowanie (ukierunkowanie reakcji), relacje (budowanie więzi), poznanie i motywację (modulowanie uwagi i pamięci) oraz zdrowie psychiczne (adaptacja vs ryzyko trudności).
+(1018) Zgodnie z prezentacją (Wykład 1), afekt to termin parasolowy (nadrzędny). W modelach wymiarowych (Russell, Watson) każdy stan afektywny ujmuje się poprzez jego walencję (pozytywna/negatywna) oraz poziom pobudzenia (wysokie/niskie).
+(1019) Podsumowanie neurofizjologii emocji wyraźnie wskazuje, że stany i trudności emocjonalne rzadko są efektem uszkodzenia pojedynczego punktu w mózgu; kluczowa jest współpraca i sprawność całych sieci neuronalnych łączących struktury szybkiej oceny ze strukturami kontroli korowej.
+(1020) Slajdy podsumowujące ujęcie biologiczne wskazują bezpośrednio, że podstawową ewolucyjną funkcją emocji jest regulacja życia – wspieranie homeostazy organizmu oraz adaptacja do otaczającego środowiska.
+(1021) Emocje samoświadomościowe (pochodne), takie jak wstyd, wina czy duma, rozwijają się później w ontogenezie, ponieważ do ich zaistnienia niezbędny jest rozwój poznawczy dziecka – wykształcenie reprezentacji własnej osoby (poczucia „Ja”) oraz internalizacja reguł i norm społecznych.
+(1022) Nastrój różni się od emocji przede wszystkim czasem trwania (jest stanem trwalszym), mniejszą dynamiką i intensywnością oraz brakiem wyraźnego, bezpośredniego obiektu (jest bardziej ogólny i rozlany w tle strumienia świadomości).
+(1023) Zgodnie z literaturą wskazaną w slajdach (Bagby, Parker, Taylor), aleksytymia jako dyspozycja osobowościowa obejmuje: trudność w rozpoznawaniu własnych emocji, trudność w ich werbalizowaniu (nazywaniu) oraz operacyjny styl myślenia (koncentrację na faktach zewnętrznych i konkretach z pominięciem świata wewnętrznego), czemu towarzyszy ubóstwo wyobraźni.
+(1024) Tłumienie ekspresji polega na blokowaniu zewnętrznych oznak emocji. Zgodnie z badaniami Hu i in., strategia ta niesie koszty społeczne – partnerzy w interakcji podświadomie wyczuwają niespójność, co osłabia poczucie autentyczności i responsywności, utrudniając budowanie bliskości.
+(1025) Biologiczny model stresu Selyego (GAS) zakłada uniwersalną, trójfazową odpowiedź organizmu na chroniczny stresor: najpierw następuje reakcja alarmowa (mobilizacja sił), następnie stadium odporności (adaptacja i próba radzenia sobie), a przy braku ustąpienia stresora – stadium wyczerpania (załamanie sił obronnych).
+(1026) Współczesne podejścia (ujęte w bibliografii wykładu) udowadniają, że ludzki afekt nie zawsze jest jednowymiarowy. Emocje mieszane to stany, w których współwystępują odczucia pozytywne i negatywne (np. stan nostalgii lub uczucie „słodko-gorzkiego” sukcesu połączonego z rozstaniem).
+(1027) Zgodnie z prezentacją o stresie, codzienne uciążliwości (daily hassles) to drobne, powszednie stresory. Badania wykazały, że ich stała obecność i wzajemne nakładanie się mogą szkodzić zdrowiu psychofizycznemu w stopniu porównywalnym lub nawet większym niż rzadkie, pojedyncze „poważne wydarzenia życiowe”.
+(1028) Socjalizacja emocji to kluczowy mechanizm środowiskowy. Rodzice modelują zachowania emocjonalne, reagują na emocje dziecka (akceptując je lub karząc) oraz rozmawiają o nich, co uczy dziecko, jak interpretować, wyrażać i regulować własne stany psychiczne.
+(1029) Lisa Feldman Barrett (wzmiankowana w bibliografii Wykładu 2) reprezentuje podejście konstruktywistyczne. Odrzuca ona pogląd, że emocje to gotowe, ewolucyjne programy ukryte w mózgu, wykazując, że mózg na bieżąco „konstruuje” emocje, interpretując sygnały z ciała (interocepcję) przy użyciu wiedzy i kontekstu kulturowego.
+(1030) Publikacja Kraiss i in. (zawarta w podsumowaniu materiału o dobrostanie) wskazuje na wyraźną korelację: u osób zmagających się z zaburzeniami psychicznymi sprawność i elastyczność w regulowaniu emocji (zwłaszcza stosowanie strategii adaptacyjnych) bezpośrednio przekłada się na wyższy poziom dobrostanu i lepsze funkcjonowanie psychofizyczne.
+(1031) Zgodnie z taksonomią ujętą w materiałach, emocje automatyczne są pierwotne, szybkie i przedrefleksyjne. Emocje refleksyjne są efektem wyższych procesów poznawczych, opierają się na strukturach pojęciowych, logice oraz ewaluacji sytuacji pod kątem standardów osobistych i społecznych.
+(1032) Namiętność w psychologicznej mapie pojęć to długotrwały stan afektywny o ogromnej sile, który ma konkretny obiekt i potrafi całkowicie podporządkować sobie procesy poznawcze oraz działania jednostki (np. namiętność do nauki, pasja twórcza lub miłość).
+(1033) O ile krótkotrwały stres mobilizuje siły, o tyle przewlekły stres (chroniczne wydzielanie kortyzolu przez oś HPA) działa immunosupresyjnie – osłabia mechanizmy obronne organizmu, co prowadzi do chorób somatycznych i ogólnego wyczerpania.
+(1034) Slajdy dotyczące ontogenezy i kompetencji emocjonalnych (oparte na koncepcji Denham) wskazują na triadę: ekspresja emocji (zgodnie z kontekstem), rozumienie emocji (identyfikacja przyczyn i stanów) oraz regulacja emocji (zarządzanie intensywnością i znakiem przeżycia).
+(1035) Zgodnie z teorią Izarda, system sensomotoryczny obejmuje m.in. pętle sprzężenia zwrotnego z ekspresji mimicznej. Ruchy mięśni twarzy wysyłają sygnały do struktur mózgowych, co może bezpośrednio uruchomić lub nasilić dane doświadczenie emocjonalne bez udziału myśli.
+(1036) W materiale „Emocje jako mechanizm regulacji...” wskazano, że wysokie pobudzenie emocjonalne może działać dezadaptacyjnie poprzez zniekształcenia poznawcze, zawężenie uwagi wyłącznie do źródła emocji i spadek elastyczności, co utrudnia skuteczne działanie.
+(1037) Prezentacja o stresie wskazuje na klasyczny podział stylów i strategii copingu: działania skoncentrowane na zadaniu (problem-focused) są ukierunkowane na zmianę sytuacji, natomiast działania skoncentrowane na emocjach (emotion-focused) mają za zadanie przynieść ulgę w przeżywanym cierpieniu i dystresie.
+(1038) Bezpieczne przywiązanie daje dziecku „bezpieczną bazę”. Dzięki responsywności opiekuna dziecko uczy się, że jego emocje są ważne, nie musi ich ukrywać (tłumić), co pozwala mu lepiej je rozumieć i efektywniej nimi zarządzać w przyszłości.
+(1039) Badania Damasio nad pacjentami z uszkodzeniem vmPFC wykazały, że mimo zachowanej inteligencji poznawczej, osoby te mają ogromne trudności życiowe. Brak integracji sygnałów emocjonalnych (somatycznych) z procesem myślenia sprawia, że nie uczą się na błędach i powtarzają ryzykowne wybory.
+(1040) Tradycja emocji podstawowych (basic emotions) zakłada, że emocje takie jak strach, złość, radość czy wstręt są produktem ewolucji. Charakteryzują się one uniwersalnością (są rozpoznawane na całym świecie), posiadają specyficzne, automatyczne sygnały ekspresyjne (mimika) oraz unikalną fizjologię.
+(1041) Zgodnie z tabelami Hu i Grossa zawartymi w prezentacji, tłumienie ekspresji następuje na samym końcu procesu generowania emocji – kiedy reakcja emocjonalna już się w pełni ukształtowała, a jednostka próbuje jedynie zablokować jej zewnętrzne objawy behawioralne. Pozostałe trzy strategie modyfikują proces zanim dojdzie do pełnej reakcji organizmu.
+(1042) Model Holmesa i Rahego (ujętym w slajdach o stresie) opiera się na założeniu, że to konieczność adaptacji do zmiany jest kluczem do zrozumienia stresu. Dlatego na ich liście wysoko punktowane są także wydarzenia radosne, takie jak małżeństwo czy święta, ponieważ one również zmuszają organizm do przystosowania się do nowych realiów.
+(1043) Koncepcja Seligmana ujęta w bibliografii wykładu o stresie opisuje stan, w którym wcześniejsze doświadczenia braku kontroli nad negatywnym bodźcem prowadzą do deficytów motywacyjnych, poznawczych i emocjonalnych – człowiek uczy się, że jego działanie nie ma znaczenia, więc poddaje się i przestaje podejmować próby obrony.
+(1044) W neurofizjologii emocji ciało migdałowate jest opisywane jako kluczowy element układu limbicznego, który działa jak system wczesnego ostrzegania. Przetwarza ono bodźce pod kątem ich wartości biologicznej i bezpieczeństwa, uruchamiając kaskadę reakcji wegetatywnych na strach i zagrożenie.
+(1045) Wyspa (insula) odgrywa unikalną rolę w neurobiologii afektu. Odpowiada za integrację sygnałów z wnętrza ciała (interocepcję) oraz jest powiązana z odczuwaniem i dekodowaniem emocji wstrętu somatycznego oraz moralnego.
+(1046) Przekierowanie uwagi w modelu Grossa to wewnętrzna strategia regulacji. Obejmuje ona manipulowanie ogniskiem uwagi w ramach danej sytuacji – możemy odwrócić uwagę (dystrakcja, np. liczenie w pamięci, myślenie o czymś miłym), aby obniżyć pobudzenie, albo nadmiernie ją koncentrować (ruminacje).
+(1047) Model Ponsa i Harrisa zawarty w literaturze ontogenezy wskazuje, że rozumienie emocji rozwija się w określonej sekwencji (hierarchicznie). Dzieci najpierw uczą się rozpoznawać miny i zewnętrzne przyczyny (okres publiczny), potem rozumieją wpływ pragnień i wiedzy na emocje (okres mentalny), a najpóźniej opanowują wiedzę o regulacji i ukrywaniu emocji (okres refleksyjny).
+(1048) Koncepcja temperamentu Rothbart (wskazana w slajdach o rozwoju) zakłada, że różnice indywidualne u dzieci opierają się na biologicznej reaktywności (jak szybko i silnie organizm reaguje na bodźce) oraz samoregulacji (w jakim stopniu dziecko potrafi intencjonalnie zarządzać tym pobudzeniem, np. poprzez mechanizmy „effortful control”).
+(1049) Selye zauważył, że stres nie zawsze musi być szkodliwy. Eustres to optymalne napięcie, które motywuje nas do stawiania czoła wyzwaniom (stres adaptacyjny). Dystres pojawia się wtedy, gdy bodźce są zbyt silne, przewlekłe lub człowiek nie ma narzędzi do poradzania sobie, co wywołuje cierpienie i szkody somatyczne.
+(1050) Slajdy neurofizjologiczne wskazują na układ nagrody jako biologiczną bazę dążenia i motywacji. Głównym przekaźnikiem w tej sieci jest dopamina, a kluczową podkorową stacją przekaźnikową i ośrodkiem przetwarzania satysfakcji/wzmocnień jest jądro półleżące.
+(1051) Teoria Jarymowicz i Imbira (Wykład 2) zakłada dwoistość systemów emocjonalnych. System automatyczny reaguje szybko, biologicznie i przedrefleksyjnie. System refleksyjny wymaga przetworzenia informacji przez struktury korowe – emocja rodzi się ze zrozumienia znaczenia sytuacji, porównania jej z wewnętrznymi wartościami, normami moralnymi lub idealnymi standardami „Ja”.
+(1052) W bibliografii wykładu o neurofizjologii pojawia się pojęcie CAN (Central Autonomic Network) – Centralna Sieć Autonomiczna. Jest to zintegrowany system struktur mózgowych (w tym kora przedczołowa, zakręt obręczy, ciało migdałowate, wyspa i podwzgórze), który kontroluje i dopasowuje reakcje autonomicznego układu nerwowego (serce, płuca, trawienie) do aktualnych stanów emocjonalnych i zadań poznawczych człowieka.
+(1053) Zgodnie z systematyką stanów afektywnych, preferencje (np. to, że wolimy kawę od herbaty albo lubimy dany styl muzyczny) to relatywnie trwałe nastawienia oceniające. W przeciwieństwie do emocji, ich przeżywaniu nie towarzyszy burza wegetatywna w ciele ani nagły impuls behawioralny (np. chęć ucieczki czy ataku).
+(1054) Wybór sytuacji to najbardziej wyprzedzająca (proaktywna) strategia w modelu Grossa. Polega na przewidywaniu własnych reakcji emocjonalnych i podjęciu decyzji behawioralnej – np. nie idę na imprezę, na której będzie mój nielubiany były partner (unikanie sytuacji lękowej/złości), albo idę do parku, bo wiem, że to mnie wyciszy.
+(1055) Prezentacja o ontogenezie („Od wczesnej reaktywności niemowlęcia...”) pokazuje, że na początku drogi rozwojowej dziecko nie odczuwa złości czy strachu w dojrzałym sensie. Jego układ nerwowy reaguje globalnie: stanem pobudzenia negatywnego (dystres w odpowiedzi na głód, zimno) lub pozytywnego (spokój, sytość). Dopiero z tego kontinuum, wraz z dojrzałością mózgu i socjalizacją, różnicują się konkretne emocje podstawowe.
+(1056) Przypadek m.in. słynnego pacjenta Elliota opisywany przez Damasio (Wykład 1) udowodnił psychologii, że czysty, odcięty od emocji intelekt nie wystarcza do normalnego życia. Pacjenci z uszkodzeniem vmPFC potrafili rozwiązać skomplikowane testy logiczne w gabinecie (IQ w normie), ale w życiu realnym podejmowali fatalne decyzje, ponieważ ich mózg stracił dostęp do somatycznego systemu wartościowania opcji (markerów somatycznych).
+(1057) W psychologii stresu rozróżnia się stresor (bodziec wyzwalający), reakcję stresową (odpowiedź organizmu) oraz stres jako proces (relację między nimi). Stresor to obiektywna przyczyna (np. nagły spadek temperatury, trudny egzamin, hałas), która uruchamia cały mechanizm obronny.
+(1058) Myślenie operacyjne (charakterystyczne dla osób z aleksytymią, Wykład 2) sprawia, że pacjent zapytany o to, jak się czuje po stracie pracy, nie opisze smutku ani lęku, lecz zacznie drobiazgowo, technicznie opowiadać o procedurach wręczania wypowiedzeń, odprawie i paragrafach kodeksu pracy. Omija sferę psychologiczną, skupiając się na czystej faktografii.
+(1059) Przednia kora zakrętu obręczy (ACC) – opisana w slajdach neurofizjologii – to struktura pomostowa między układem limbicznym a korą nową. Działa jak detektor „anomalii” i konfliktów: aktywuje się silnie, gdy coś idzie niezgodnie z planem, gdy czujemy ból somatyczny, bądź kiedy doświadczamy bolesnych emocji związanych np. z wykluczeniem z grupy społecznej.
+(1060) Robert Levenson (Wykład 2, nurt ewolucyjno-biologiczny) uważa, że emocje podstawowe to ewolucyjne pakiety adaptacyjne. Jego badania nad autonomicznym układem nerwowym (tętno, przewodnictwo skóry, temperatura ciała) wykazały, że np. złość ma inny stały profil fizjologiczny (m.in. wzrost temperatury dłoni – gotowość do walki) niż strach (spadek temperatury dłoni – krew odpływa do dużych mięśni, ucieczka), co wspiera tezę o ich wrodzonym i biologicznym podłożu.
+(1061) Zgodnie z modelem procesualnym Grossa, wybór sytuacji działa proaktywnie (wchodzę w sytuację lub nie). Modyfikacja sytuacji ma miejsce wtedy, gdy już w niej jesteśmy i zmieniamy jej realne parametry fizyczne lub społeczne (np. prosimy o ściszenie muzyki, jeśli nas drażni, albo zapraszamy przyjaciela do trudnej rozmowy, by zmniejszyć lęk).
+(1062) Prezentacja (Wykład 1) wskazuje na wieloskładnikowy charakter emocji. Pełna emocja to zintegrowany proces obejmujący: ocenę poznawczą bodźca, zmiany w ciele (np. tętno), ekspresję zewnętrzną (wyraz twarzy), subiektywne poczucie danego stanu (uczucie) oraz gotowość do podjęcia konkretnego zachowania (np. ucieczka, atak).
+(1063) Reinterpretation (reinterpretacja/reinterpretacja poznawcza) to potężna strategia regulacji. Działa zanim ukształtuje się pełna odpowiedź organizmu – polega na przeformułowaniu myśli (np. „ten trudny egzamin to nie zagrożenie, przed którym muszę uciekać, ale wyzwanie i szansa na sprawdzenie siebie”), co modyfikuje całą dalszą kaskadę emocjonalną.
+(1064) Klasyczne badania Holmesa i Rahego (zawarte w materiale o stresie) wykazały, że nagromadzenie dużych zmian życiowych (wysoka suma LCU) w krótkim czasie drastycznie wyczerpuje zasoby adaptacyjne organizmu. Prowadzi to do obciążenia allostatycznego i znacząco zwiększa prawdopodobieństwo zachorowania (np. na zawał, depresję, wrzody żołądka).
+(1065) Zgodnie z neurofizjologią emocji, droga dolna (low road) pozwala na natychmiastową reakcję ratującą życie. Bodziec (np. kształt przypominający węża) trafia ze wzgórza wprost do ciała migdałowatego, które natychmiast uruchamia ciało do ucieczki, zanim kora mózgowa (droga górna – high road) zdąży przeanalizować, że to był tylko nieszkodliwy kawałek sznura.
+(1066) Rothbart (slajdy o rozwoju w ontogenezie) wskazuje, że obok biologicznej reaktywności, kluczem do dojrzałości emocjonalnej jest samoregulacja, której bazą jest „effortful control”. Pozwala ona dziecku powstrzymać się przed natychmiastowym działaniem (np. uderzeniem kogoś w złości) dzięki sprawnym procesom uwagi i kontroli wykonawczej.
+(1067) Krótkotrwała odpowiedź stresowa (ostra) jest ewolucyjnym sukcesem adaptacyjnym. Pozwala na natychmiastowe zmobilizowanie sił – podniesienie poziomu glukozy, przyspieszenie akcji serca i oddechu – co ułatwia przetrwanie fizycznego zagrożenia. Szkodliwy staje się dopiero stres przewlekły (chroniczny).
+(1068) W modelu Selyego faza alarmowa nie jest jednorodna. Bezpośrednio po zadziałaniu silnego stresora organizm przeżywa szok (faza szoku – obniżenie ciśnienia, osłabienie napięcia mięśniowego). Bardzo szybko jednak następuje faza przeciwszoku, w której nadnercza pompują hormony, a organizm gwałtownie podnosi swoją gotowość do obrony.
+(1069) Wstręt ewolucyjnie rozwinął się jako mechanizm obrony przed patogenami (zepsute jedzenie, odchody, toksyny). Specyficzny wzorzec mimiczny (zmarszczenie nosa, wysunięcie języka) fizycznie ogranicza dopływ powietrza przez nos i ułatwia wyplucie szkodliwej substancji, co chroni życie osobnika.
+(1070) Klasyczna triada lub czwórka cech aleksytymii (Wykład 2) obejmuje: trudności z rozpoznawaniem emocji, trudności z ich nazywaniem, operacyjny styl myślenia oraz ubóstwo życia wyobrażeniowego (wskazane w bibliografii/slajdach). Osoby te myślą skrajnie konkretnie, a ich świat wewnętrznych fantazji czy snów jest bardzo ubogi.
+(1071) W rozwoju ontogenetycznym (Pons, Harris & de Rosnay, 2004) okres mentalny stanowi drugi krok (po okresie publicznym). Dziecko zaczyna pojmować, że dwie osoby mogą różnie zareagować na to samo zdarzenie, ponieważ mają odmienne pragnienia lub wiedzę (np. ktoś boi się królika, bo myśli, że ten gryzie, a ktoś inny się cieszy).
+(1072) Model Watsona, Tellegena i Clarka (Wykład 1, modele wymiarowe) opisuje przestrzeń afektywną poprzez dwa niezależne ortogonalne wymiary: Afekt Pozytywny (od niskiego do wysokiego zaangażowania/energii pozytywnej) oraz Afekt Negatywny (odzwierciedlający poziom dystresu i nieprzyjemnego zaangażowania).
+(1073) Komponent motywacyjny emocji manifestuje się właśnie jako tendencja do działania (Wykład 1, Scherer). Emocje nie są tylko pasywnym stanem umysłu – ich biologicznym zadaniem jest natychmiastowe pchnięcie organizmu w stronę zachowania, które w toku ewolucji najlepiej rozwiązywało dany problem adaptacyjny (np. wstręt = odrzucenie pokarmu).
+(1074) Mikroekspresje są kluczowym pojęciem w psychologii ekspresji (Wykład 2). Ponieważ mięśnie twarzy są częściowo sterowane przez ewolucyjnie stare struktury podkorowe, w momencie przeżywania silnej emocji prawdziwy afekt „przecieka” na ułamek sekundy, zanim struktury korowe (świadoma kontrola) zdążą zablokować wyraz twarzy (tłumienie ekspresji).
+(1075) Podsumowanie wykładu o neurofizjologii wskazuje na dynamiczną równowagę. Emocje są generowane szybko przez struktury podkorowe (ocena znaczenia), ale dojrzałe funkcjonowanie i regulacja wymagają sprawnych procesów „odgórnych” (top-down), realizowanych przez korę przedczołową, która potrafi wyhamować nadmierną aktywność ciała migdałowatego.
+(1076) Kanner, Lazarus i współpracownicy (1981, cytowani w slajdach o stresie) dowiedli, że mikrostresory dnia codziennego (np. ciągły hałas, drobne kłótnie, uciążliwe dojazdy) wywołują stałe, drobne skoki kortyzolu i nie dają organizmowi czasu na powrót do pełnej homeostazy. Ten brak regeneracji prowadzi do chronicznego obciążenia allostatycznego.
+(1077) Rozróżnienie stan vs cecha (wskazane w mapie pojęć) jest kluczowe. Każdy człowiek może przeżyć lęk jako stan (np. stojąc przed trudnym egzaminem). Jednak osoby o wysokim lęku jako cesze (cecha afektywna/dyspozycja) mają niski próg aktywacji tego stanu i będą odczuwać niepokój nawet w sytuacjach obiektywnie bezpiecznych.
+(1078) Stadium wyczerpania to ostatnia faza GAS. Jeśli stresor nie znika, a organizm zbyt długo przebywał w fazie oporu (stadium odporności), zasoby biologiczne (np. energetyczne, hormonalne) ulegają całkowitemu wyczerpaniu. Układ odpornościowy przestaje działać, co Selye bezpośrednio powiązał z powstawaniem tzw. chorób adaptacyjnych.
+(1079) Współczesne badania nad dobrostanem i zdrowiem psychicznym (Kraiss i in., podsumowanie materiału) pokazują, że nie ma jednej „idealnej” strategii na każdy moment. Kluczem do zdrowia psychicznego i wysokiego dobrostanu jest elastyczność – osoba dojrzała emocjonalnie potrafi dobrać strategię (np. dystrakcję, reinterpretację lub akceptację) adekwatnie do wymagań środowiska.
+(1080) Na pierwszych slajdach Wykładu 1 (charakterystyka Scherera) podkreślono procesualny i dynamiczny charakter emocji. Emocje rozwijają się w czasie – od momentu pojawienia się bodźca, przez jego ciągłą ocenę poznawczą, po kaskadowe zmiany w ciele, ekspresji i dążeniach, co odróżnia je od bardziej stabilnych nastrojów czy preferencji.
+(1081) Zgodnie z modelem Grossa, modyfikacja poznawcza to kategoria strategii antecedencyjnych (wyprzedzających reakcję). Polega ona na pracy z własnymi myślami i przekonaniami na temat sytuacji – zmieniamy osobiste znaczenie bodźca, co bezpośrednio wpływa na to, jaką emocję ostatecznie poczujemy.
+(1082) Selye w swoim modelu GAS (Ogólny Zespół Adaptacyjny) wykazał, że jeśli organizm zbyt długo przebywa w stadium oporu i wkracza w stadium wyczerpania, ciągłe przeciążenie hormonalne i metaboliczne niszczy tkanki i narządy. Te fizyczne konsekwencje chronicznego stresu nazwał właśnie chorobami adaptacyjnymi.
+(1083) Droga górna (high road) według LeDoux angażuje struktury korowe (korę nową). Choć przesłanie informacji trwa dłużej niż na drodze dolnej (omijającej korę), pozwala to na racjonalną ocenę sytuacji – np. na zorientowanie się, że obiekt na ziemi to gałąź, a nie jadowity wąż, co pozwala wyhamować lęk wzbudzony drogą dolną.
+(1084) Odniesienie społeczne to fundamentalny mechanizm socjalizacji emocjonalnej (slajdy o ontogenezie). Gdy dziecko napotyka nieznany obiekt (np. nową zabawkę lub obcą osobę), patrzy na twarz matki/ojca. Jeśli rodzic wysyła sygnał lęku, dziecko wycofuje się; jeśli rodzic się uśmiecha, dziecko podejmuje eksplorację.
+(1085) Według Damasio (Wykład 1), emocje pierwotne są wrodzone i uruchamiane głównie podkorowo (ciało migdałowate). Emocje wtórne rozwijają się w toku doświadczeń życiowych, kiedy zaczynamy kojarzyć złożone sytuacje, myśli i pojęcia ze specyficznymi stanami somatycznymi, co wymaga udziału kory przedczołowej.
+(1086) Emocje automatyczne w ujęciu Jarymowicz i Imbira (Wykład 2) mają podłoże biologiczne i ewolucyjne. Są generowane szybko przez starsze struktury mózgu, służąc natychmiastowemu reagowaniu na bodźce zmysłowe (np. ból, przyjemność, nagłe zagrożenie) bez udziału namysłu pojęciowego.
+(1087) McEwen (slajdy o stresie) wskazuje, że allostaza (osiąganie stabilności przez zmianę) jest realizowana za pomocą sieci mediatorów chemicznych. Należą do nich hormony stresu (układ współczulny i oś HPA) oraz markery układu immunologicznego. Ich przewlekłe, nadmierne wydzielanie prowadzi do obciążenia allostatycznego.
+(1088) Aleksytymia pierwotna wiąże się ze stałymi cechami neurobiologicznymi/strukturalnymi osobowości. Aleksytymia wtórna (omówiona w kontekście klinicznym Wykładu 2) traktowana jest jako stan przejściowy lub stały, będący reakcją obronną organizmu na ekstremalne przeciążenie psychiczne – pacjent „odcina” poznawcze przetwarzanie afektu, by chronić się przed cierpieniem.
+(1089) Modulacja reakcji w modelu Grossa działa najpóźniej, gdy emocja już w pełni powstała. Obejmuje próby opanowania lub zmodyfikowania jej komponentów somatycznych i behawioralnych – możemy tłumić minę, ale możemy też obniżyć tętno poprzez głębokie oddechy, sport czy farmakoterapię afektu.
+(1090) Rozumienie emocji to zaawansowana kompetencja poznawczo-afektywna rozwijająca się w ontogenezie. Dziecko uczy się nie tylko, co oznaczają miny (ekspresja), ale z czasem zaczyna rozumieć złożone przyczyny emocji (np. wspomnienia, ukryte pragnienia) oraz fakt, że ktoś może być smutny, mimo że na twarzy maskuje to uśmiechem.
+(1091) W transakcyjnym modelu Lazarusa i Folkman ocena poznawcza nie jest jednorazowym aktem. Ponowna ocena (reappraisal) to dynamiczny proces monitorowania relacji Ja-środowisko – jeśli widzimy, że nasze działania przynoszą skutek lub sytuacja się zmienia, rewidujemy nasze wcześniejsze myślenie o zagrożeniu.
+(1092) Slajd dotyczący lateralizacji („Lateralizacja mózgu a emocje”) wyraźnie wiąże lewą półkulę (a w szczególności jej obszary przedczołowe) z afektem pozytywnym, zachowaniami zbliżenia (approach) oraz dążeniem do interakcji i realizacji celów.
+(1093) Ekman udowodnił, że choć biologiczna baza emocji podstawowych i ich mimika są uniwersalne dla gatunku ludzkiego, to kultura narzuca reguły okazywania (display rules). Przykładowo, w niektórych kulturach norma społeczna nakazuje maskowanie smutku lub złości uśmiechem w obecności osób o wyższym statusie.
+(1094) Podwzgórze (hypothalamus) pełni funkcję wykonawczą dla stanów afektywnych. Otrzymuje sygnały z układu limbicznego (np. z ciała migdałowatego) i przekłada je na konkretne zmiany fizjologiczne – kontroluje autonomiczną pracę serca oraz uruchamia osie hormonalne (w tym oś HPA sterującą wydzielaniem kortyzolu).
+(1095) W rozwoju (ontogenezie) regulacja emocji zaczyna się od poziomu interpersonalnego – noworodek i niemowlę całkowicie zależą od matki/ojca w kwestii obniżania dystresu (kojenie, karmienie). Dopiero z czasem, wraz z dojrzałością kory przedczołowej i socjalizacją, dziecko uwewnętrznia te mechanizmy i uczy się autoregulacji (intrapersonalnej).
+(1096) Modele wymiarowe (np. kołowy model Russella, Wykład 1) opisują każdy stan afektywny na dwóch prostopadłych osiach. Walencja określa znak emocji (czy stan jest przyjemny, jak radość, czy nieprzyjemny, jak smutek/strach), natomiast pobudzenie (arousal) określa jego intensywność energetyczną.
+(1097) Emocje refleksyjne (oparte na strukturach korowych) pozwalają człowiekowi wyjść poza czysty egocentryzm. Standardy alocentryczne (Wykład 2) oznaczają, że emocja (np. podziw, moralne oburzenie, poczucie sprawiedliwości) rodzi się z analizy sytuacji pod kątem wartości wyższych i dobra innych podmiotów, a nie tylko własnego, natychmiastowego interesu.
+(1098) Droga górna to neurofizjologiczna ścieżka świadomej oceny afektywnej. Ponieważ impuls przechodzi przez korę nową (sensoryczną i asocjacyjną), przetwarzanie bodźca jest pełniejsze, co pozwala na elastyczną i adekwatną regulację emocjonalną (np. uświadomienie sobie, że rzekomy wąż to tylko cień rośliny).
+(1099) Osoby z aleksytymią (Wykład 2) odczuwają fizjologiczne komponenty emocji (np. szybsze bicie serca w stresie), ale z powodu deficytu poznawczego nie potrafią połączyć ich z psychicznym stanem (np. „boję się”). W efekcie interpretują te sygnały czysto medycznie – myślą, że mają zawał lub chorobę serca, co napędza procesy somatyzacji.
+(1100) Oś HPA (Podwzgórze-Przysadka-Nadnercza) to główny neuroendokrynny system reakcji na stres przewlekły. Podwzgórze wydziela CRH, przysadka ACTH, co stymuluje korę nadnerczy do uwalniania kortyzolu. Sprawność tej osi decyduje o możliwościach adaptacyjnych organizmu do długotrwałych wyzwań.
+(1101) Rezyliencja (wskazana w modelach dobrostanu i regulacji, Wykład „Emocje jako mechanizm regulacji...”) to kluczowy zasób odpornościowy. Osoby o wysokiej rezyliencji szybciej wracają do normy fizjologicznej i psychicznej po zderzeniu ze stresorami, ponieważ skuteczniej i elastyczniej korzystają ze strategii regulacyjnych.
+(1102) Badania Kannera i Lazarusa ujęte w slajdach dowodzą, że to nie tylko wielkie życiowe tragedie (jak śmierć czy rozwód) niszczą zdrowie. Stałe, drobne, codzienne uciążliwości (daily hassles) poprzez brak przerw na regenerację wywołują permanentne obciążenie allostatyczne, co drastycznie osłabia zdrowie psychofizyczne człowieka.
+(1103) Izard (Wykład o neurofizjologii) założył hierarchiczność systemów aktywacji. O ile system neuronalny czy sensomotoryczny (np. pętla mimiczna) działają od urodzenia, o tyle poziom poznawczy wkracza do gry najpóźniej, jako że wymaga dojrzałości struktur kory nowej i rozwoju funkcji poznawczych (myślenia, języka, pamięci).
+(1104) Lęk jako cecha (Wykład 1, dyspozycje) to stała podatność osobowościowa. Osoby o wysokim lęku dyspozycyjnym mają poznawczo „skrzywiony” filtr uwagi – ich mózg nieustannie szuka sygnałów niebezpieczeństwa, przez co zwykłe, neutralne sytuacje (np. czyjeś spojrzenie) są przez nie interpretowane jako wrogie lub ryzykowne.
+(1105) Subiektywne znaczenie (Wykład 1, Scherer) tłumacz, dlaczego to samo wydarzenie (np. odwołanie wyjazdu) u jednej osoby wywoła złość (bo zablokowało jej cel), u drugiej smutek, a u trzeciej ulgę. Emocja jest wynikiem subiektywnej oceny: „jak to zdarzenie wpływa na moje interesy i cele?”.
+(1106) W neurofizjologii emocji hipokamp pełni kluczową rolę w zapamiętywaniu kontekstu sytuacji stresowej. Podczas gdy ciało migdałowate pamięta czysty, emocjonalny strach, hipokamp koduje fakty i warunki otoczenia (gdzie i kiedy to było). Współpraca hipokampu z korą przedczołową pozwala ocenić, czy w nowym kontekście dany bodziec nadal jest groźny, co umożliwia wygaszanie lęku.
+(1107) Tłumienie ekspresji (suppression) to strategia angażująca zasoby na sam koniec procesu (Gross). Człowiek przeżywa emocję, ale musi zużyć mnóstwo energii poznawczej na „trzymanie kamiennej twarzy”. Te zasoby uwagi i pamięci roboczej są wtedy blokowane, co utrudnia np. zapamiętywanie argumentów rozmówcy podczas trudnej dyskusji.
+(1108) Metaanaliza Kraiss i in. (podsumowanie materiałów) potwierdziła transdiagnostyczną wartość regulacji emocji. Pokazała, że nawet w grupie osób z diagnozami psychiatrycznymi, poprawa umiejętności radzenia sobie z afektem (adaptacyjna regulacja) bezpośrednio przekłada się na wyższą jakość życia i subiektywny dobrostan.
+(1109) Wspierająca socjalizacja polega na uczeniu dziecka, że emocje są naturalnymi sygnałami. Rodzice, którzy akceptują emocje dziecka (nawet te trudne, jak złość czy smutek) i pomagają mu je zrozumieć oraz konstruktywnie rozładować, budują u niego wysoką samoregulację i odporność psychiczną (rezyliencję).
+(1110) Całość materiałów dr Basińskiej (zarówno ujęcia Damasio, Grossa, Scherera, jak i dane o rozwoju w ontogenezie) prowadzi do jednego głównego wniosku: emocje i poznanie tworzą spójny system adaptacyjny. Emocje selekcjonują bodźce istotne dla bezpieczeństwa i celów, nadając kierunek procesom myślowym, co jest niezbędne do racjonalnego i zdrowego funkcjonowania w środowisku.
+(1111) Model Grossa (Wykład „Emocje jako mechanizm regulacji...”) wskazuje, że w ramach kierowania uwagą możemy zastosować dystrakcję (która zazwyczaj skutecznie obniża napięcie afektywne) albo wejść w proces ruminacji (które często nasilają i podtrzymują negatywny afekt, będąc cechą np. stanów depresyjnych).
+(1112) Zgodnie z prezentacją o stresie, ocena pierwotna odpowiada na pytanie „Czy to zdarzenie mi zagraża?”. Jeśli sytuacja jest stresowa, oceniamy ją jako: krzywdę/stratę (szkoda już się dokonała), zagrożenie (szkoda może się dopiero wydarzyć) lub wyzwanie (sytuacja jest trudna, ale niesie szansę na zysk lub rozwój).
+(1113) Okres refleksyjny (slajdy o ontogenezie) to szczyt rozwoju rozumienia emocji w koncepcji Ponsa i Harrisa. Dziecko przestaje oceniać emocje innych tylko po minach czy prostych pragnieniach; rozumie, że można czuć radość i smutek naraz (emocje mieszane) oraz wie, że zmiana myślenia pomaga opanować dystres.
+(1114) Zadanie Iowa Gambling Task (IGT) ujęte w kontekście hipotezy Damasio (Wykład 1) udowodniło, że zdrowe osoby podświadomie zaczynają odczuwać stres (np. skok przewodnictwa skóry) przed wyciągnięciem karty z „złej talii” – ich ciało wysyła marker somatyczny. Pacjenci z uszkodzeniem vmPFC nie mają tego sygnału i bankrutują, wybierając impulsywnie i nieracjonalnie.
+(1115) Skala TAS-20 (Bagby, Parker, Taylor, Wykład 2) opiera się bezpośrednio na strukturze pojęcia aleksytymii. Podskale to: Difficulty Identifying Feelings (DIF), Difficulty Describing Feelings (DDF) oraz Externally-Oriented Thinking (EOT), co pozwala precyzyjnie zdiagnozować deficyty poznawczego przetwarzania afektu.
+(1116) Taksonomia Jarymowicz i Imbira (Wykład 2) zakłada, że emocje automatyczne opierają się na standardach egocentrycznych – naturalnych, ewolucyjnych punktach odniesienia, gdzie kryterium oceny bodźca jest proste: „czy to jest dobre/bezpieczne dla MIEGO ciała i MOJEGO interesu tu i teraz”.
+(1117) Tłumienie ekspresji to próba zablokowania zewnętrznego ujawnienia emocji (Wykład „Emocje jako mechanizm regulacji...”). Wysiłek włożony w kontrolę mięśni i zachowania generuje silny wewnętrzny koszt fizjologiczny – organizm „gotuje się w środku”, co rejestrują przyrządy medyczne badające układ krążenia i układ współczulny.
+(1118) Deficyt poznawczy w wyuczonej bezradności (koncepcja Seligmana, slajdy o stresie) polega na tym, że nawet jeśli badacz zmieni warunki i da człowiekowi/zwierzęciu realną możliwość ucieczki przed problemem, badany z powodu wcześniejszego treningu bezradności nie potrafi powiązać swojego zachowania z sukcesem – uważa, że nic od niego nie zależy.
+(1119) Koncepcja CAN (Quadt, Critchley & Nagai, Wykład o neurofizjologii) opisuje zintegrowaną strukturę mózgową. CAN pozwala na to, by myśli (kora) i emocje (układ limbiczny) mogły błyskawicznie sterować fizjologią ciała (np. przyspieszać bicie serca, modyfikować oddech za pomocą ANS), dostosowując ciało do wymogów sytuacji.
+(1120) Model Rothbart (slajdy o rozwoju) zakłada, że dzieci rodzą się z różnym poziomem reaktywności – niektóre niemowlęta reagują gwałtownie i silnie na cichy dźwięk (wysoka reaktywność), inne potrzebują mocnych bodźców. Drugim, nadrzędnym filarem temperamentu jest samoregulacja, która uczy zarządzania tą reaktywnością.
+(1121) Komponent motywacyjny (Wykład 1, Scherer) oznacza, że emocje nie są stanem czysto teoretycznym. Każda emocja niesie impuls motoryczny i behawioralny – strach mobilizuje duże mięśnie do ucieczki, złość daje energię do uderzenia lub usunięcia przeszkody, wstręt popycha do odrzucenia obiektu.
+(1122) W systematyce afektu (Scherer, Lane, Wykład 1) emocje są zawsze „o czymś” – wyzwala je konkretna strata, sukces czy zagrożenie. Nastroje (moods) charakteryzują się brakiem intencjonalności – są rozlanym tłem afektywnym; możemy być w złym nastroju cały dzień, nie potrafiąc wskazać jednego, konkretnego obiektu, który ten stan podtrzymuje.
+(1123) Neurobiologia afektu dowodzi, że mózg wykorzystuje te same sieci neuronalne do przetwarzania cierpienia fizycznego i psychicznego. Przednia kora zakrętu obręczy (ACC) aktywuje się silnie, gdy doznajemy rany cielesnej, ale także wtedy, gdy w eksperymentach społecznych doświadczamy jawnego wykluczenia przez rówieśników (ból społeczny).
+(1124) Teoria Izarda (Wykład o neurofizjologii) zakłada pluralizm źródeł emocji (emocje mogą rodzić się z myśli, ruchu mięśni twarzy lub hormonów), ale podkreśla, że na poziomie biologicznym każda emocja wymaga ostatecznie wzbudzenia i wyładowania w układzie nerwowym. Dlatego poziom neuronalny stanowi absolutną, zawsze czynną podstawę hierarchii.
+(1125) Metaanaliza Kraiss i in. (podsumowanie materiałów o dobrostanie) dowodzi, że zdrowie psychiczne nie polega na mechanicznym używaniu jednej „dobrej” strategii. Osoba odporna psychicznie wykazuje elastyczność regulacyjną – w sytuacji braku kontroli (np. śmierć bliskiego) wybiera akceptację lub dystrakcję, a w sytuacji sterowalnej (np. trudny projekt) wybiera działanie zadaniowe i modyfikację sytuacji.
+(1126) Okres publiczny (ontogeneza rozumienia emocji) opiera się na tym, co widać z zewnątrz (publiczne komponenty). Małe dziecko potrafi bezbłędnie przypisać emocję do miny (uśmiech = radość) oraz rozumie proste zależności środowiskowe (prezent = radość, upadek = smutek), nie potrafi jeszcze jednak analizować ukrytych stanów mentalnych czy intencji.
+(1127) Model Watsona i Tellegena (Wykład 1, modele wymiarowe) ujmuje afekt poprzez dwa niezależne konstrukty: PA (Afekt Pozytywny) oraz NA (Afekt Negatywny). Wysokie NA nie oznacza po prostu braku przyjemności, lecz jest aktywnym stanem przeżywania trudnych, awersyjnych emocji o wysokim napięciu (np. złość, lęk, podrażnienie).
+(1128) Faza szoku (Selye, GAS, slajdy o stresie) to moment pierwszego zderzenia z silnym, niszczącym bodźcem. Organizm reaguje jak „ogłuszony” – parametry życiowe chwilowo spadają poniżej poziomu homeostatycznego. Dopiero po ułamku sekundy/minucie rusza faza przeciwszoku, czyli gwałtowna mobilizacja hormonów i układu współczulnego do walki.
+(1129) Konsekwencje przewlekłego stresu (McEwen, slajdy o stresie i neurofizjologii) są destrukcyjne dla mózgu. Hipokamp posiada bardzo dużo receptorów dla kortyzolu. Stałe zalewanie tej struktury hormonem stresu niszczy połączenia synaptyczne i hamuje powstawanie nowych komórek, co upośledza pamięć deklaratywną i utrudnia korze hamowanie paniki.
+(1130) Konsekwencje poznawcze strategii (Hu, Gross, Wykład „Emocje jako mechanizm regulacji...”) wyraźnie pokazują przewagę reinterpretacji. Osoba tłumiąca emocje (ukrywająca minę) zużywa zasoby pamięci roboczej na samokontrolę behawioralną. Przez to gorzej koduje i zapamiętuje fakty, które miały miejsce w trakcie stresującej sytuacji (np. podczas kłótni czy prezentacji).
+(1131) W literaturze rozwoju emocjonalnego (Cassidy, slajdy o ontogenezie) styl unikający wiąże się z obronną strategią regulacji. Dziecko podświadomie maskuje swój dystres i udaje obojętność (choć aparatura medyczna wykazuje u niego silne tętno), ponieważ wie, że płacz i szukanie bliskości spotkają się z chłodem lub odrzuceniem ze strony rodzica.
+(1132) ACC (Anterior Cingulate Cortex) w neurobiologii (slajdy o CAN i neurofizjologii) działa jak wewnętrzny system alarmowy kory. Kiedy popełniamy błąd, czujemy niespójność lub pojawia się konflikt poznawczo-emocjonalny, ACC gwałtownie zwiększa swoją aktywność, dając sygnał dla PFC, że należy wdrożyć poprawki, skupić uwagę lub zmienić strategię regulacyjną.
+(1133) Klasyczne rozróżnienie Damasio (Wykład 1, podsumowanie) mówi, że emocje rozgrywają się na „teatrze ciała” (tętno, pot, mimika – programy ewolucyjne). Uczucia to wyższy poziom – to uświadomienie sobie tej burzy cielesnej („czuję lęk, czuję spokój”). Mózg mapuje ciało (interocepcja), a uczucie to psychiczny wynik tej interpretacji.
+(1134) Definicja copingu (Lazarus & Folkman, slajdy o stresie) kładzie nacisk na wysiłek i procesualny charakter radzenia sobie. Coping nie jest sztywną cechą, lecz dynamicznym działaniem (myślami i zachowaniem), które człowiek podejmuje, by poradzić sobie z presją stresora, niezależnie od tego, czy te działania zakończą się sukcesem, czy porażką.
+(1135) Publikacja Kraiss i in. (podsumowanie materiałów o regulacji i dobrostanie) opiera się na dojrzałej psychologicznej definicji dobrostanu (w tradycji Ryff). Dobrostan to nie tylko brak objawów choroby czy chwilowy hedonizm, lecz poczucie, że życie ma sens, rozwinięta autonomia oraz zdolność do budowania stabilnych relacji i akceptacji siebie, co jest silnie powiązane ze sprawną regulacją emocjonalną.
+(1136) Przegląd Kleinginna & Kleinginna (1981) to klasyczna pozycja cytowana na początku Wykładu 1, obrazująca trudności definicyjne w psychologii afektu – autorzy zebrali ogromną liczbę definicji i pogrupowali je m.in. pod kątem komponentów fizjologicznych, poznawczych czy ekspresyjnych.
+(1137) Damasio (Wykład 1) wskazał, że w toku rozwoju mózg uczy się przechodzić na skróty. W „pętli jak-gdyby” kora przedczołowa wysyła sygnały prosto do map somatosensorycznych – mózg reaguje tak, jakby ciało się zmieniło (np. poczuło lęk), co przyspiesza procesy decyzyjne i refleksyjne.
+(1138) Zgodnie z klasyczną skalą SRRS Holmesa i Rahego (materiał o stresie), utrata męża lub żony została sklasyfikowana jako najbardziej obciążająca zmiana życiowa, wymagająca od ludzkiego organizmu największego i najdłuższego wysiłku adaptacyjnego, stąd przypisano jej bazowe 100 punktów LCU.
+(1139) Badania te (slajdy o stresie) pokazały, że ludzkie życie to nie tylko stresory. Codzienne pozytywne mikrowydarzenia (uplifts) stanowią przeciwwagę dla codziennych uciążliwości (hassles), pomagając w regeneracji zasobów allostatycznych organizmu.
+(1140) W ujęciu konstruktywistycznym Barrett (Wykład 2, bibliografia), afekt rdzenny (core affect) towarzyszy nam zawsze, nawet gdy nie czujemy konkretnej emocji. To wewnętrzny, biologiczny zapis poziomu energii (pobudzenie) i komfortu (walencja), który mózg dopiero później kategoryzuje jako np. „smutek” lub „złość”.
+(1141) Slajdy poświęcone rozwojowi emocjonalnemu wskazują, że pojawienie się języka (etykietowanie werbalne) około 2-3 roku życia diametralnie zmienia strukturę emocjonalną dziecka. Pozwala to na przejście od czystej ekspresji fizycznej do symbolicznego komunikowania i lepszego kontrolowania swoich stanów psychicznych.
+(1142) Aby proaktywnie zarządzać emocjami (Gross), musimy umieć trafnie przewidzieć swoje przyszłe stany psychiczne. Jeśli wiem, że oglądanie danego filmu wywoła u mnie silny lęk (affective forecasting), to świadomie rezygnuję z seansu, realizując strategię wyboru sytuacji.
+(1143) Między 5. a 7. rokiem życia (okres mentalny) children zaczynają integrować teorię umysłu z afektem. Rozumieją np., że jeśli ktoś myśli, że w pudełku są cukierki (choć są tam kamienie), to otwierając je, poczuje radość – jego emocja wynika z przekonania, a nie z obiektywnego stanu faktycznego.
+(1144) Współczesne metaanalizy (Kraiss i in., podsumowanie) podkreślają, że patologia psychiczna często wiąże się ze sztywnością. Osoby cierpiące na depresję uporczywie stosują ruminacje (biernemyślenie o problemie), tracąc zdolność do elastycznego przełączania się na adaptacyjne strategie, takie jak reinterpretacja czy dystrakcja.
+(1145) In the CAN network (Quadt i in., slajdy) ciało migdałowate pełni rolę detektora afektywnego. Po wykryciu zagrożenia natychmiast wysyła impulsy wykonawcze do podwzgórza i pnia mózgu, co skutkuje błyskawiczną aktywacją współczulną – przyspieszeniem akcji serca, rozszerzeniem źrenic i wyrzutem adrenaliny.
+(1146) W neurobiologii (slajdy o strukturach kory) wyróżnia się podział ACC. Część grzbietowa (dorsal) wiąże się z procesami poznawczymi i monitorowaniem błędów, natomiast część brzuszna (ventral) jest ściśle zintegrowana z afektem – bierze udział w regulowaniu emocji i wygaszaniu lęku.
+(1147) Zgodnie z anatomią układu nagrody omówioną w neurofizjologii, neurony produkujące dopaminę mają swoje ciała komórkowe w brzusznej części nakrywki (VTA). Stamtąd wysyłają aksony do jądra półleżącego (nucleus accumbens) oraz kory przedczołowej, tworząc biologiczną oś motywacji i dążenia.
+(1148) Interocepcja (odczytywanie sygnałów z ciała) to fundament konstrukcji emocji. Jeśli ktoś słabo odróżnia sygnały z wnętrza organizmu, nie potrafi sprecyzować, czy jego szybsze bicie serca to złość, lęk czy ekscytacja – czuje po prostu rozlany afekt negatywny, co utrudnia wdrożenie adekwatnej regulacji emocjonalnej.
+(1149) Emocje refleksyjne (Wykład 2) rodzą się z operacji intelektualnych. Ponieważ myśli, wartości i pojęcia mogą być analizowane w umyśle godzinami, emocja refleksyjna (np. poczucie niesprawiedliwości, duma z osiągnięcia celów życiowych) może trwać długo i być trwale podtrzymywana przez wewnętrzny monolog poznawczy.
+(1150) Model Lazarusa to model transakcyjny – stres zależy od relacji osoby z otoczeniem (slajdy o stresie). Czynniki osobowe (wewnętrzne wartości i cele) decydują o tym, co nas dotyka: jeśli dla studenta oceny nie mają znaczenia, egzamin nie będzie oceniony jako zagrożenie; jeśli zależy mu na stypendium (wysokie zaangażowanie), sytuacja ta wywoła silną reakcję stresową.
+(1151) Droga niska/dolna (thalamus-amygdala) to ewolucyjny skrót ratujący życie (neurofizjologia). Przesyła ona mało precyzyjny, ale superszybki sygnał. Dzięki temu odskakujemy na bok na widok podłużnego kształtu na leśnej ścieżce, zanim droga górna (korowa) zdąży spokojnie przeanalizować, czy to wąż, czy zwykła gałąź.
+(1152) Ubóstwo wyobraźni (Wykład 2, Luminet i in.) to ważny, choć rzadziej omawiany komponent aleksytymii. Osoby te operują w sferze czystych faktów i konkretów (myślenie operacyjne) – ich świat wewnętrzny jest pozbawiony bogatej narracji wyobrażeniowej, fantazji czy symboliki literackiej.
+(1153) Modyfikacja sytuacji (Gross) różni się od wyboru sytuacji tym, że już w niej uczestniczymy. Nie uciekamy (co byłoby wyborem/unikaniem sytuacji), lecz aktywnie zmieniamy parametry fizyczne lub społeczne środowiska, w którym jesteśmy, by wpłynąć na przebieg reakcji emocjonalnej.
+(1154) Socjalizacja rodzicielska (Eisenberg, Denham, slajdy o ontogenezie) to podstawowy mechanizm, dzięki któremu dziecko uczy się tzw. reguł okazywania. Rodzice dają dziecku sygnały, np.: „nie krzycz tak głośno w sklepie, gdy jesteś zły”, co uczy malucha dopasowywania intensywności ekspresji do wymogów kultury, w której żyje.
+(1155) Koncepcja McEwena (slajdy o stresie) zakłada, że allostaza staje się destrukcyjna (wear and tear), gdy system nie potrafi się wyłączyć. Jeśli stresor zniknął (np. egzamin się skończył), a oś HPA nadal pompuje wysoki poziom kortyzolu przez kolejne dni, organizm ponosi ogromne, fizyczne koszty tkankowe i metaboliczne.
+(1156) Emocje to stany ostre, burzliwe i zmienne (trwające od kilku sekund do minut). Nastrój (mood, Lane, Wykład 1) to stan rozlany w tle, który wykazuje niską dynamikę – może trwać godzinami lub dniami, zmieniając się powoli i nadając ogólny ton (pozytywny lub negatywny) całemu naszemu przetwarzaniu informacji.
+(1157) Model Scherera (Wykład 1) kładzie ogromny nacisk na to, jak mózg ocenia bodziec. System SECs to sekwencyjny proces poznawczy, w którym organizm krok po kroku sprawdza parametry bodźca: nowość, walencję, ważność dla celów, możliwości kontroli oraz zgodność z normami.
+(1158) Slajd „Lateralizacja mózgu a emocje” wprost przypisuje prawej półkuli: emocje negatywne, zachowania unikania (avoidance) oraz funkcje rozpoznawania emocji u innych. Osoby z naturalnie wyższą spoczynkową aktywnością prawej strony czołowej częściej wykazują cechy lękowe i wycofujące.
+(1159) Test TEC (Test of Emotion Comprehension) to autorskie narzędzie Ponsa i Harrisa cytowane w bibliografii ontogenezy. Składa się z historyjek obrazkowych i bada, na którym z trzech poziomów rozwoju (publicznym, mentalnym czy refleksyjnym) znajduje się dziecko pod kątem rozumienia stanów afektywnych.
+(1160) Wszystkie slajdy i wykłady (od definicji afektu, przez stres i neurofizjologię, po ontogenezę) zbiegają się w tym jednym wniosku. Emocje nie są wrogiem rozumu; są kluczowym, ewolucyjnym systemem operacyjnym, który porządkuje nasze zachowanie, chroni zdrowie biologiczne (homeostaza) i pozwala elastycznie adaptować się do wymagań świata społecznego.
+(1161) Zgodnie z prezentacją (Wykład 1), emocja jako stan ostry jest reakcją na konkretny wyzwalacz (np. strach przed psem). Nastrój jest tłem afektywnym, którego źródła często nie potrafimy jednoznacznie wskazać – może na niego wpływać zmęczenie, pogoda czy skumulowane mikrostresory, przez co jego przyczyna jest dla nas niejasna.
+(1162) W literaturze stresu zawartej w slajdach dokonuje się tego rozróżnienia: styl to nasza stała cecha (np. ktoś ma styl skoncentrowany na unikaniu), a strategia to konkretna mikroreakcja tu i teraz (np. włączenie muzyki w odpowiedzi na hałas sąsiada, czyli dystrakcja w ramach danej sytuacji).
+(1163) Ujemne sprzężenie zwrotne (slajdy o neuroendokrynologii stresu) to kluczowy bezpiecznik organizmu. Kortyzol, docierając do receptorów w mózgu (m.in. w hipokampie i podwzgórzu), informuje system: „reakcja zaszła, starczy”. Dzięki temu wydzielanie CRH i ACTH spada, co chroni organizm przed toksycznym nadmiarem glikokortykoidów.
+(1164) Komponent pragnień (okres mentalny, 5-7 lat) pokazuje, że dziecko zaczyna dostrzegać subiektywny charakter afektu. Pojmuje, że to nie samo obiektywne zdarzenie decyduje o emocji, lecz to, jak to zdarzenie ma się do wewnętrznych, unikalnych potrzeb i pragnień danej osoby.
+(1165) Dzieci ambiwalentne (slajdy o ontogenezie i Cassidy) doświadczyły rodzicielstwa niespójnego (rodzic raz był blisko, a raz odrzucał). Nauczyły się, że jedynym sposobem na uzyskanie opieki jest „krzyczeć jak najgłośniej” – stąd ich strategia regulacji opiera się na hiperaktywacji afektu negatywnego i trudnościach w wyciszeniu.
+(1166) Jądro półleżące (nucleus accumbens, slajdy o neurobiologii) to kluczowa stacja mezolimbicznego szlaku dopaminergicznego. Kiedy dążymy do celu lub otrzymujemy nagrodę, wyrzut dopaminy w tej strukturze daje subiektywne poczucie satysfakcji, co motywuje nas do powtarzania tych adaptacyjnych zachowań w przyszłości.
+(1167) Zgodnie z badaniami Hu i Grossa, tłumienie niesie potężne koszty interpersonalne. Ludzka twarz służy do komunikacji; gdy ktoś sztucznie blokuje emocje, jego rozmówca czuje dyskomfort psychiczny i brak zaufania, co bezpośrednio niszczy jakość więzi i bliskość społeczną.
+(1168) Sytuacja „repeated hits” (slajdy o stresie McEwena) ma miejsce wtedy, gdy człowiek żyje w ciągłym wirze kryzysów – ledwo poradzi sobie z jednym problemem, pojawia się następny. Układ współczulny i oś HPA nie nadążają z powrotem do linii bazowej, co prowadzi do skumulowanego zużycia fizycznego organizmu.
+(1169) Emocje refleksyjne (Wykład 2) potrzebują korowej analizy porównawczej. Standardy idealne to nasze wewnętrzne drogowskazy – emocja (np. satysfakcja moralna, poczucie sensu, żal po niespełnieniu ideałów) rodzi się wtedy, gdy zestawiamy realne fakty i zachowania z naszym wewnętrznym systemem wartości i wizją ideału.
+(1170) System afektywny w koncepcji Izarda (Wykład o neurofizjologii) pokazuje niepoznawczą drogę wzbudzania emocji. Emocje mogą działać w łańcuchach afektywnych – przeżywanie jednego stanu (np. upokorzenia) automatycznie aktywuje inny organiczny stan (np. wściekłość), bez konieczności świadomego myślenia czy reinterpretacji sytuacji.
+(1171) Ocena pierwotna w transakcyjnym modelu Lazarusa (slajdy o stresie) decyduje o tym, czy bodziec w ogóle uruchomi reakcję stresową. Jeśli aparat poznawczy uzna sytuację za neutralną lub bez znaczenia dla naszych celów osobistych, proces stresowy nie ruszy. Dopiero uznanie bodźca za ważny (jako strata, zagrożenie lub wyzwanie) aktywuje dalsze etapy adaptacji.
+(1172) Hipoteza „anatomicznego rozszczepienia” lub deficytu ciała modzelowatego (Wykład 2, podsumowanie aleksytymii) wyjaśnia, dlaczego osoby te czują afekt (prawa półkula przetwarza emocje i ciało), ale nie potrafią go nazwać (lewa półkula odpowiada za werbalizację) – informacja afektywna ma trudności z przedostaniem się przez spoidło wielkie mózgu.
+(1173) Przekierowanie uwagi (Gross, Wykład „Emocje jako mechanizm regulacji...”) nie musi być tylko procesem czysto myślowym (jak liczenie w pamięci). Może przybrać formę prostej reakcji fizycznej – odwracamy wzrok od igły podczas pobierania krwi (unikanie wzrokowe), co blokuje dopływ emocjogennego bodźca do kory zmysłowej i obniża pobudzenie lękowe.
+(1174) Istotą odkrycia Selyego (slajdy o stresie) była uniwersalność odpowiedzi biologicznej. Zauważył on, że ciało na każde wyzwanie (termiczne, chemiczne, emocjonalne) reaguje taką samą kaskadą obronną – aktywacją nadnerczy, zmianami w układzie chłonnym itp. Stąd nazwa: Ogólny (czyli niespecyficzny dla konkretnego bodźca) Zespół Adaptacyjny.
+(1175) Komponent przypomnień (Pons i Harris, slajdy o ontogenezie) to zaawansowana wiedza o psychice. Starsze dziecko pojmuje, że smutek kogoś, kto nagle posmutniał na widok zabawki, może wynikać z tego, że ta zabawka przypomniała mu o utraconym niedawno ukochanym psie – bodziec działa jako pomost do pamięci emocjonalnej.
+(1176) Selye (Wykład o stresie) podkreślał, że stres jest przyprawą życia i bez niego organizm by obumarł. Eustres (dobry stres) to napięcie, które odczuwamy np. przed ważnym, ale ekscytującym występem, meczem czy ślubem – dodaje nam sił i napędza do sprawnego działania, nie niszcząc struktur somatycznych.
+(1177) Skoro lewa kora przedczołowa odpowiada za afekt pozytywny i system dążenia (Wykład o neurofizjologii, slajd „Lateralizacja”), to jej wyłączenie lub osłabienie zaburza tę równowagę. Mózg traci zdolność do generowania motywacji zbliżenia, dając pełne pole do popisu prawej półkuli, która odpowiada za unikanie, ostrożność i lęk.
+(1178) Scherer (Wykład 1) wskazuje na adaptacyjną wyższość emocji nad prostymi odruchami bezwarunkowymi. Odruch działa mechanicznie (dotknięcie gorącego = cofnięcie ręki). Emocja (np. złość) mobilizuje organizm, ale kora nowa daje nam czas i elastyczność – możemy w złości krzyknąć, możemy wyjść z pokoju, a możemy użyć reinterpretacji i spokojnie porozmawiać, dopasowując reakcję do norm społecznych.
+(1179) Model McEwena (slajdy o stresie) obrazuje mechanizm, w jaki sposób psychiczny stres niszczy ciało. Hormony stresu are healthy na 5 minut (allostaza). Gdy krążą we krwi tygodniami (obciążenie allostatyczne), niszczą metabolizm, rozregulowują gospodarkę insulinową i odkładają tłuszcz, wywołując fizyczne jednostki chorobowe.
+(1180) Walidacja emocji (slajdy o rozwoju i socjalizacji) to najwyższy standard wspierającej postawy rodzicielskiej. Gdy rodzic waliduje (np. „widzę, że jesteś bardzo zły, że ta wieża się rozpadła, to faktycznie może frustrować”), dziecko czuje się bezpiecznie, uczy się identyfikować swój stan (nie wchodzi w aleksytymię) i chętniej współdziała w nauce konstruktywnej regulacji napięcia.
+(1181) W sieci CAN (Quadt i in., neurofizjologia) vmPFC działa jako centralny hamulec bezpieczeństwa drogą odgórną (top-down). Kiedy kora uzna, że zagrożenie minęło, vmPFC wysyła sygnały stymulujące układ przywspółczulny (nerw błędny), który zwalnia akcję serca i pozwala ciału na odpoczynek i regenerację.
+(1182) Anhedonia (omówiona w podsumowaniach neurofizjologii i dobrostanu) to osiowy objaw m.in. depresji. Wiąże się z wygaszeniem sprawności mezolimbicznego szlaku dopaminergicznego – jądro półleżące przestaje prawidłowo reagować na wzmocnienia, przez co pacjent traci motywację dążenia (approach), ponieważ nic nie sprawia mu już przyjemności.
+(1183) Czynnik DIF w skali TAS-20 (Bagby, Parker, Taylor, Wykład 2) dotyczy samego rdzenia aleksytymii. Osoby z wysokim DIF odczuwają burzę somatyczną w ciele, ale ich aparat poznawczy nie potrafi jej zinterpretować emocjonalnie – sygnał wegetatywny pozostaje dla nich bezimiennym dyskomfortem fizycznym, co prowadzi do lęku o zdrowie (somatyzacji).
+(1184) Asymetria walencji w systemie automatycznym (Wykład 2) to spuścizna ewolucyjna. Natura zaprogramowała nas tak, by sygnały o niebezpieczeństwie (strach, wstręt) miały absolutny priorytet przetwarzania – błąd polegający na niezauważeniu zagrożenia kosztuje życie, podczas gdy przegapienie szansy na przyjemność niesie znacznie mniejsze konsekwencje ewolucyjne.
+(1185) Kołowy model Russella (circumplex model, Wykład 1, slajdy o modelach wymiarowych) krzyżuje te dwie niezależne osie. Każdy stan afektywny można na nich umieścić: przykładowo, złość i strach mają walencję negatywną i wysokie pobudzenie, radość ma walencję pozytywną i wysokie pobudzenie, a relaks ma walencję pozytywną i niskie pobudzenie.
+`;
+const EXTRA_BANK = parseBankFrom(extraQuestionsText, extraAnswersText);
+Object.assign(EXPLANATIONS, parseExplanationsFrom(extraExplanationsText));
+
 
 /* ============================================================
    KONFIG: LINK-DO-KURSU — mapowanie pytań na konkretny blok kursu.
@@ -2459,10 +3603,14 @@ function questionPart(id){
   for(const [a,b] of PART_RANGES.motywacje) if(n>=a && n<=b) return 'motywacje';
   return 'emocje';   // wszystko poza zakresem motywacji traktujemy jak Emocje (1–125, 211–216, 223–240)
 }
-/* Baza źródłowa po nałożeniu filtra zakresu — używana wszędzie zamiast surowego BANK. */
+/* Baza źródłowa po nałożeniu filtra zakresu — używana wszędzie zamiast surowego BANK.
+   W trybie „extra" (dodatkowe pytania) zawsze zwraca EXTRA_BANK, niezależnie od zakresu. */
 function sourceBank(){
+  if(currentMode==='extra') return EXTRA_BANK;
   return partFilter==='all' ? BANK : BANK.filter(q => questionPart(q.id)===partFilter);
 }
+/* Pełna baza dla bieżącego trybu (do uzgadniania zapisanej kolejki). */
+function fullBank(){ return currentMode==='extra' ? EXTRA_BANK : BANK; }
 
 let maxStreak=0;       // rekord najdłuższej serii (trwały, między sesjami)
 const MAXSTREAK_KEY = 'emocjeMotywacje_v1_maxStreak';
@@ -2538,7 +3686,7 @@ function masteryBucket(id){
   return mastery[id] >= MASTERY_GRADUATE ? 'mastered' : 'weak';
 }
 // Tryby, w których aktualizujemy trwałe opanowanie i powtórki w obrębie sesji.
-function isLearningMode(){ return currentMode==='normal' || currentMode==='weak' || currentMode==='flash'; }
+function isLearningMode(){ return currentMode==='normal' || currentMode==='weak' || currentMode==='flash' || currentMode==='extra'; }
 
 // op: +1 (wzmocnij) lub 'reset' (błąd kasuje opanowanie). Działa tylko w trybach nauki.
 function bumpMastery(id, op){
@@ -2596,7 +3744,7 @@ function buildQueue(){
 function gapFrom(range){ const [lo,hi]=range; return lo + Math.floor(Math.random()*(hi-lo+1)); }
 
 function insertRetry(srcQ, stage, lapses){
-  const baseQ = BANK.find(b=>b.id===srcQ.id);
+  const baseQ = fullBank().find(b=>b.id===srcQ.id);
   if(!baseQ) return;
   const retry = {...baseQ, isRetry:true, stage, lapses, options:[...baseQ.options]};
   const useShuffle = currentMode === 'normal' ? shuffleOn : true;
@@ -2656,6 +3804,7 @@ function bloomWrong(){
    PERSYSTENCJA Z ROZDZIELENIEM TRYBÓW W LOCALSTORAGE
    ============================================================ */
 function getSaveKey() {
+  if(currentMode === 'extra') return 'emocjeMotywacje_v1_extra';   // osobna sesja puli dodatkowej
   const base = currentMode === 'test'  ? 'emocjeMotywacje_v1_test'
        : currentMode === 'weak'  ? 'emocjeMotywacje_v1_weak'
        : currentMode === 'flash' ? 'emocjeMotywacje_v1_flash'
@@ -2683,9 +3832,10 @@ function saveState(){
    z BANK, zachowując zapisaną KOLEJNOŚĆ opcji (tasowanie) i cały postęp sesji. */
 function reconcileQueueWithBank(){
   if(!Array.isArray(queue)) return;
-  queue = queue.filter(item => item && BANK.some(b => b.id === item.id)); // usuń pytania spoza bazy
+  const BK = fullBank();                                                  // BANK lub EXTRA_BANK (tryb extra)
+  queue = queue.filter(item => item && BK.some(b => b.id === item.id));   // usuń pytania spoza bazy
   queue.forEach(item => {
-    const base = BANK.find(b => b.id === item.id);
+    const base = BK.find(b => b.id === item.id);
     item.correct = base.correct;                       // poprawna odpowiedź zawsze z aktualnej bazy
     const sameLetters = Array.isArray(item.options)
       && item.options.length === base.options.length
@@ -2764,10 +3914,12 @@ function updateStats(){
   $('lvl-name').textContent = curLvl.name;
   $('lvl-xp').textContent = nextLvl ? `${globalXP}/${nextLvl.req}` : globalXP;
 
-  // Licznik „słabych punktów" (pytania w toku, jeszcze nieopanowane) w bieżącym zakresie.
+  // Licznik „słabych punktów" — zawsze dla głównej bazy w bieżącym zakresie
+  // (tryb „Słabe punkty" drillu je z głównej puli, nie z pytań dodatkowych).
   const wc=$('mi-weak-count');
   if(wc){
-    const n=sourceBank().reduce((a,q)=> a + (masteryBucket(q.id)==='weak' ? 1 : 0), 0);
+    const weakScope = partFilter==='all' ? BANK : BANK.filter(q => questionPart(q.id)===partFilter);
+    const n=weakScope.reduce((a,q)=> a + (masteryBucket(q.id)==='weak' ? 1 : 0), 0);
     wc.textContent=n; wc.classList.toggle('hidden', n===0);
   }
 }
@@ -2781,6 +3933,7 @@ function updateUIForMode(){
   const sfx = m==='test'  ? BRAND_SUFFIX_TEST
             : m==='weak'  ? BRAND_SUFFIX_WEAK
             : m==='flash' ? BRAND_SUFFIX_FLASH
+            : m==='extra' ? '— Dodatkowe pytania (Emocje)'
             : BRAND_SUFFIX_LEARN;
   $('brand-em').textContent = sfx;
   // Tasowanie ma sens tylko w zwykłej nauce.
@@ -2791,6 +3944,10 @@ function updateUIForMode(){
   const miW=$('mi-weak'), miF=$('mi-flash');
   if(miW) miW.classList.toggle('active', m==='weak');
   if(miF) miF.classList.toggle('active', m==='flash');
+  // Tryb „extra": filtr zakresu nie dotyczy puli dodatkowej → ukryj; podświetl przycisk.
+  const segWrap=document.querySelector('.seg-wrap'); if(segWrap) segWrap.classList.toggle('hidden', m==='extra');
+  const btnExtra=$('btn-extra');
+  if(btnExtra){ btnExtra.classList.toggle('active', m==='extra'); btnExtra.setAttribute('aria-pressed', m==='extra'?'true':'false'); }
 }
 
 /* Wyjaśnienie poprawnej odpowiedzi — pokazywane PO udzieleniu odpowiedzi.
@@ -2888,7 +4045,9 @@ function showQuestion(){
       ? '✓ Potwierdzenie — wcześniej błędne'
       : '⟳ Powtórka — wcześniej błędne';
   }
-  $('qnum').textContent='Pytanie '+(currentMode === 'test' ? (idx+1) : q.id);
+  $('qnum').textContent='Pytanie '+(currentMode === 'test' ? (idx+1)
+        : currentMode === 'extra' ? (+q.id - 1000)   // pula dodatkowa: id 1001+ → numer 1..185
+        : q.id);
   $('question').textContent=q.text;
   updateBackBtn();
   updateFavBtn();
@@ -3276,6 +4435,7 @@ function switchMode(target){
 function toggleMode(){ switchMode(currentMode === 'normal' ? 'test' : 'normal'); }
 function enterWeakMode(){ switchMode(currentMode === 'weak'  ? 'normal' : 'weak'); }
 function enterFlashMode(){ switchMode(currentMode === 'flash' ? 'normal' : 'flash'); }
+function enterExtraMode(){ switchMode(currentMode === 'extra' ? 'normal' : 'extra'); }
 
 /* ====== Zakres pytań: Wszystkie / Emocje / Motywacje ====== */
 function updatePartUI(){
