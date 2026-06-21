@@ -278,6 +278,47 @@ header.top{
 .btn-course:hover .bc-shine{opacity:1;animation:bcShine .85s var(--ease)}
 @keyframes bcShine{from{transform:translateX(-220%) skewX(-16deg)}to{transform:translateX(420%) skewX(-16deg)}}
 
+/* ====== Deska ratunku — spokojny kafel powtórki na koniec ====== */
+.rescue-row{width:100%;margin-bottom:14px}
+.btn-rescue{
+  position:relative;display:flex;align-items:center;gap:13px;width:100%;
+  padding:13px 16px;border-radius:14px;cursor:pointer;text-decoration:none;
+  color:#fff;overflow:hidden;
+  background:linear-gradient(135deg,#5f7e98,#43607a);
+  border:1px solid hsl(206 28% 74% / .45);
+  box-shadow:0 10px 26px -16px hsl(206 42% 30% / .7),inset 0 1px 0 hsl(0 0% 100% / .26);
+  transition:transform .22s var(--ease),box-shadow .25s var(--ease),filter .2s;
+}
+.btn-rescue::before{                /* delikatny połysk szkła */
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(125deg,hsl(0 0% 100% / .18),transparent 46%);
+}
+.btn-rescue:hover{transform:translateY(-2px);filter:brightness(1.04);
+  box-shadow:0 16px 32px -16px hsl(206 42% 28% / .75),inset 0 1px 0 hsl(0 0% 100% / .34)}
+.btn-rescue:active{transform:translateY(0) scale(.995)}
+.btn-rescue .br-ic{
+  flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
+  font-size:1.5rem;line-height:1;background:hsl(0 0% 100% / .15);
+  box-shadow:inset 0 1px 0 hsl(0 0% 100% / .28);
+}
+.btn-rescue .br-tx{display:flex;flex-direction:column;line-height:1.2;min-width:0;flex:1}
+.btn-rescue .br-kick{font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.9}
+.btn-rescue .br-name{font-family:"Fraunces",serif;font-size:1.08rem;font-weight:600;letter-spacing:-.01em;margin-top:3px}
+.btn-rescue .br-sub{font-size:.75rem;opacity:.9;margin-top:3px;font-weight:500}
+.btn-rescue .br-go{margin-left:auto;flex:none;font-size:.72rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:7px;
+  background:hsl(0 0% 100% / .16);padding:9px 14px;border-radius:999px;
+  box-shadow:inset 0 1px 0 hsl(0 0% 100% / .22);transition:background .2s var(--ease)}
+.btn-rescue:hover .br-go{background:hsl(0 0% 100% / .26)}
+.btn-rescue .br-go i{font-style:normal;transition:transform .25s var(--ease)}
+.btn-rescue:hover .br-go i{transform:translateX(3px)}
+@media (max-width:560px){
+  .btn-rescue{gap:11px;padding:12px 13px}
+  .btn-rescue .br-sub{display:none}
+  .btn-rescue .br-go i{display:none}
+}
+
 /* delikatny „pop" liczby przy wzroście wyniku / serii */
 #score,#streak{display:inline-block;transform-origin:left center}
 @keyframes statPop{0%{transform:scale(1)}32%{transform:scale(1.18)}100%{transform:scale(1)}}
@@ -660,6 +701,19 @@ html[data-theme="light"] .wn-overlay{background:hsl(38 25% 25% / .3)}
       <span class="bc-shine" aria-hidden="true"></span>
       <span class="bc-ic">📙</span>
       <span class="bc-tx"><span class="bc-kick">Kurs · Część 2</span><span class="bc-name">Motywacje</span></span>
+    </a>
+  </div>
+
+  <!-- Ostatnia deska ratunku: skrót na ostatnią chwilę przed egzaminem -->
+  <div class="rescue-row">
+    <a class="btn-rescue" href="deska_ratunku.html" title="Deska ratunku — spokojna powtórka samych pewniaków przed egzaminem">
+      <span class="br-ic" aria-hidden="true">🛟</span>
+      <span class="br-tx">
+        <span class="br-kick">Powtórka na koniec</span>
+        <span class="br-name">Deska ratunku</span>
+        <span class="br-sub">Same pewniaki w pigułce — na spokojnie, esencja zamiast całego kursu</span>
+      </span>
+      <span class="br-go" aria-hidden="true">Otwórz <i>→</i></span>
     </a>
   </div>
 

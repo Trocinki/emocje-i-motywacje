@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ostatnia deska ratunku — Emocje i Motywacje</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
+
+#dr, #dr * { margin:0; padding:0; box-sizing:border-box; }
+
+#dr {
+  --ink:#1b1a17;
+  --paper:#fbf7f0;
+  --card:#fefcf8;
+  --line:#e6ddcd;
+  --muted:#736a58;
+  --signal:#d6442c;
+  --signal-bg:#fbe7e1;
+  --signal-ink:#8f2615;
+  --emo:#a8336a;
+  --emo-soft:#f6e6ef;
+  --mot:#b5602a;
+  --mot-soft:#f7eadd;
+  --done:#2f7d6b;
+  --done-soft:#e4efeb;
+  font-family:'Inter',system-ui,sans-serif;
+  color:var(--ink);
+  background:var(--paper);
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+
+#dr ::selection { background:#ffe0b3; }
+
+/* ---------- command bar ---------- */
+#dr .bar {
+  position:sticky; top:0; z-index:50;
+  background:rgba(251,247,240,0.92);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+  padding:10px 16px;
+  display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px;
+}
+#dr .bar-brand {
+  font-family:'Space Mono',monospace; font-weight:700;
+  font-size:12px; letter-spacing:0.14em; text-transform:uppercase;
+  display:flex; align-items:center; gap:8px; color:var(--ink);
+}
+#dr .bar-brand b { color:var(--signal); font-size:15px; line-height:1; }
+#dr .bar-spacer { flex:1 1 auto; }
+#dr .counter {
+  font-family:'Space Mono',monospace; font-size:12px; color:var(--muted);
+  white-space:nowrap;
+}
+#dr .counter b { color:var(--done); font-weight:700; }
+#dr .ctrl {
+  font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.04em;
+  text-transform:uppercase; font-weight:700;
+  border:1px solid var(--line); background:var(--card); color:var(--ink);
+  padding:7px 11px; border-radius:999px; cursor:pointer;
+  transition:background .15s,border-color .15s,color .15s,transform .05s;
+}
+#dr .ctrl:hover { border-color:var(--ink); }
+#dr .ctrl:active { transform:translateY(1px); }
+#dr .ctrl[aria-pressed="true"] { background:var(--signal); border-color:var(--signal); color:#fff; }
+#dr .ctrl.jump[aria-pressed="true"] { background:var(--ink); border-color:var(--ink); }
+#dr .ctrl:focus-visible, #dr [tabindex]:focus-visible, #dr .done-btn:focus-visible {
+  outline:2px solid var(--signal); outline-offset:2px;
+}
+
+/* ---------- hero ---------- */
+#dr .wrap { max-width:1180px; margin:0 auto; padding:0 16px; }
+#dr .hero { padding:46px 0 30px; border-bottom:1px solid var(--line); }
+#dr .kicker {
+  font-family:'Space Mono',monospace; font-size:12px; letter-spacing:0.18em;
+  text-transform:uppercase; color:var(--signal); font-weight:700; margin-bottom:14px;
+}
+#dr .hero h1 {
+  font-family:'Space Grotesk',sans-serif; font-weight:700;
+  font-size:clamp(32px,6vw,54px); line-height:1.02; letter-spacing:-0.02em;
+  max-width:14ch;
+}
+#dr .hero h1 .br { color:var(--signal); }
+#dr .lead {
+  margin-top:18px; max-width:62ch; font-size:16px; color:#403a30;
+}
+#dr .lead strong { color:var(--ink); font-weight:600; }
+#dr .how {
+  margin-top:22px; display:flex; flex-wrap:wrap; gap:8px 10px; align-items:center;
+}
+#dr .step {
+  font-family:'Space Mono',monospace; font-size:12px; color:var(--muted);
+  background:var(--card); border:1px solid var(--line); border-radius:8px;
+  padding:7px 11px; display:flex; align-items:center; gap:7px;
+}
+#dr .step b { color:var(--ink); }
+#dr .arrow { color:var(--line); font-size:14px; }
+#dr .legend {
+  margin-top:24px; display:flex; flex-wrap:wrap; gap:18px;
+  font-size:13px; color:var(--muted);
+}
+#dr .legend span { display:inline-flex; align-items:center; gap:7px; }
+#dr .flame-chip { color:var(--signal); font-size:15px; line-height:1; }
+#dr .trap-chip {
+  font-family:'Space Mono',monospace; font-size:10px; font-weight:700;
+  background:var(--signal); color:#fff; padding:2px 6px; border-radius:4px; letter-spacing:0.06em;
+}
+#dr .stats {
+  margin-top:24px; display:flex; flex-wrap:wrap; gap:0;
+  border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--card);
+  max-width:560px;
+}
+#dr .stat { flex:1 1 120px; padding:16px 18px; border-right:1px solid var(--line); }
+#dr .stat:last-child { border-right:none; }
+#dr .stat .n {
+  font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:30px; line-height:1;
+  letter-spacing:-0.02em;
+}
+#dr .stat.s1 .n { color:var(--signal); }
+#dr .stat.s2 .n { color:var(--emo); }
+#dr .stat.s3 .n { color:var(--mot); }
+#dr .stat .l {
+  font-family:'Space Mono',monospace; font-size:11px; text-transform:uppercase;
+  letter-spacing:0.08em; color:var(--muted); margin-top:7px;
+}
+
+/* ---------- sections ---------- */
+#dr .section { padding:8px 0 14px; }
+#dr .sec-head {
+  position:sticky; top:51px; z-index:40;
+  background:var(--paper);
+  padding:22px 0 14px; margin-bottom:6px;
+  display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+  border-bottom:2px solid var(--ink);
+}
+#dr .sec-head .tag {
+  font-family:'Space Mono',monospace; font-weight:700; font-size:11px;
+  letter-spacing:0.1em; text-transform:uppercase; color:#fff;
+  padding:5px 9px; border-radius:5px; align-self:center;
+}
+#dr .section.emo .sec-head .tag { background:var(--emo); }
+#dr .section.mot .sec-head .tag { background:var(--mot); }
+#dr .sec-head h2 {
+  font-family:'Space Grotesk',sans-serif; font-weight:600;
+  font-size:clamp(22px,3.5vw,30px); letter-spacing:-0.01em;
+}
+#dr .sec-head .who { font-size:13px; color:var(--muted); font-family:'Space Mono',monospace; }
+
+/* ---------- group ---------- */
+#dr .group { margin:26px 0 8px; }
+#dr .eyebrow {
+  font-family:'Space Mono',monospace; font-weight:700; font-size:11px;
+  letter-spacing:0.14em; text-transform:uppercase; color:var(--muted);
+  display:flex; align-items:center; gap:10px; margin-bottom:14px;
+}
+#dr .eyebrow::after { content:""; flex:1; height:1px; background:var(--line); }
+
+#dr .grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr));
+  gap:12px; align-items:start;
+}
+
+/* ---------- card ---------- */
+#dr .card {
+  position:relative; background:var(--card); border:1px solid var(--line);
+  border-radius:12px; overflow:hidden;
+  transition:border-color .15s, box-shadow .15s;
+}
+#dr .card::before {
+  content:""; position:absolute; left:0; top:0; bottom:0; width:4px;
+}
+#dr .section.emo .card::before { background:var(--emo); }
+#dr .section.mot .card::before { background:var(--mot); }
+#dr .card:hover { border-color:#cdbfa6; box-shadow:0 4px 14px rgba(40,30,10,0.05); }
+#dr .card.flame::before { width:4px; }
+#dr .card.is-done { background:var(--done-soft); border-color:#bcd8cf; }
+#dr .card.is-done::before { background:var(--done) !important; }
+
+#dr .card-main {
+  padding:15px 15px 12px 18px; cursor:pointer; display:block; width:100%; text-align:left;
+}
+#dr .card-head { display:flex; align-items:flex-start; gap:8px; }
+#dr .badge { color:var(--signal); font-size:14px; line-height:1.4; flex:none; }
+#dr .name {
+  font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:16px;
+  letter-spacing:-0.01em; line-height:1.25; flex:1;
+}
+#dr .who-mini { font-size:11px; color:var(--muted); font-weight:400; font-family:'Space Mono',monospace; }
+#dr .essence {
+  margin-top:9px; font-size:14.5px; color:#36302689; color:#363026;
+}
+#dr .essence b { font-weight:600; color:var(--ink); }
+#dr .hint {
+  display:none; margin-top:8px;
+  font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.04em;
+  color:var(--muted);
+}
+#dr .details {
+  display:none; margin-top:11px; padding-top:11px; border-top:1px dashed var(--line);
+}
+#dr .card.open .details { display:block; }
+#dr .details ul { list-style:none; display:flex; flex-direction:column; gap:7px; }
+#dr .details li {
+  font-size:13.5px; color:#403a30; padding-left:15px; position:relative; line-height:1.5;
+}
+#dr .details li::before {
+  content:""; position:absolute; left:0; top:8px; width:5px; height:5px; border-radius:1px;
+}
+#dr .section.emo .details li::before { background:var(--emo); }
+#dr .section.mot .details li::before { background:var(--mot); }
+#dr .details li b { font-weight:600; color:var(--ink); }
+#dr .details li.warn { color:var(--signal-ink); }
+#dr .details li.warn::before { background:var(--signal); }
+
+#dr .done-btn {
+  position:absolute; right:10px; bottom:10px;
+  font-family:'Space Mono',monospace; font-size:10px; font-weight:700;
+  letter-spacing:0.06em; text-transform:uppercase;
+  border:1px solid var(--line); background:transparent; color:var(--muted);
+  padding:4px 9px; border-radius:999px; cursor:pointer; line-height:1.3;
+  transition:all .12s;
+}
+#dr .done-btn:hover { border-color:var(--done); color:var(--done); }
+#dr .card.is-done .done-btn { background:var(--done); border-color:var(--done); color:#fff; }
+#dr .card.open .card-main { padding-bottom:34px; }
+#dr .card:not(.open) .done-btn { opacity:0; pointer-events:none; }
+#dr .card:hover:not(.open) .done-btn, #dr .card.is-done .done-btn { opacity:1; pointer-events:auto; }
+
+/* trap / comparison card */
+#dr .card.trap { grid-column:1/-1; background:var(--signal-bg); border-color:#eccabf; }
+#dr .card.trap::before { background:var(--signal) !important; }
+#dr .card.trap .badge { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; color:#fff; background:var(--signal); padding:2px 6px; border-radius:4px; letter-spacing:0.06em; }
+#dr .card.trap .name { color:var(--signal-ink); }
+#dr .card.trap.is-done { background:var(--done-soft); border-color:#bcd8cf; }
+
+/* ---------- test mode redaction ---------- */
+#dr.test .card:not(.open) .essence {
+  color:transparent; user-select:none; border-radius:6px;
+  background-image:repeating-linear-gradient(135deg,#e7ddcb 0 9px,#efe7d7 9px 18px);
+}
+#dr.test .card:not(.open) .essence b { color:transparent; }
+#dr.test .card:not(.open) .hint { display:block; }
+#dr.test .card.trap:not(.open) .essence { background-image:repeating-linear-gradient(135deg,#f0cfc4 0 9px,#f7ddd4 9px 18px); }
+
+/* only-flame filter */
+#dr.only-flame .card:not(.flame):not(.trap) { display:none; }
+#dr .group.is-empty { display:none; }
+
+/* ---------- footer ---------- */
+#dr .footer { border-top:2px solid var(--ink); margin-top:40px; padding:34px 0 60px; }
+#dr .footer h3 {
+  font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:20px;
+  margin-bottom:6px; letter-spacing:-0.01em;
+}
+#dr .footer .sub { color:var(--muted); font-size:13px; margin-bottom:22px; }
+#dr .fgrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:16px; }
+#dr .fcol { border:1px solid var(--line); border-radius:12px; padding:18px; background:var(--card); }
+#dr .fcol .ft {
+  font-family:'Space Mono',monospace; font-size:11px; font-weight:700;
+  letter-spacing:0.08em; text-transform:uppercase; margin-bottom:12px;
+  display:flex; align-items:center; gap:8px;
+}
+#dr .fcol.bet .ft { color:var(--done); }
+#dr .fcol.cut .ft { color:var(--muted); }
+#dr .fcol.check .ft { color:var(--signal); }
+#dr .fcol ul { list-style:none; display:flex; flex-direction:column; gap:9px; }
+#dr .fcol li { font-size:13px; color:#403a30; padding-left:16px; position:relative; line-height:1.5; }
+#dr .fcol li::before { content:""; position:absolute; left:0; top:7px; width:5px; height:5px; border-radius:50%; }
+#dr .fcol.bet li::before { background:var(--done); }
+#dr .fcol.cut li::before { background:var(--muted); }
+#dr .fcol.check li::before { background:var(--signal); }
+#dr .fcol li b { color:var(--ink); font-weight:600; }
+#dr .coda { margin-top:26px; font-size:12.5px; color:var(--muted); max-width:70ch; line-height:1.6; }
+#dr .coda b { color:var(--ink); }
+
+@media (max-width:560px){
+  #dr .hero { padding:34px 0 24px; }
+  #dr .sec-head { top:88px; }
+  #dr .bar { padding:9px 12px; }
+  #dr .wrap { padding:0 12px; }
+  #dr .card-main { padding:14px 13px 12px 16px; }
+}
+@media (prefers-reduced-motion:reduce){
+  #dr *, #dr *::before, #dr *::after { transition:none !important; }
+}
+</style>
+</head>
+<body>
+<div id="dr">
+  <div class="bar">
+    <span class="bar-brand"><b>✦</b> Deska ratunku</span>
+    <span class="bar-spacer"></span>
+    <span class="counter">Opanowane <b id="cDone">0</b>/<span id="cTotal">0</span></span>
+    <button class="ctrl jump" data-jump="emo" aria-pressed="false">Emocje</button>
+    <button class="ctrl jump" data-jump="mot" aria-pressed="false">Motywacja</button>
+    <button class="ctrl" id="btnFlame" aria-pressed="false">Tylko pewniaki</button>
+    <button class="ctrl" id="btnTest" aria-pressed="false">Tryb testu</button>
+    <button class="ctrl" id="btnExpand" aria-pressed="false">Rozwiń wszystko</button>
+  </div>
+
+  <div class="wrap">
+    <header class="hero">
+      <div class="kicker">Typy AI · Egzamin · Emocje i Motywacje · UKW</div>
+      <h1>Ostatnia <span class="br">deska ratunku</span></h1>
+      <p class="lead">Każda karta to jedno zdanie esencji plus 2–3 punkty, których realnie potrzebujesz. Emocje wg dr Basińskiej, motywacja wg dr hab. Kasprzak. Czerwone <span class="flame-chip">✦</span> to <strong>pewniaki wytypowane przez AI</strong> — nie oficjalna lista, tylko najlepszy zakład; czerwone <span class="trap-chip">PUŁAPKA</span> to rzeczy, które najłatwiej pomylić na teście.</p>
+      <div class="how">
+        <span class="step"><b>1.</b> Czytaj esencję</span>
+        <span class="arrow">→</span>
+        <span class="step"><b>2.</b> Włącz <b>tryb testu</b> i sprawdzaj się</span>
+        <span class="arrow">→</span>
+        <span class="step"><b>3.</b> Dotknij karty, oznacz <b>umiem</b></span>
+      </div>
+      <div class="stats">
+        <div class="stat s1"><div class="n" id="nFlame">0</div><div class="l">Pewniaki AI ✦</div></div>
+        <div class="stat s2"><div class="n" id="nEmo">0</div><div class="l">Karty: emocje</div></div>
+        <div class="stat s3"><div class="n" id="nMot">0</div><div class="l">Karty: motywacja</div></div>
+      </div>
+    </header>
+
+    <main id="content"></main>
+
+    <footer class="footer">
+      <h3>Na co postawiłem — i czego tu świadomie nie ma</h3>
+      <p class="sub">Bo zostało mało czasu, a uczciwość jest ważniejsza niż udawanie, że to komplet.</p>
+      <div class="fgrid">
+        <div class="fcol bet">
+          <div class="ft">✓ Na co stawiam (najwyższa pewność)</div>
+          <ul>
+            <li><b>Emocje:</b> trójka klasyczna (James-Lange / Cannon-Bard / Schachter-Singer), klaster appraisal (Lazarus, Weiner, Scherer), Ekman + Plutchik, LeDoux, Damasio, blok stresu (Selye, Lazarus-Folkman, Yerkes-Dodson) i regulacja Grossa — to rdzeń zagadnień Basińskiej.</li>
+            <li><b>Motywacja:</b> 3 mechanizmy kierunku, kontinuum autodeterminacji (SDT), cele osiągnięć 2×2, Yerkes-Dodson, teoria Aptera, wyuczona bezradność i styl wyjaśniania, Fredrickson — wszystkie potwierdzone w bazie pytań Kasprzak (część z nich pojawia się tam dwa razy).</li>
+          </ul>
+        </div>
+        <div class="fcol cut">
+          <div class="ft">— Czego tu nie ma (niższy priorytet)</div>
+          <ul>
+            <li><b>Emocje:</b> szczegóły obwodów Papeza i MacLeana, cała ontogeneza rozwoju emocji poza minimum, drobne modele stresu (Holmes-Rahe, Kanner, Hobfoll, McEwen). Są w pełnym <i>emocje.html</i>, jeśli starczy czasu.</li>
+            <li><b>Motywacja:</b> dysonans poznawczy i flow — w wykładach Kasprzak marginalne. Inteligencja emocjonalna i lateralizacja siedzą bardziej po stronie emocji/biologii.</li>
+          </ul>
+        </div>
+        <div class="fcol check">
+          <div class="ft">! Zweryfikuj sam (moje decyzje, nie pewniki)</div>
+          <ul>
+            <li>Zakres <b>kontinuum SDT</b> i <b>celów 2×2</b> wywnioskowałem częściowo z bazy pytań, nie z detalu wykładu — sprawdź, czy pani Kasprzak nie chce więcej.</li>
+            <li>Blok <b>stresu</b> u Basińskiej jest duży; mocno go skompresowałem do nazwisk + jednego rozróżnienia na każde.</li>
+            <li>Format egzaminu (Basińska: <b>pytania zamknięte + 1 otwarte</b>) — to z notatki z wykładu; potwierdź przed wejściem.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="coda"><b>Uwaga techniczna:</b> stan „opanowane” trzyma się w pamięci karty i znika po odświeżeniu strony — to celowo, żeby nic się nie zacięło podczas nauki na ostatnią chwilę. Jak chcesz, dorobię wersję z trwałym zapisem postępu albo dorzucę aktywne fiszki do <i>emocje.html</i>.</p>
+    </footer>
+  </div>
+</div>
+
+<script>
+const DATA = [
+{
+  id:"emo", cls:"emo", tag:"Część I", title:"Emocje", who:"dr Patrycja Basińska",
+  groups:[
+    {
+      eyebrow:"Pojęcia podstawowe",
+      cards:[
+        {flame:true, name:"Afekt", essence:"Pojęcie nadrzędne nad wszystkimi stanami emocjonalnymi, opisane przez dwa wymiary: walencję i pobudzenie.", details:[
+          "<b>Walencja</b> = przyjemne–nieprzyjemne; <b>pobudzenie</b> = niskie–wysokie.",
+          "Afekt to ogólny stan; emocja to nazwany, złożony stan umiejscowiony w tej przestrzeni (np. złość).",
+          "Obejmuje: emocje, nastroje, uczucia, preferencje, nastawienia."
+        ]},
+        {flame:true, name:"Emocja vs nastrój vs uczucie", essence:"Trzy stany różniące się czasem, siłą, przyczyną i ukierunkowaniem.", details:[
+          "<b>Emocja:</b> sekundy–minuty, silna, ma konkretną przyczynę i obiekt (ukierunkowana), mobilizuje do działania.",
+          "<b>Nastrój:</b> godziny–dni, słabszy, często bez wyraźnej przyczyny, rozlany (nieukierunkowany), zabarwia myślenie.",
+          "<b>Uczucie:</b> świadoma, subiektywna reprezentacja emocji („jak się czuję”); interpretacja z udziałem płata czołowego."
+        ]},
+        {flame:false, name:"Cechy emocji", essence:"Pięć cech: epizodyczność, krótkotrwałość, wartościowanie, ukierunkowanie, dynamika.", details:[
+          "<b>Epizodyczna</b> (reakcja na bodziec) i <b>krótkotrwała</b> (sek–min).",
+          "<b>Wartościująca</b> (ocena +/−) i <b>ukierunkowana</b> (na obiekt).",
+          "<b>Dynamiczna</b> — może przechodzić w inny stan; podtrzymywana przez ruminację lub stres."
+        ]},
+        {flame:false, name:"Stan vs dyspozycja + namiętność", essence:"Kryterium to czas trwania: stany są krótkie, dyspozycje trwałe.", details:[
+          "<b>Stany:</b> emocja, nastrój. <b>Dyspozycje:</b> namiętność, cechy osobowości.",
+          "<b>Namiętność (pasja, Vallerand):</b> trwałe, silne zaangażowanie wobec osoby/aktywności/idei.",
+          "<b>Harmonijna</b> (autonomiczna internalizacja — daje energię i sens) vs <b>obsesyjna</b> (kontrolowana internalizacja — przejmuje kontrolę, konflikt z innymi sferami)."
+        ]},
+        {flame:false, name:"Aleksytymia", essence:"„Analfabetyzm emocjonalny” — trudność w rozpoznawaniu, nazywaniu i wyrażaniu własnych emocji.", details:[
+          "4 deficyty (Sifneos, Nemiah): trudność <b>identyfikacji</b> uczuć, trudność <b>opisywania</b> uczuć, ubóstwo <b>wyobraźni</b>, <b>operacyjny styl myślenia</b>.",
+          "Mylenie emocji z doznaniami z ciała (np. lęk z głodem).",
+          "Cecha/wymiar, nie choroba; utrudnia regulację emocji; transdiagnostyczna."
+        ]}
+      ]
+    },
+    {
+      eyebrow:"Komponenty, funkcje, rodzaje",
+      cards:[
+        {flame:true, name:"5 komponentów emocji", essence:"Emocja jest zjawiskiem wieloskładnikowym — pełny epizod to pięć elementów naraz.", details:[
+          "<b>Ocena poznawcza (appraisal)</b> — zgodność z celem, sprawstwo, nowość, normy.",
+          "<b>Reakcje fizjologiczne</b> — układ autonomiczny, oś HPA. <b>Ekspresja</b> — twarz, głos, postawa.",
+          "<b>Tendencje do działania</b> + <b>doświadczenie subiektywne</b> („jak to jest”)."
+        ]},
+        {flame:false, name:"Tendencje do działania", essence:"Każda emocja przygotowuje organizm do konkretnego działania.", details:[
+          "<b>Strach</b> → ucieczka / unikanie.",
+          "<b>Złość</b> → konfrontacja.",
+          "<b>Wstręt</b> → odrzucenie."
+        ]},
+        {flame:false, name:"Funkcje emocji", essence:"Emocje są systemem alarmowym i mechanizmem priorytetyzacji informacji.", details:[
+          "<b>Sygnalizacyjna, adaptacyjna, regulacyjna, społeczna, decyzyjna.</b>",
+          "Kierują uwagą, ustalają priorytety między celami.",
+          "W relacjach: komunikacja, regulacja norm, więzi, współpraca."
+        ]},
+        {flame:true, name:"Rodzaje emocji", essence:"Od wrodzonych podstawowych po złożone poznawczo — pięć kategorii.", details:[
+          "<b>Podstawowe:</b> wrodzone, uniwersalna ekspresja (strach, złość, smutek, radość, wstręt, zaskoczenie).",
+          "<b>Pochodne/wtórne:</b> zależą od interpretacji, Ja, norm, pamięci, porównań społecznych.",
+          "<b>Samoświadomościowe</b> (przedmiotem jest Ja: wstyd, wina, duma), <b>społeczne/moralne</b> (współczucie, zawiść, pogarda), <b>mieszane</b> (≥2 jakości naraz, np. ukończenie studiów = radość + smutek)."
+        ]}
+      ]
+    },
+    {
+      eyebrow:"Teorie klasyczne",
+      cards:[
+        {flame:true, name:"James-Lange", essence:"Emocja to odczyt zmian ciała — najpierw reakcja fizjologiczna, potem uczucie.", details:[
+          "Bodziec → reakcja ciała → subiektywne odczucie. „Boję się, bo drżę / uciekam”.",
+          "Rola informacji zwrotnej z ciała.",
+          "<b>Ograniczenie:</b> podobne pobudzenie może towarzyszyć różnym emocjom."
+        ]},
+        {flame:true, name:"Cannon-Bard", essence:"Przeżycie emocji i pobudzenie fizjologiczne zachodzą równolegle, z jednego ośrodka.", details:[
+          "Bodziec → procesy centralne → jednocześnie: (1) uczucie i (2) reakcja fizjologiczna.",
+          "Źródło ośrodkowe (międzymózgowie, wzgórze) — nie same trzewia.",
+          "<b>Kluczowa teza:</b> samo pobudzenie ciała nie wystarcza, by „wyprodukować” emocję."
+        ]},
+        {flame:true, name:"Schachter-Singer (dwuczynnikowa)", essence:"Emocja = niespecyficzne pobudzenie + etykieta poznawcza nadana z kontekstu.", details:[
+          "Ten sam stan ciała może zostać nazwany różnie zależnie od sytuacji.",
+          "Eksperyment z adrenaliną: bez jasnego wyjaśnienia pobudzenia ludzie „przypisują” je kontekstowi (euforia / gniew).",
+          "<b>Pomost</b> między teoriami klasycznymi a poznawczymi."
+        ]},
+        {flame:true, trap:true, name:"PUŁAPKA: klasyczna trójka", essence:"Najczęstsza pomyłka na teście — kolejność i rola pobudzenia.", details:[
+          "<b>James-Lange:</b> ciało <b>najpierw</b> → emocja jako jego odczyt.",
+          "<b>Cannon-Bard:</b> emocja i pobudzenie <b>jednocześnie</b>, równolegle.",
+          "<b>Schachter-Singer:</b> pobudzenie <b>+ interpretacja</b> (etykieta) = emocja."
+        ]}
+      ]
+    },
+    {
+      eyebrow:"Teorie poznawcze (appraisal)",
+      cards:[
+        {flame:true, name:"Wspólne założenie appraisal", essence:"Nie bodziec sam w sobie, lecz ocena jego znaczenia dla mnie wywołuje emocję.", details:[
+          "Ocena może być szybka/automatyczna albo refleksyjna/świadoma.",
+          "Klucz: zgodność z celem, kontrola, odpowiedzialność, normy/wartości.",
+          "Różnimy się emocjami, bo różnimy się celami, przekonaniami, zasobami."
+        ]},
+        {flame:true, name:"Lazarus", essence:"Emocja zależy od dwóch ocen relacji osoba–otoczenie: pierwotnej i wtórnej.", details:[
+          "<b>Ocena pierwotna:</b> czy to istotne? zagrożenie / krzywda / wyzwanie / korzyść?",
+          "<b>Ocena wtórna:</b> czy mam kontrolę i zasoby? kto odpowiada?",
+          "Konfiguracje: zagrożenie + niska kontrola → lęk; krzywda + wina kogoś → złość; strata + bezradność → smutek."
+        ]},
+        {flame:true, name:"Weiner (atrybucyjna)", essence:"To, jak wyjaśniamy przyczynę wyniku, decyduje, jaka emocja się utrzyma.", details:[
+          "3 wymiary przyczyny: <b>umiejscowienie</b> (wew/zew), <b>stabilność</b> (stałe/zmienne), <b>kontrolowalność</b>.",
+          "Stabilność → oczekiwania (nadzieja/bezradność); locus → emocje samoocenowe (duma/wstyd).",
+          "Kontrolowalność → emocje moralne (wina, złość, współczucie) i skłonność do karania/pomagania."
+        ]},
+        {flame:true, name:"Scherer (CPM)", essence:"Emocja to proces — sekwencja szybkich „sprawdzeń oceny” (appraisal checks).", details:[
+          "Sprawdzenia: <b>nowość</b>, <b>samoistna przyjemność</b>, <b>istotność dla celu</b>, <b>możliwości zaradcze</b>, <b>zgodność z Ja/normami</b>.",
+          "Component Process Model: poznanie + fizjologia + ekspresja + motywacja + doświadczenie.",
+          "Różne emocje = różne profile tych ocen."
+        ]},
+        {flame:false, name:"Arnold, Frijda, Roseman", essence:"Trzy uzupełnienia klastra: ocena intuicyjna, gotowość do działania, konfiguracje ocen.", details:[
+          "<b>Arnold:</b> appraisal = natychmiastowa intuicyjna ocena „korzystne–szkodliwe”; emocja = <b>odczuwana tendencja</b> (felt tendency) ku dobremu / od złego.",
+          "<b>Frijda:</b> emocje to stany <b>gotowości do działania</b> (action readiness); prawo troski; pierwszeństwo kontroli.",
+          "<b>Roseman:</b> konkretne kombinacje wymiarów oceny (sprawstwo, siła, pewność) przewidują dyskretne emocje."
+        ]}
+      ]
+    },
+    {
+      eyebrow:"Teorie dyskretne i wymiarowe",
+      cards:[
+        {flame:true, name:"Ekman", essence:"Emocje podstawowe mają uniwersalną, wrodzoną ekspresję — potwierdzoną międzykulturowo.", details:[
+          "Ekspresja to najważniejszy wskaźnik emocji; pełni funkcję adaptacyjną i komunikacyjną.",
+          "<b>Reguły okazywania (display rules)</b> — kultura modyfikuje, co wolno pokazać.",
+          "Programy afektywne; badania nad plemionami zbieracko-łowieckimi."
+        ]},
+        {flame:true, name:"Plutchik", essence:"Koło emocji: 8 podstawowych, z natężeniem, przeciwieństwami i diadami.", details:[
+          "8 podstawowych: radość, smutek, zaufanie, wstręt, zaskoczenie, przeczucie, strach, gniew.",
+          "Emocje przeciwstawne leżą po przeciwnych stronach koła; mają różne <b>natężenie</b>.",
+          "<b>Diady</b> = mieszanki sąsiednich emocji (emocje złożone)."
+        ]},
+        {flame:false, name:"Izard (DET)", essence:"Teoria różnicowych emocji: ograniczony zestaw jakościowo różnych emocji podstawowych.", details:[
+          "Każda emocja = <b>odrębny system</b> (specyficzne przeżycie + mikroekspresja + pobudzenie + impuls do działania).",
+          "Wrodzone, pojawiają się wcześnie; emocja nie wymaga złożonego myślenia.",
+          "Uwaga: to inna teoria niż „4 systemy aktywacji” Izarda (patrz neurobiologia)."
+        ]},
+        {flame:true, name:"Teorie wymiarowe (Russell, Watson-Tellegen)", essence:"Emocje jako punkty w przestrzeni wymiarów, a nie odrębne kategorie.", details:[
+          "<b>Russell — kołowy model afektu:</b> dwa wymiary — walencja × pobudzenie.",
+          "<b>Watson & Tellegen:</b> dwa <b>niezależne (ortogonalne)</b> wymiary — PA (pozytywny afekt) i NA (negatywny afekt).",
+          "Konsekwencja: słaby PA i słaby NA mogą współwystępować; silne — wykluczają się."
+        ]},
+        {flame:true, name:"Barrett (konstruowane emocje)", essence:"Mózg nie „odpala” gotowej emocji — konstruuje ją z surowego afektu i pojęć.", details:[
+          "<b>Rdzeń afektu</b> (interocepcja) + <b>kategoryzacja</b> za pomocą pojęć i języka.",
+          "Kontekst i kultura współtworzą emocję.",
+          "Brak uniwersalnych „odcisków” emocji — duża zmienność."
+        ]}
+      ]
+    },
+    {
+      eyebrow:"Neurobiologia emocji",
+      cards:[
+        {flame:true, name:"Sieci, nie ośrodek", essence:"Nie istnieje jeden „ośrodek emocji” — powstają w dynamicznych sieciach mózgowych.", details:[
+          "<b>Ciało migdałowate:</b> wykrywanie znaczenia/zagrożenia, warunkowanie strachu, pamięć emocjonalna.",
+          "<b>Hipokamp:</b> pamięć i kontekst. <b>Wyspa:</b> interocepcja (cielesne odczuwanie).",
+          "<b>Kora przedczołowa:</b> regulacja korowa; zakręt obręczy — świadome zabarwienie afektywne."
+        ]},
+        {flame:true, name:"Izard — 4 systemy aktywacji", essence:"Emocja może zostać uruchomiona przez cztery różne systemy, nie tylko przez świadomy namysł.", details:[
+          "<b>I neuronalny</b> — zawsze aktywny, wystarczający i konieczny (neuroprzekaźniki, hormony).",
+          "<b>II sensomotoryczny</b> — ekspresja twarzy, napięcie mięśni; mimiczne sprzężenie zwrotne.",
+          "<b>III motywacyjny/afektywny</b> — emocje + popędy. <b>IV poznawczy</b> — oceny, atrybucje, wspomnienia. Hierarchia = kolejność rozwojowa."
+        ]},
+        {flame:true, trap:true, name:"PUŁAPKA: LeDoux — dwie drogi strachu", essence:"Którą drogą szybciej i czy z udziałem świadomości.", details:[
+          "<b>Droga dolna / szybka:</b> wzgórze → ciało migdałowate. Szybka, „zgrubna”, <b>bez świadomości</b>.",
+          "<b>Droga górna / korowa:</b> wzgórze → kora → ciało migdałowate. Wolniejsza, dokładniejsza, z analizą.",
+          "Rozróżnia <b>reakcje obronne</b> (automatyczne) od <b>świadomego uczucia strachu</b> (procesy korowe)."
+        ]},
+        {flame:true, name:"Damasio — markery somatyczne", essence:"Emocje „oznaczają” opcje jako korzystne lub ryzykowne sygnałami z ciała i pomagają decydować.", details:[
+          "<b>Marker somatyczny</b> = skrót oparty na doświadczeniu: dany stan ciała wraca i ukierunkowuje wybór.",
+          "Działa szybko i automatycznie, zanim wszystko przeanalizujemy.",
+          "Kluczowa <b>kora przedczołowa brzuszno-przyśrodkowa (vmPFC)</b>; emocje nie są przeciwieństwem rozumu."
+        ]},
+        {flame:false, name:"Rozwój emocji — minimum", essence:"Od globalnej reaktywności niemowlęcia do refleksyjnej regulacji — proces stopniowy.", details:[
+          "<b>Social referencing</b>, lęk wobec obcych i lęk separacyjny pod koniec 1. roku życia.",
+          "Regulacja: od <b>ko-regulacji</b> (z opiekunem) do <b>samoregulacji</b>; przywiązanie jako matryca.",
+          "Temperament (negatywna emocjonalność, kontrola wysiłkowa) + <b>goodness of fit</b> (dopasowanie dziecko–środowisko)."
+        ]}
+      ]
+    },
+    {
+      eyebrow:"Stres (duży blok)",
+      cards:[
+        {flame:false, name:"Cannon — homeostaza", essence:"Organizm dąży do równowagi (homeostazy), a na zagrożenie reaguje: walcz albo uciekaj.", details:[
+          "<b>Fight or flight</b> — szybka mobilizacja na zagrożenie.",
+          "Podstawa biologicznego rozumienia reakcji stresowej.",
+          "Stresor ≠ reakcja stresowa ≠ skutki stresu."
+        ]},
+        {flame:true, name:"Selye — GAS (Ogólny Zespół Adaptacyjny)", essence:"Niespecyficzna reakcja organizmu na stresor przebiega w trzech fazach.", details:[
+          "<b>Faza alarmowa → odporności → wyczerpania.</b>",
+          "<b>Eustres</b> — stres mobilizujący, pozytywny; <b>dystres</b> — szkodliwy.",
+          "„Niespecyficzna” = podobny wzorzec niezależnie od rodzaju stresora."
+        ]},
+        {flame:true, name:"Yerkes-Dodson", essence:"Między pobudzeniem a efektywnością jest zależność odwróconego U, zależna od trudności zadania.", details:[
+          "Istnieje <b>optymalny poziom pobudzenia</b> dla każdego działania.",
+          "Dla zadań <b>trudnych</b> optimum jest <b>niższe</b>, dla łatwych — wyższe.",
+          "To samo co hipoteza optymalnej stymulacji."
+        ]},
+        {flame:true, name:"Lazarus & Folkman — model transakcyjny", essence:"Stres to relacja osoba–otoczenie oceniana jako obciążająca lub przekraczająca zasoby.", details:[
+          "Ocena <b>pierwotna</b> (znaczenie dla dobrostanu) + <b>wtórna</b> (możliwości zaradcze) + <b>reappraisal</b>.",
+          "<b>Coping skoncentrowany na problemie</b> (instrumentalny) vs <b>na emocjach</b>.",
+          "Czynniki pośredniczące: ocena poznawcza i radzenie sobie; proces ciągły i cykliczny."
+        ]},
+        {flame:true, name:"Seligman — wyuczona bezradność", essence:"Skutek stresu niekontrolowalnego: nauczenie się braku związku działanie–skutek.", details:[
+          "Prowadzi do bierności, pesymizmu i objawów depresji.",
+          "Deficyty: <b>poznawcze, motywacyjne, emocjonalne</b>.",
+          "Zależy od <b>stylu wyjaśniania</b>, nie od samego faktu porażki (część osób nie popada)."
+        ]},
+        {flame:true, name:"SAM vs HPA", essence:"Dwie ścieżki fizjologiczne stresu: jedna szybka, druga wolniejsza.", details:[
+          "<b>SAM (współczulno-rdzeniowa) — szybka:</b> adrenalina i noradrenalina, natychmiastowa mobilizacja.",
+          "<b>Oś HPA — wolniejsza:</b> podwzgórze → przysadka → nadnercza → <b>kortyzol</b>.",
+          "Adrenalina/kortyzol regulują siłę reakcji; długotrwałe pobudzenie = przewlekły stres."
+        ]}
+      ]
+    },
+    {
+      eyebrow:"Regulacja emocji (Gross)",
+      cards:[
+        {flame:true, name:"Regulacja wg Grossa", essence:"Regulacja to nie tylko tłumienie — to wpływanie na to, jakie emocje mamy, kiedy i jak je wyrażamy.", details:[
+          "Obejmuje wzmacnianie, skracanie, wydłużanie, podtrzymywanie i zmianę emocji.",
+          "Potoczna „kontrola = hamowanie” jest zbyt wąska.",
+          "Strategie różnią się momentem działania i kosztami."
+        ]},
+        {flame:true, name:"Model procesowy — 5 strategii", essence:"Pięć punktów, w których można regulować emocję, ułożonych wg momentu jej powstawania.", details:[
+          "<b>Wybór sytuacji → modyfikacja sytuacji → kierowanie uwagą → zmiana poznawcza → modulacja reakcji.</b>",
+          "Im wcześniej strategia działa, tym zwykle tańsza.",
+          "Zmiana poznawcza = <b>reinterpretacja</b>; modulacja reakcji = m.in. <b>tłumienie ekspresji</b>."
+        ]},
+        {flame:true, trap:true, name:"PUŁAPKA: reinterpretacja vs tłumienie", essence:"Dwie strategie, które łatwo pomylić co do momentu i kosztów.", details:[
+          "<b>Reinterpretacja (zmiana poznawcza):</b> działa <b>wcześnie</b>, zmienia samo przeżycie, tańsza.",
+          "<b>Tłumienie ekspresji:</b> działa <b>późno</b>, zmniejsza widoczność, ale <b>nie samo przeżycie</b>.",
+          "Koszty tłumienia: większe pobudzenie współczulne, gorsza pamięć, gorszy przebieg interakcji. Kluczowa <b>elastyczność regulacyjna</b>, nie podział „dobre/złe”."
+        ]}
+      ]
+    }
+  ]
+},
+{
+  id:"mot", cls:"mot", tag:"Część II", title:"Motywacja", who:"dr hab. Elżbieta Kasprzak",
+  groups:[
+    {
+      eyebrow:"Podstawy motywacji",
+      cards:[
+        {flame:true, name:"Definicja motywacji (Murphy)", essence:"Proces, który wzbudza działanie, utrzymuje je w toku i reguluje jego przebieg.", details:[
+          "Obejmuje aspekt <b>energetyczny</b> + <b>kierunek</b> + regulację zachowania.",
+          "Dwa mechanizmy motywacyjne: <b>afektywny</b> (biologiczny) i <b>poznawczy</b>.",
+          "Motywacja = mechanizmy uruchamiające i podtrzymujące zachowanie adaptacyjne."
+        ]},
+        {flame:true, name:"3 mechanizmy kierunku zachowania", essence:"Kierunek działania wyznaczają trzy mechanizmy — a przedmiot działania wyznacza cel, nie popęd.", details:[
+          "<b>1. Potrzeby/popędy</b> — napięcie, podłoże biologiczne.",
+          "<b>2. Uczenie się/nawyki</b> i <b>3. myślenie/reprezentacja poznawcza</b> — wyznaczają cel.",
+          "<b>Kluczowe:</b> popęd głodu daje energię, ale to cel decyduje, czy to kanapka (nawyk) czy sałatka (myślenie). Cel wyznacza przedmiot zachowania."
+        ]},
+        {flame:false, name:"Dążenie-unikanie + system gorący/zimny", essence:"Kierunek to stała dyspozycja; o samokontroli decyduje walka systemu szybkiego z wolnym.", details:[
+          "Konflikt motywów dążenia i unikania; <b>unikanie zwykle silniejsze</b> (ewolucja, loss aversion).",
+          "<b>System gorący</b> (Metcalfe, Mischel): szybki, emocjonalny, natychmiastowa gratyfikacja, nasila się w stresie.",
+          "<b>System zimny:</b> wolny, refleksyjny, kontrolowany przez jednostkę, słabnie w stresie."
+        ]},
+        {flame:false, name:"Hull — popęd", essence:"Zachowanie wyjaśniają mechanizmy biologiczne: popęd dostarcza energii, uczenie się kierunku.", details:[
+          "<b>Zachowanie = popęd × nawyk.</b>",
+          "Emocje są efektem ubocznym (zaspokojenia lub nie popędu).",
+          "Motywacja jako redukcja popędu."
+        ]},
+        {flame:false, name:"Skinner — uczenie bez redukcji popędu", essence:"Uczenie się następuje nawet bez redukcji popędu — kluczowe są zewnętrzne wzmocnienia.", details:[
+          "Odejście od wewnętrznego mechanizmu popędu na rzecz nagród i kar.",
+          "<b>Wzmacnianie częściowe</b> kształtuje wytrwałość.",
+          "Energia, siła i kierunek zachowania zależą od wzmocnień."
+        ]},
+        {flame:true, name:"Bandura — społeczne uczenie się", essence:"Nawyki tworzą się bez własnych nagród i kar — przez obserwację innych.", details:[
+          "Nowe zachowanie = <b>modelowanie</b> zachowań innych ludzi.",
+          "<b>Wzmocnienie zastępcze</b> — obserwacja modela, który za swoje zachowanie dostaje nagrodę.",
+          "Zachowanie wynika z informacji pozyskiwanych ze środowiska."
+        ]}
+      ]
+    },
+    {
+      eyebrow:"Potrzeby jako motywy",
+      cards:[
+        {flame:true, name:"Maslow — hierarchia potrzeb", essence:"Potrzeby ułożone w piramidę: od fizjologicznych po samoaktualizację.", details:[
+          "Fizjologiczne → bezpieczeństwa → przynależności → szacunku → poznawcze → estetyczne → <b>samoaktualizacji</b>.",
+          "Potrzeby niższe zwykle muszą być zaspokojone, by aktywowały się wyższe.",
+          "Należy do psychologii humanistycznej (Maslow, Rogers)."
+        ]},
+        {flame:true, name:"SDT — 3 potrzeby (Deci & Ryan)", essence:"Trzy wrodzone, uniwersalne potrzeby psychologiczne napędzają motywację wewnętrzną.", details:[
+          "<b>Autonomia, kompetencja, relacje</b> z innymi (autonomy, competence, relatedness).",
+          "Są wartościami (nie brakiem) — ukierunkowują na szukanie szans.",
+          "Ich zaspokojenie → aktywność, motywacja wewnętrzna, satysfakcja życiowa."
+        ]},
+        {flame:true, name:"SDT — kontinuum autodeterminacji", essence:"Motywacja rozciąga się od amotywacji po wewnętrzną, z pięcioma typami regulacji po drodze.", details:[
+          "Oś: <b>amotywacja → motywacja zewnętrzna → wewnętrzna</b>.",
+          "Typy regulacji: <b>zewnętrzna</b> (kary/nagrody) → <b>zintrojektowana</b> (by uniknąć winy/wstydu) → <b>zidentyfikowana</b> (to dla mnie ważne) → <b>zintegrowana</b> (spójne z tym, kim jestem) → <b>wewnętrzna</b> (sama czynność przyjemna).",
+          "Regulacja <b>kontrolująca</b> (przyczyna na zewnątrz) vs <b>autonomiczna</b> (przyczyna wewnątrz)."
+        ]},
+        {flame:false, name:"McClelland — potrzeba osiągnięć", essence:"Najważniejszy motyw w wyjaśnianiu zachowań i powodzenia życiowego.", details:[
+          "Trzy potrzeby: <b>osiągnięć, afiliacji, władzy</b>.",
+          "Satysfakcja z osiągnięcia jest <b>wrodzona</b>; siłę potrzeby <b>nabywamy</b> (nagradzanie, wychowanie).",
+          "Kolejne cele umożliwiają ciągłe doskonalenie."
+        ]},
+        {flame:false, name:"Atkinson — wartość × oczekiwanie", essence:"Siła motywacji to iloczyn wartości celu i oczekiwania sukcesu — najsilniejsza przy średniej trudności.", details:[
+          "Kierunek: <b>dążenie</b> (potrzeba osiągnięć) vs <b>unikanie niepowodzenia</b> (lęk przed porażką).",
+          "Wartość celu a prawdopodobieństwo — relacja ujemna; motywacja a prawdopodobieństwo — krzywa dzwonu.",
+          "Najsilniejsza motywacja przy <b>średnim</b> poziomie trudności zadania."
+        ]},
+        {flame:true, name:"Cele osiągnięć 2×2", essence:"Cztery typy celów z przecięcia dwóch osi: mistrzostwo/wykazanie się × dążenie/unikanie.", details:[
+          "<b>Mistrzostwa-dążenie:</b> „robię najlepiej jak potrafię”. <b>Mistrzostwa-unikanie:</b> boję się, że nie zrobię dobrze.",
+          "<b>Wykazania-dążenie:</b> być lepszym/równym innym. <b>Wykazania-unikanie:</b> nie podejmuję, by się nie ośmieszyć.",
+          "<b>Konsekwencje:</b> cele dążeniowe → wzrost motywacji i rozwój; unikowe → spadek motywacji i jakości."
+        ]}
+      ]
+    },
+    {
+      eyebrow:"Biologia motywacji",
+      cards:[
+        {flame:false, name:"RAS i pobudzenie", essence:"Twór siatkowaty steruje stanem pobudzenia, czuwania i przytomności.", details:[
+          "<b>RAS</b> (Reticular Activating System) pobudza CUN; współpracuje z podwzgórzem.",
+          "Pobudzenie obejmuje AUN (autonomiczny) i SUN (somatyczny).",
+          "Podwzgórze → rdzeń nadnerczy → <b>adrenalina/noradrenalina</b> — wpływają na <b>siłę</b> emocji, nie ich treść."
+        ]},
+        {flame:false, name:"Pobudzenie a afekt", essence:"Pobudzenie autonomiczne i korowe wiążą się z afektem na dwa różne sposoby.", details:[
+          "<b>Autonomiczne</b> ↔ afekt: zależność <b>odwróconego U</b>.",
+          "<b>Korowe</b> ↔ afekt: zależność <b>liniowa</b>.",
+          "Pobudzenie AUN w dłuższym czasie objawia się stresem."
+        ]},
+        {flame:true, name:"Yerkes-Dodson (optymalna stymulacja)", essence:"Dla każdego zachowania istnieje optymalny poziom pobudzenia, zależny od trudności zadania.", details:[
+          "Średni poziom pobudzenia AUN → najwyższa efektywność i pozytywny afekt.",
+          "Dla zadań <b>trudnych</b> optymalne pobudzenie jest <b>niższe</b>, dla łatwych wyższe.",
+          "Dwa prawa Yerkesa-Dodsona (1908)."
+        ]},
+        {flame:true, name:"Teoria odwróconego kierunku (Apter)", essence:"Odrzuca redukcję napięcia; wprowadza 4 pary przeciwstawnych stanów metamotywacyjnych.", details:[
+          "<b>Teliczny–parateliczny</b> (cele/skuteczność – zabawa/przyjemność).",
+          "<b>Konformistyczny–negatywistyczny</b>; <b>władzy/mistrzostwa–współodczuwania</b>; <b>autyczny–alloiczny</b> (uwaga na siebie – na innych).",
+          "W jednym momencie działa <b>tylko jeden</b> stan z pary; ludzie przechodzą między nimi."
+        ]},
+        {flame:false, trap:true, name:"PUŁAPKA: pobudzenie jako cecha vs stan", essence:"Skąd pochodzi pobudzenie — z osoby czy z sytuacji.", details:[
+          "<b>Cecha</b> (niezależne od otoczenia): ekstrawersja-introwersja, neurotyzm-stabilność (Eysenck), impulsywność-lęk (<b>Gray: BAS/BIS</b>).",
+          "<b>Stan</b> (zależne od otoczenia): przeciążenie informacyjne, dysonans poznawczy, ekspozycja na ocenę (egzamin, rywalizacja).",
+          "BAS = system nawiązywania kontaktu (impulsywność, nadzieja); BIS = układ hamujący (lęk)."
+        ]}
+      ]
+    },
+    {
+      eyebrow:"Motywy poznawcze",
+      cards:[
+        {flame:false, name:"Cele + poczucie własnej skuteczności", essence:"Cel napędza działanie, a podjęcie się go zależy od wiary we własną skuteczność.", details:[
+          "<b>Funkcje celu (Locke & Latham):</b> kieruje uwagą, mobilizuje, podtrzymuje wytrwałość, ułatwia strategię.",
+          "Dobry cel: konkretny, wewnętrzny, lekko powyżej dotychczasowego standardu.",
+          "<b>Self-efficacy (Bandura):</b> przekonanie, że potrafię osiągnąć cel — „czucie się autorem celu”."
+        ]},
+        {flame:false, name:"Samoocena — funkcja motywacyjna", essence:"Ludzie szukają i pragną pozytywnej oceny Ja — i to ukierunkowuje ich działanie.", details:[
+          "Wysoka samoocena → pewność siebie, niezależność, przedsiębiorczość, wytrwałość.",
+          "Niska → wstyd i poczucie winy (przekonanie o niskich kompetencjach), poczucie bezwartościowości.",
+          "Osoby z niską samooceną są wrażliwsze na wzmocnienia <b>negatywne</b> i wybierają zadania mniej ambitne (chęć uniknięcia wstydu > chęć dumy)."
+        ]},
+        {flame:true, name:"Dweck — nastawienie (mindset)", essence:"Dwie ukryte teorie zdolności: przekonanie o stałości albo o rozwoju inteligencji.", details:[
+          "Przekonania kształtują, co czujemy, wybieramy i spostrzegamy.",
+          "<b>Teoria stałości</b> vs <b>teoria rozwojowa</b> zdolności.",
+          "Wiara w <b>rozwojową</b> teorię = korzystny element poznawczy w wyznaczaniu i realizacji celów."
+        ]},
+        {flame:false, name:"Potrzeba kontroli", essence:"Poczucie kontroli nad sobą i otoczeniem pozwala przewidywać zdarzenia i chroni zdrowie.", details:[
+          "Daje poczucie bezpieczeństwa i aktywuje inne potrzeby (np. kompetencji).",
+          "Osoby z poczuciem kontroli żyją dłużej, szybciej zdrowieją, rzadziej chorują.",
+          "Brak kontroli → lęk, stres, depresja, słabsza odporność. Geneza: geny (~30%), uczenie się, czynniki poznawcze."
+        ]},
+        {flame:true, name:"Wyuczona bezradność (Seligman)", essence:"Utrwalone przekonanie o braku związku między własnym działaniem a jego skutkami.", details:[
+          "Skutki — deficyty: <b>poznawcze</b> (nie rozumie sytuacji), <b>motywacyjne</b> (brak działania), <b>emocjonalne</b> (depresja, apatia, lęk).",
+          "W porażce ~<b>2/3</b> popada w bezradność, <b>1/3</b> nie.",
+          "Decyduje <b>styl wyjaśniania</b>, nie sam fakt porażki; bezradność = pesymistyczne atrybucje."
+        ]},
+        {flame:true, name:"Styl wyjaśniania (Seligman) + Rotter", essence:"Optymizm/pesymizm jako sposób tłumaczenia sukcesów i porażek na trzech wymiarach.", details:[
+          "3 wymiary: <b>trwałość</b> (permanence), <b>ogólność</b> (pervasiveness), <b>personalizacja</b> (locus wew/zew).",
+          "<b>Optymista:</b> sukces = wewnętrzny/stały/ogólny, porażka = zewnętrzny/zmienny/lokalny. <b>Pesymista</b> — odwrotnie.",
+          "<b>Rotter:</b> umiejscowienie kontroli (wewnętrzne/zewnętrzne) jako trwała cecha osobowości."
+        ]},
+        {flame:true, trap:true, name:"PUŁAPKA: optymizm vs nadzieja", essence:"Oba to ogólne oczekiwania, ale różnią się tym, na czym się opierają.", details:[
+          "<b>Optymizm (Scheier, Carver):</b> oczekiwanie pomyślnego wyniku — orientacja na wartość, względnie niezależna od własnych możliwości.",
+          "<b>Nadzieja (Snyder):</b> przekonanie, że osiągnę cel dzięki umiejętnościom i wytrwałości — orientacja behawioralna na cel.",
+          "Nadzieja = <b>myślenie kierunkowe (pathway)</b> + <b>myślenie sprawcze (agency)</b> + cele; lepiej prognozuje sukces niż optymizm. <b>PsyCap</b> = efficacy + optimism + hope + resilience."
+        ]},
+        {flame:false, name:"Pesymizm → depresja; model Becka", essence:"Pesymistyczny styl wyjaśniania sprzyja utracie sprawstwa i może prowadzić do depresji.", details:[
+          "Dowody: częstsze objawy depresji u pesymistów; zmiana stylu na optymistyczny redukuje objawy.",
+          "<b>Model Becka:</b> poznawczy — negatywne schematy Ja/świata/przyszłości selekcjonują fakty zgodnie z negatywnym obrazem.",
+          "Biologicznie: u osób z depresją mniej dopaminy, serotoniny, noradrenaliny."
+        ]},
+        {flame:true, name:"Fredrickson — poszerzanie i budowanie", essence:"Emocje pozytywne poszerzają uwagę i repertuar działań oraz budują trwałe zasoby.", details:[
+          "<b>Broaden:</b> poszerzają pole widzenia, świadomość i repertuar zachowań.",
+          "<b>Build:</b> budują zasoby na zasadzie <b>spirali wzrostu</b> (radość → nowe cele → nowe zachowania → zasoby → emocje pozytywne…).",
+          "Funkcje emocji pozytywnych: informacyjna, motywacyjna, sygnalizująca nowe możliwości."
+        ]}
+      ]
+    }
+  ]
+}
+];
+
+/* ---------------- render ---------------- */
+const content = document.getElementById('content');
+let totalCards = 0, flameCards = 0, emoCards = 0, motCards = 0, doneCount = 0;
+
+DATA.forEach(sec=>{
+  const section = document.createElement('section');
+  section.className = 'section '+sec.cls;
+  section.id = 'sec-'+sec.id;
+
+  const head = document.createElement('div');
+  head.className = 'sec-head';
+  head.innerHTML = `<span class="tag">${sec.tag}</span><h2>${sec.title}</h2><span class="who">${sec.who}</span>`;
+  section.appendChild(head);
+
+  sec.groups.forEach(g=>{
+    const group = document.createElement('div');
+    group.className = 'group';
+    const eb = document.createElement('div');
+    eb.className = 'eyebrow';
+    eb.textContent = g.eyebrow;
+    group.appendChild(eb);
+
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+
+    g.cards.forEach(c=>{
+      totalCards++;
+      if(c.flame) flameCards++;
+      if(sec.id==='emo') emoCards++; else motCards++;
+
+      const card = document.createElement('article');
+      card.className = 'card' + (c.flame ? ' flame':'') + (c.trap ? ' trap':'');
+
+      const main = document.createElement('div');
+      main.className = 'card-main';
+      main.setAttribute('role','button');
+      main.setAttribute('tabindex','0');
+      main.setAttribute('aria-expanded','false');
+
+      const badge = c.trap ? 'PUŁAPKA' : (c.flame ? '✦' : '');
+      const detailHtml = c.details.map(d=>{
+        const warn = d.startsWith('[!]');
+        const txt = warn ? d.slice(3) : d;
+        return `<li${warn?' class="warn"':''}>${txt}</li>`;
+      }).join('');
+
+      main.innerHTML =
+        `<div class="card-head">${badge?`<span class="badge">${badge}</span>`:''}<h4 class="name">${c.name}</h4></div>`+
+        `<p class="essence">${c.essence}</p>`+
+        `<p class="hint">↳ dotknij, aby odsłonić i sprawdzić się</p>`+
+        `<div class="details"><ul>${detailHtml}</ul></div>`;
+
+      const toggle = ()=>{
+        const open = card.classList.toggle('open');
+        main.setAttribute('aria-expanded', open ? 'true':'false');
+      };
+      main.addEventListener('click', toggle);
+      main.addEventListener('keydown', e=>{
+        if(e.key==='Enter' || e.key===' '){ e.preventDefault(); toggle(); }
+      });
+
+      const done = document.createElement('button');
+      done.className = 'done-btn';
+      done.type = 'button';
+      done.textContent = 'umiem';
+      done.addEventListener('click', e=>{
+        e.stopPropagation();
+        const on = card.classList.toggle('is-done');
+        done.textContent = on ? '✓ umiem' : 'umiem';
+        doneCount += on ? 1 : -1;
+        document.getElementById('cDone').textContent = doneCount;
+      });
+
+      card.appendChild(main);
+      card.appendChild(done);
+      grid.appendChild(card);
+    });
+
+    group.appendChild(grid);
+    section.appendChild(group);
+  });
+
+  content.appendChild(section);
+});
+
+document.getElementById('cTotal').textContent = totalCards;
+document.getElementById('nFlame').textContent = flameCards;
+document.getElementById('nEmo').textContent = emoCards;
+document.getElementById('nMot').textContent = motCards;
+
+/* ---------------- controls ---------------- */
+const root = document.getElementById('dr');
+
+const btnTest = document.getElementById('btnTest');
+btnTest.addEventListener('click', ()=>{
+  const on = root.classList.toggle('test');
+  btnTest.setAttribute('aria-pressed', on?'true':'false');
+  btnTest.textContent = on ? 'Wyłącz test' : 'Tryb testu';
+});
+
+const btnFlame = document.getElementById('btnFlame');
+btnFlame.addEventListener('click', ()=>{
+  const on = root.classList.toggle('only-flame');
+  btnFlame.setAttribute('aria-pressed', on?'true':'false');
+  btnFlame.textContent = on ? 'Pokaż wszystkie' : 'Tylko pewniaki';
+  document.querySelectorAll('#dr .group').forEach(g=>{
+    const anyVisible = [...g.querySelectorAll('.card')].some(c=>{
+      if(!on) return true;
+      return c.classList.contains('flame') || c.classList.contains('trap');
+    });
+    g.classList.toggle('is-empty', !anyVisible);
+  });
+});
+
+const btnExpand = document.getElementById('btnExpand');
+btnExpand.addEventListener('click', ()=>{
+  const on = btnExpand.getAttribute('aria-pressed')==='true';
+  document.querySelectorAll('#dr .card').forEach(c=>{
+    c.classList.toggle('open', !on);
+    const m = c.querySelector('.card-main');
+    if(m) m.setAttribute('aria-expanded', (!on)?'true':'false');
+  });
+  btnExpand.setAttribute('aria-pressed', (!on)?'true':'false');
+  btnExpand.textContent = (!on) ? 'Zwiń wszystko' : 'Rozwiń wszystko';
+});
+
+document.querySelectorAll('#dr .ctrl.jump').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    const target = document.getElementById('sec-'+b.dataset.jump);
+    if(target) target.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start'});
+  });
+});
+</script>
+</body>
+</html>
